@@ -448,7 +448,7 @@ yeccpars2_19_(__Stack0) ->
 yeccpars2_20_(__Stack0) ->
  [__3,__2,__1 | __Stack] = __Stack0,
  [begin
-   { index , unwrap_value ( __2 ) }
+   { index_access , unwrap_value ( __2 ) }
   end | __Stack].
 
 -compile({inline,yeccpars2_21_/1}).

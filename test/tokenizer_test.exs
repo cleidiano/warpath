@@ -1,6 +1,8 @@
 defmodule TokenizerTest do
   use ExUnit.Case, async: true
 
+  alias Warpath.Tokenizer
+
   describe "tokenize/1" do
     test "root" do
       assert {:ok, [{:root, 1, "$"}], 1} == Tokenizer.tokenize("$")
