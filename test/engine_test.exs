@@ -54,46 +54,10 @@ defmodule EngineTest do
     end
   end
 
-  describe "query/3 return path on" do
-    test "evaluate root expression", context do
-      assert Engine.query(context[:data], tokens("$"), result_type: :path) == "$"
-    end
-
-    test "evaluate property expression ", context do
-      assert Engine.query(context[:data], tokens("$.city"), result_type: :path) == "$['city']"
-    end
-
-    test "evaluate array index expression ", context do
-      assert Engine.query(context[:data], tokens("$.persons[0]"), result_type: :path) ==
-               "$['persons'][0]"
-    end
-
-    test "evaluate wildcard array expression", context do
-      assert Engine.query(context[:data], tokens("$.persons[*]"), result_type: :path) ==
-               "$['persons']"
-    end
-
-    test "evaluate wildcard array expression with property after it", context do
-      assert Engine.query(context[:data], tokens("$.persons[*].name"), result_type: :path) ==
-               [
-                 "$['persons'][0]['name']",
-                 "$['persons'][1]['name']"
-               ]
-    end
-
-    test "evaluate filter expression for relation >", context do
-      assert Engine.query(context[:data], tokens("$.persons[?(@.age > 18)]"), result_type: :path) ==
-               ["$['persons'][1]"]
-    end
-
-    test "evaluate filter expression for relation <", context do
-      assert Engine.query(context[:data], tokens("$.persons[?(@.age < 22)]"), result_type: :path) ==
-               ["$['persons'][0]"]
-    end
-
-    test "evaluate filter expression for relation ==", context do
-      assert Engine.query(context[:data], tokens("$.persons[?(@.age == 18)]"), result_type: :path) ==
-               ["$['persons'][0]"]
+  describe "query/3 return error when" do
+    test "trying to traverse a list using dot notation", context do
+      {:error, %{message: message}} = Engine.query(context[:data], tokens("$.persons.name"))
+      assert message =~ "You are trying to traverse a list using dot notation"
     end
   end
 

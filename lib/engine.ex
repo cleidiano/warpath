@@ -8,7 +8,7 @@ defmodule Warpath.Engine do
       [value, paths] = transform(tokens, data, _acc = [])
 
       case opts[:result_type] do
-        :path -> ItemPath.create(paths)
+        :path -> ItemPath.bracketify(paths)
         _ -> value
       end
     rescue
@@ -16,37 +16,32 @@ defmodule Warpath.Engine do
     end
   end
 
-  defp transform([{:root, key} | t], data, item_path) do
-    transform(t, data, [key | item_path])
+  defp transform([segment = {:root, _} | t], data, item_path) do
+    [value, paths] = transform(t, data, [segment | item_path])
+    [value, Enum.reverse(paths)]
   end
 
-  defp transform([{:dot, {:property, property}} | _], data, item_path) when is_list(data) do
-    #TODO ADICIONAR TEST APRA ESTE CASO
-    base_path =
-      item_path
-      |> ItemPath.create()
-      |> String.replace("['", ".")
-      |> String.replace("']", "")
+  defp transform([{:dot, segment = {:property, property}} | _], data, item_path)
+       when is_list(data) do
+    message =
+      "You are trying to traverse a list using dot " <>
+        "notation '#{ItemPath.dotify([segment | item_path])}', " <>
+        "that it's not allowed for list type. " <>
+        "You can use something like this for " <>
+        "exemple, '#{ItemPath.dotify(item_path)}[*].#{property}'!"
 
-    property_path = "#{base_path}.#{property}"
-    index_path = "#{base_path}[*].#{property}"
-
-    raise RuntimeError,
-          "You are trying to traverse a list using dot notation #{property_path} " <>
-            "that it's not allowed for list type, you can use something like this for exemple, #{
-              index_path
-            } instead!"
+    raise RuntimeError, message
   end
 
-  defp transform([{:dot, {:property, property}} | t], data, item_path) do
-    transform(t, data[property], [ItemPath.segment(:property, property) | item_path])
+  defp transform([{:dot, segment = {:property, property}} | t], data, item_path) do
+    transform(t, data[property], [segment | item_path])
   end
 
-  defp transform([{:index_access, index} | t], data, item_path)
+  defp transform([segment = {:index_access, index} | t], data, item_path)
        when is_list(data) or is_map(data) do
     value = get_in(data, [Access.at(index)])
 
-    transform(t, value, [ItemPath.segment(:index, index) | item_path])
+    transform(t, value, [segment | item_path])
   end
 
   defp transform([{:array_wildcard, _} | t], data, item_path)
@@ -54,13 +49,13 @@ defmodule Warpath.Engine do
     [itens, paths] =
       data
       |> Stream.with_index()
-      |> Stream.map(fn {item, index} -> {item, [ItemPath.segment(:index, index) | item_path]} end)
+      |> Stream.map(fn {item, index} -> {item, [{:index_access, index} | item_path]} end)
       |> Stream.map(fn {item, path} -> transform(t, item, path) end)
       |> Enum.reduce([_item_acc = [], _path_acc = []], fn [item | path], [acc_itens, trace] ->
-        [[item | acc_itens], [path | trace]]
+        [[item | acc_itens], [List.flatten(path) | trace]]
       end)
 
-    [Enum.reverse(itens), Enum.reverse(paths)]
+    [Enum.reverse(itens), Enum.map(paths, &Enum.reverse/1)]
   end
 
   defp transform([{:array_wildcard, _} | []], data, item_path) do
@@ -68,13 +63,17 @@ defmodule Warpath.Engine do
   end
 
   defp transform([{:filter, filter_expression} | t], data, item_path) do
-    # TODO How will path look like??
     [result, itens_path] = filter(filter_expression, data, item_path)
     transform(t, result, itens_path)
   end
 
   defp transform([], data, item_path) do
     [data, item_path]
+  end
+
+  defp transform(syntax, data, paths) do
+    raise Warpath.SyntaxError,
+          "tokens=#{inspect(syntax)}, data=#{inspect(data)}, paths=#{inspect(paths)}"
   end
 
   defp filter({{:property, property}, operator, operand}, data, item_path)
@@ -89,34 +88,17 @@ defmodule Warpath.Engine do
       data
       |> Stream.with_index()
       |> Stream.filter(fn {item, _index} -> filter_fun.(item[property]) end)
-      |> Stream.map(fn {item, index} -> {item, [ItemPath.segment(:index, index) | item_path]} end)
+      |> Stream.map(fn {item, index} -> {item, [{:index_access, index} | item_path]} end)
       |> Enum.reduce([_itens_acc = [], _path_acc = []], fn {item, path}, [itens, paths] ->
-        [[item | itens], [path | paths]]
+        [[item | itens], [List.flatten(path) | paths]]
       end)
 
-    [itens, Enum.reverse(paths)]
+    [Enum.reverse(itens), Enum.map(paths, &Enum.reverse/1)]
   end
 
   # TODO Define a catch all for transform function
 end
 
-defmodule Warpath.Engine.ItemPath do
-  @moduledoc false
-
-  def create(data) when is_list(data) do
-    join(data)
-  end
-
-  def segment(:property, term) when is_binary(term), do: "['#{term}']"
-  def segment(:index, index), do: "[#{index}]"
-
-  defp join([h | _] = data) when is_list(h) do
-    data
-    |> Enum.map(fn path -> join(path) end)
-    |> List.flatten()
-  end
-
-  defp join([h | _] = data) when is_binary(h) do
-    data |> Enum.reverse() |> Enum.join()
-  end
+defmodule Warpath.SyntaxError do
+  defexception [:message]
 end
