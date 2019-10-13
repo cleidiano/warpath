@@ -2,9 +2,10 @@ Definitions.
 
 ROOT                 = \$
 CURRENT_OBJECT       = @
-PROPERTY             = [a-zA-Z_-]+([0-9_-]+)?
+PROPERTY             = [A-Za-z_][A-Za-z0-9]*
 COMPARATOR           = (>|<|==)
-OPERATOR             = (+|-)
+PLUS                 = \+
+MINUS                = \-
 INT                  = [0-9]+
 OPEN_BRACKET         = \[
 CLOSE_BRACKET        = \]
@@ -13,6 +14,7 @@ CLOSE_PARENTHESE     = \)
 DOT                  = \.
 QUESTION_MARK        = \?
 WILDCARD             = \*
+COMMA                =  ,
 WHITESPACE           = [\s\t\n\r]
 
 Rules.
@@ -22,7 +24,10 @@ Rules.
 {CURRENT_OBJECT}        : {token, {current_object,  TokenLine, list_to_binary(TokenChars)}}.
 {COMPARATOR}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
 {INT}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
-{DOT}                   : {token, {dot,             TokenLine, list_to_atom(TokenChars)}}.  
+{INT}{DOT}{INT}         : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
+{DOT}                   : {token, {dot,             TokenLine, list_to_atom(TokenChars)}}.
+{MINUS}                 : {token, {minus,           TokenLine, TokenChars}}.
+{COMMA}                 : {token, {comma,           TokenLine, TokenChars}}.  
 {OPEN_BRACKET}          : {token, {open_bracket,    TokenLine, list_to_atom(TokenChars)}}.
 {CLOSE_BRACKET}         : {token, {close_bracket,   TokenLine, list_to_atom(TokenChars)}}.
 {QUESTION_MARK}         : {token, {question_mark,   TokenLine, list_to_atom(TokenChars)}}.
