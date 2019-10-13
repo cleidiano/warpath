@@ -19,6 +19,7 @@ index_access   -> open_bracket int close_bracket                          :   {i
 filter_exp     -> open_bracket filter close_bracket                       :   {filter, '$2'}.  %{filter, @.age > 18}
 filter         -> question_mark open_parens filter_target close_parens    :   '$3'. % @.age > 18
 filter_target  -> current_object dot property comparator number           :   {unwrap('$3'), unwrap_value('$4'), '$5'}. %@.age > 18
+filter_target  -> current_object dot property                             :   {contains, unwrap('$3')}.
 
 number         -> int                                                     : unwrap_value('$1').
 number         -> float                                                   : unwrap_value('$1').

@@ -72,22 +72,25 @@ defmodule Warpath.Engine do
   end
 
   defp transform(syntax, data, paths) do
-    raise Warpath.SyntaxError,
+    raise Warpath.UnsupportedExpression,
           "tokens=#{inspect(syntax)}, data=#{inspect(data)}, paths=#{inspect(paths)}"
   end
 
   defp filter({{:property, property}, operator, operand}, data, item_path)
        when is_list(data) and operator in @relation_fun do
-    do_filter(data, property, operator, operand, item_path)
+    filter_fun = fn item -> apply(Kernel, operator, [item[property], operand]) end
+    do_filter(data, filter_fun, item_path)
   end
 
-  defp do_filter(data, property, operator, operand, item_path) do
-    filter_fun = fn item -> apply(Kernel, operator, [item, operand]) end
+  defp filter({:contains, {:property, property}}, data, item_path) when is_list(data) do
+    do_filter(data, &Map.has_key?(&1, property), item_path)
+  end
 
+  defp do_filter(data, filter_fun, item_path) do
     [itens, paths] =
       data
       |> Stream.with_index()
-      |> Stream.filter(fn {item, _index} -> filter_fun.(item[property]) end)
+      |> Stream.filter(fn {item, _index} -> filter_fun.(item) end)
       |> Stream.map(fn {item, index} -> {item, [{:index_access, index} | item_path]} end)
       |> Enum.reduce([_itens_acc = [], _path_acc = []], fn {item, path}, [itens, paths] ->
         [[item | itens], [List.flatten(path) | paths]]
@@ -95,10 +98,8 @@ defmodule Warpath.Engine do
 
     [Enum.reverse(itens), Enum.map(paths, &Enum.reverse/1)]
   end
-
-  # TODO Define a catch all for transform function
 end
 
-defmodule Warpath.SyntaxError do
+defmodule Warpath.UnsupportedExpression do
   defexception [:message]
 end

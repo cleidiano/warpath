@@ -70,5 +70,17 @@ defmodule ParserTest do
                   {:filter, {{:property, "age"}, :==, 10}}
                 ]}
     end
+
+    test "filter expression contains @.age" do
+      tokens = Tokenizer.tokenize!("$.persons[?(@.age)]")
+
+      assert Parser.parser(tokens) ==
+               {:ok,
+                [
+                  {:root, "$"},
+                  {:dot, {:property, "persons"}},
+                  {:filter, {:contains, {:property, "age"}}}
+                ]}
+    end
   end
 end

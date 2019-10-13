@@ -1,6 +1,6 @@
 -module(parser).
 -export([parse/1, parse_and_scan/1, format_error/1]).
--file("src/parser.yrl", 28).
+-file("src/parser.yrl", 29).
 
 unwrap({T, _, V})       -> {T, V}.
 unwrap_value({_, _, V}) -> V.
@@ -343,11 +343,12 @@ yeccpars2_15(S, property, Ss, Stack, T, Ts, Tzr) ->
 yeccpars2_15(_, _, _, _, T, _, _) ->
  yeccerror(T).
 
--dialyzer({nowarn_function, yeccpars2_16/7}).
 yeccpars2_16(S, comparator, Ss, Stack, T, Ts, Tzr) ->
  yeccpars1(S, 17, Ss, Stack, T, Ts, Tzr);
-yeccpars2_16(_, _, _, _, T, _, _) ->
- yeccerror(T).
+yeccpars2_16(_S, Cat, Ss, Stack, T, Ts, Tzr) ->
+ [_,_|Nss] = Ss,
+ NewStack = yeccpars2_16_(Stack),
+ yeccgoto_filter_target(hd(Nss), Cat, Nss, NewStack, T, Ts, Tzr).
 
 -dialyzer({nowarn_function, yeccpars2_17/7}).
 yeccpars2_17(S, float, Ss, Stack, T, Ts, Tzr) ->
@@ -471,6 +472,14 @@ yeccpars2_11_(__Stack0) ->
    __1 ++ [ { array_wildcard , unwrap_value ( __3 ) } ]
   end | __Stack].
 
+-compile({inline,yeccpars2_16_/1}).
+-file("src/parser.yrl", 18).
+yeccpars2_16_(__Stack0) ->
+ [__3,__2,__1 | __Stack] = __Stack0,
+ [begin
+   { contains , unwrap ( __3 ) }
+  end | __Stack].
+
 -compile({inline,yeccpars2_18_/1}).
 -file("src/parser.yrl", 17).
 yeccpars2_18_(__Stack0) ->
@@ -480,7 +489,7 @@ yeccpars2_18_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_19_/1}).
--file("src/parser.yrl", 20).
+-file("src/parser.yrl", 21).
 yeccpars2_19_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -488,7 +497,7 @@ yeccpars2_19_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_20_/1}).
--file("src/parser.yrl", 19).
+-file("src/parser.yrl", 20).
 yeccpars2_20_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -496,7 +505,7 @@ yeccpars2_20_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_22_/1}).
--file("src/parser.yrl", 22).
+-file("src/parser.yrl", 23).
 yeccpars2_22_(__Stack0) ->
  [__2,__1 | __Stack] = __Stack0,
  [begin
@@ -504,7 +513,7 @@ yeccpars2_22_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_23_/1}).
--file("src/parser.yrl", 21).
+-file("src/parser.yrl", 22).
 yeccpars2_23_(__Stack0) ->
  [__2,__1 | __Stack] = __Stack0,
  [begin
@@ -552,4 +561,4 @@ yeccpars2_28_(__Stack0) ->
   end | __Stack].
 
 
--file("src/parser.yrl", 33).
+-file("src/parser.yrl", 34).

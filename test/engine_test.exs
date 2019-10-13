@@ -113,15 +113,38 @@ defmodule EngineTest do
     end
 
     test "evaluate filter expression for relation ==", context do
-      tolkien = %{
-        "category" => "fiction",
-        "author" => "J. R. R. Tolkien",
-        "title" => "The Lord of the Rings",
-        "isbn" => "0-395-19395-8",
-        "price" => 22.99
-      }
+      tolkien = [
+        %{
+          "category" => "fiction",
+          "author" => "J. R. R. Tolkien",
+          "title" => "The Lord of the Rings",
+          "isbn" => "0-395-19395-8",
+          "price" => 22.99
+        }
+      ]
 
-      assert Engine.query(context[:data], tokens("$.store.book[?(@.price == 22.99)]")) == [tolkien]
+      assert Engine.query(context[:data], tokens("$.store.book[?(@.price == 22.99)]")) == tolkien
+    end
+
+    test "evaluate filter expression for contains operation", context do
+      books = [
+        %{
+          "category" => "fiction",
+          "author" => "Herman Melville",
+          "title" => "Moby Dick",
+          "isbn" => "0-553-21311-3",
+          "price" => 8.99
+        },
+        %{
+          "category" => "fiction",
+          "author" => "J. R. R. Tolkien",
+          "title" => "The Lord of the Rings",
+          "isbn" => "0-395-19395-8",
+          "price" => 22.99
+        }
+      ]
+
+      assert Engine.query(context[:data], tokens("$.store.book[?(@.isbn)]")) == books
     end
   end
 
