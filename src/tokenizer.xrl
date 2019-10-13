@@ -26,8 +26,8 @@ Rules.
 {INT}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
 {INT}{DOT}{INT}         : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
 {DOT}                   : {token, {dot,             TokenLine, list_to_atom(TokenChars)}}.
-{MINUS}                 : {token, {minus,           TokenLine, TokenChars}}.
-{COMMA}                 : {token, {comma,           TokenLine, TokenChars}}.  
+{MINUS}                 : {token, {minus,           TokenLine, list_to_binary(TokenChars)}}.
+{COMMA}                 : {token, {comma,           TokenLine, list_to_binary(TokenChars)}}.  
 {OPEN_BRACKET}          : {token, {open_bracket,    TokenLine, list_to_atom(TokenChars)}}.
 {CLOSE_BRACKET}         : {token, {close_bracket,   TokenLine, list_to_atom(TokenChars)}}.
 {QUESTION_MARK}         : {token, {question_mark,   TokenLine, list_to_atom(TokenChars)}}.

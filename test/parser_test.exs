@@ -35,6 +35,17 @@ defmodule ParserTest do
                {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}, {:array_wildcard, :*}]}
     end
 
+    test "access many array index" do
+      tokens = Tokenizer.tokenize!("$[0, 1, 2]")
+
+      assert Parser.parser(tokens) ==
+               {:ok,
+                [
+                  {:root, "$"},
+                  {:array_indexes, [{:index_access, 0}, {:index_access, 1}, {:index_access, 2}]}
+                ]}
+    end
+
     test "filter expression @.age > 10" do
       tokens = Tokenizer.tokenize!("$.persons[?(@.age > 10)]")
 

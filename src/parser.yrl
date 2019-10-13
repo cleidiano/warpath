@@ -1,9 +1,9 @@
-Nonterminals expression index_access filter_exp filter filter_target number.
+Nonterminals expression index_access filter_exp filter filter_target number index indexes array_indexes.
 
 Terminals  
 root property current_object comparator int float
 dot open_bracket close_bracket question_mark 
-open_parens close_parens wildcard minus.
+open_parens close_parens wildcard minus comma.
 
 Rootsymbol expression.
 
@@ -13,13 +13,17 @@ expression     -> expression index_access                                 :   '$
 expression     -> expression filter_exp                                   :   '$1' ++ ['$2'].
 expression     -> expression dot wildcard                                 :   '$1'.  
 expression     -> expression open_bracket wildcard close_bracket          :   '$1' ++ [{array_wildcard, unwrap_value('$3')}].  
-
+expression     -> expression array_indexes                                :   '$1' ++ ['$2'].
 
 index_access   -> open_bracket int close_bracket                          :   {index_access, unwrap_value('$2')}.
+array_indexes  -> open_bracket indexes close_bracket                      :   {array_indexes, '$2'}.
 filter_exp     -> open_bracket filter close_bracket                       :   {filter, '$2'}.  %{filter, @.age > 18}
 filter         -> question_mark open_parens filter_target close_parens    :   '$3'. % @.age > 18
 filter_target  -> current_object dot property comparator number           :   {unwrap('$3'), unwrap_value('$4'), '$5'}. %@.age > 18
 filter_target  -> current_object dot property                             :   {contains, unwrap('$3')}.
+
+indexes        -> int comma int                                           :   [{index_access, unwrap_value('$1')}, {index_access, unwrap_value('$3')}].
+indexes        -> indexes comma int                                       :   '$1' ++ [{index_access, unwrap_value('$3')}].  
 
 number         -> int                                                     : unwrap_value('$1').
 number         -> float                                                   : unwrap_value('$1').

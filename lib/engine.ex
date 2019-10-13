@@ -44,6 +44,17 @@ defmodule Warpath.Engine do
     transform(t, value, [segment | item_path])
   end
 
+  defp transform([_segment = {:array_indexes, indexes} | t], data, item_path) do
+    [values, paths] =
+      indexes
+      |> Stream.map(&transform([&1], data, item_path))
+      |> Enum.reduce([_values = [], _paths = []], fn [item, path], [itens_acc, paths_acc] ->
+        [[item | itens_acc], [path | paths_acc]]
+      end)
+
+    transform(t, Enum.reverse(values), Enum.reverse(paths))
+  end
+
   defp transform([{:array_wildcard, _} | t], data, item_path)
        when is_list(data) and length(t) > 0 do
     [itens, paths] =

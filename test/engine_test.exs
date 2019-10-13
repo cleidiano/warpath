@@ -66,6 +66,26 @@ defmodule EngineTest do
       assert Engine.query(context[:data], tokens("$.store.book[0]")) == nigel_rees
     end
 
+    test "evaluate many array indexes expression", context do
+      books = [
+        %{
+          "category" => "fiction",
+          "author" => "Evelyn Waugh",
+          "title" => "Sword of Honour",
+          "price" => 12.99
+        },
+        %{
+          "category" => "fiction",
+          "author" => "Herman Melville",
+          "title" => "Moby Dick",
+          "isbn" => "0-553-21311-3",
+          "price" => 8.99
+        }
+      ]
+
+      assert Engine.query(context[:data], tokens("$.store.book[1, 2]")) == books
+    end
+
     test "evaluate wildcard array expression", context do
       expected = context[:data]["store"]["book"]
       assert Engine.query(context[:data], tokens("$.store.book[*]")) == expected

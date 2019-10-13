@@ -36,28 +36,40 @@ defmodule TokenizerTest do
       assert {:ok, [{:int, 1, 10}], 1} == Tokenizer.tokenize("10")
     end
 
-    test "[" do
+    test "float" do
+      assert {:ok, [{:float, 1, 1.1}], 1} == Tokenizer.tokenize("1.1")
+    end
+
+    test "open bracket" do
       assert {:ok, [{:open_bracket, 1, :"["}], 1} == Tokenizer.tokenize("[")
     end
 
-    test "]" do
+    test "close bracket" do
       assert {:ok, [{:close_bracket, 1, :"]"}], 1} == Tokenizer.tokenize("]")
     end
 
-    test "?" do
+    test "question mark" do
       assert {:ok, [{:question_mark, 1, :"?"}], 1} == Tokenizer.tokenize("?")
     end
 
-    test "(" do
+    test "open parentheses" do
       assert {:ok, [{:open_parens, 1, :"("}], 1} == Tokenizer.tokenize("(")
     end
 
-    test ")" do
+    test "close parentheses" do
       assert {:ok, [{:close_parens, 1, :")"}], 1} == Tokenizer.tokenize(")")
     end
 
-    test "*" do
+    test "multiply" do
       assert {:ok, [{:wildcard, 1, :*}], 1} == Tokenizer.tokenize("*")
+    end
+
+    test "comma" do
+      assert {:ok, [{:comma, 1, ","}], 1} == Tokenizer.tokenize(",")
+    end
+
+    test "minus" do
+      assert {:ok, [{:minus, 1, "-"}], 1} == Tokenizer.tokenize("-")
     end
   end
 end
