@@ -44,29 +44,22 @@ defmodule Warpath.Engine do
     transform(rest, term, [segment | trace])
   end
 
-  defp transform([_segment = {:array_indexes, indexes} | rest], data, trace) do
+  defp transform([{:array_indexes, indexes} | rest], data, trace) do
     [terms, terms_trace] =
       indexes
       |> Stream.map(&transform([&1], data, trace))
-      |> Enum.reduce([[], []], fn [term, path], [term_acc, trace_acc] ->
-        [[term | term_acc], [path | trace_acc]]
-      end)
+      |> consume_stream()
 
-    transform(rest, Enum.reverse(terms), Enum.reverse(terms_trace))
+    transform(rest, terms, terms_trace)
   end
 
   defp transform([{:array_wildcard, _} | rest], data, trace)
        when is_list(data) and length(rest) > 0 do
-    [terms, terms_trace] =
-      data
-      |> Stream.with_index()
-      |> Stream.map(fn {term, index} -> {term, [{:index_access, index} | trace]} end)
-      |> Stream.map(fn {term, path} -> transform(rest, term, path) end)
-      |> Enum.reduce([[], []], fn [term | path], [terms_acc, trace_acc] ->
-        [[term | terms_acc], [List.flatten(path) | trace_acc]]
-      end)
-
-    [Enum.reverse(terms), Enum.map(terms_trace, &Enum.reverse/1)]
+    data
+    |> Stream.with_index()
+    |> Stream.map(fn {term, index} -> {term, [{:index_access, index} | trace]} end)
+    |> Stream.map(fn {term, path} -> transform(rest, term, path) end)
+    |> consume_stream()
   end
 
   defp transform([{:array_wildcard, _} | []], data, trace) do
@@ -98,12 +91,17 @@ defmodule Warpath.Engine do
   end
 
   defp do_filter(data, filter_fun, trace) do
+    data
+    |> Stream.with_index()
+    |> Stream.filter(fn {term, _index} -> filter_fun.(term) end)
+    |> Stream.map(fn {term, index} -> [term, [{:index_access, index} | trace]] end)
+    |> consume_stream()
+  end
+
+  defp consume_stream(%Stream{} = terms_trace_stream) do
     [terms, terms_trace] =
-      data
-      |> Stream.with_index()
-      |> Stream.filter(fn {term, _index} -> filter_fun.(term) end)
-      |> Stream.map(fn {term, index} -> {term, [{:index_access, index} | trace]} end)
-      |> Enum.reduce([[], []], fn {term, path}, [terms_acc, trace_acc] ->
+      terms_trace_stream
+      |> Enum.reduce([[], []], fn [term | path], [terms_acc, trace_acc] ->
         [[term | terms_acc], [List.flatten(path) | trace_acc]]
       end)
 
