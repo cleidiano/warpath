@@ -1,4 +1,3 @@
-
 defmodule Warpath.Engine.ItemPath do
   @moduledoc false
 
