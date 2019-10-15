@@ -5,109 +5,109 @@ defmodule Warpath.Engine do
 
   def query(data, tokens, opts \\ []) when is_list(tokens) do
     try do
-      [value, paths] = transform(tokens, data, _acc = [])
+      [term, trace] = transform(tokens, data, [])
 
       case opts[:result_type] do
-        :path -> ItemPath.bracketify(paths)
-        _ -> value
+        :path -> ItemPath.bracketify(trace)
+        _ -> term
       end
     rescue
       e in RuntimeError -> {:error, e}
     end
   end
 
-  defp transform([segment = {:root, _} | t], data, item_path) do
-    [value, paths] = transform(t, data, [segment | item_path])
-    [value, Enum.reverse(paths)]
+  defp transform([segment = {:root, _} | rest], data, trace) do
+    [term, terms_trace] = transform(rest, data, [segment | trace])
+    [term, Enum.reverse(terms_trace)]
   end
 
-  defp transform([{:dot, segment = {:property, property}} | _], data, item_path)
+  defp transform([{:dot, segment = {:property, property}} | _], data, trace)
        when is_list(data) do
     message =
       "You are trying to traverse a list using dot " <>
-        "notation '#{ItemPath.dotify([segment | item_path])}', " <>
+        "notation '#{ItemPath.dotify([segment | trace])}', " <>
         "that it's not allowed for list type. " <>
         "You can use something like this for " <>
-        "exemple, '#{ItemPath.dotify(item_path)}[*].#{property}'!"
+        "exemple, '#{ItemPath.dotify(trace)}[*].#{property}'!"
 
     raise RuntimeError, message
   end
 
-  defp transform([{:dot, segment = {:property, property}} | t], data, item_path) do
-    transform(t, data[property], [segment | item_path])
+  defp transform([{:dot, segment = {:property, property}} | rest], data, trace) do
+    transform(rest, data[property], [segment | trace])
   end
 
-  defp transform([segment = {:index_access, index} | t], data, item_path)
+  defp transform([segment = {:index_access, index} | rest], data, trace)
        when is_list(data) or is_map(data) do
-    value = get_in(data, [Access.at(index)])
+    term = get_in(data, [Access.at(index)])
 
-    transform(t, value, [segment | item_path])
+    transform(rest, term, [segment | trace])
   end
 
-  defp transform([_segment = {:array_indexes, indexes} | t], data, item_path) do
-    [values, paths] =
+  defp transform([_segment = {:array_indexes, indexes} | rest], data, trace) do
+    [terms, terms_trace] =
       indexes
-      |> Stream.map(&transform([&1], data, item_path))
-      |> Enum.reduce([_values = [], _paths = []], fn [item, path], [itens_acc, paths_acc] ->
-        [[item | itens_acc], [path | paths_acc]]
+      |> Stream.map(&transform([&1], data, trace))
+      |> Enum.reduce([[], []], fn [term, path], [term_acc, trace_acc] ->
+        [[term | term_acc], [path | trace_acc]]
       end)
 
-    transform(t, Enum.reverse(values), Enum.reverse(paths))
+    transform(rest, Enum.reverse(terms), Enum.reverse(terms_trace))
   end
 
-  defp transform([{:array_wildcard, _} | t], data, item_path)
-       when is_list(data) and length(t) > 0 do
-    [itens, paths] =
+  defp transform([{:array_wildcard, _} | rest], data, trace)
+       when is_list(data) and length(rest) > 0 do
+    [terms, terms_trace] =
       data
       |> Stream.with_index()
-      |> Stream.map(fn {item, index} -> {item, [{:index_access, index} | item_path]} end)
-      |> Stream.map(fn {item, path} -> transform(t, item, path) end)
-      |> Enum.reduce([_item_acc = [], _path_acc = []], fn [item | path], [acc_itens, trace] ->
-        [[item | acc_itens], [List.flatten(path) | trace]]
+      |> Stream.map(fn {term, index} -> {term, [{:index_access, index} | trace]} end)
+      |> Stream.map(fn {term, path} -> transform(rest, term, path) end)
+      |> Enum.reduce([[], []], fn [term | path], [terms_acc, trace_acc] ->
+        [[term | terms_acc], [List.flatten(path) | trace_acc]]
       end)
 
-    [Enum.reverse(itens), Enum.map(paths, &Enum.reverse/1)]
+    [Enum.reverse(terms), Enum.map(terms_trace, &Enum.reverse/1)]
   end
 
-  defp transform([{:array_wildcard, _} | []], data, item_path) do
-    transform([], data, item_path)
+  defp transform([{:array_wildcard, _} | []], data, trace) do
+    transform([], data, trace)
   end
 
-  defp transform([{:filter, filter_expression} | t], data, item_path) do
-    [result, itens_path] = filter(filter_expression, data, item_path)
-    transform(t, result, itens_path)
+  defp transform([{:filter, filter_expression} | rest], data, trace) do
+    [terms, terms_trace] = filter(filter_expression, data, trace)
+    transform(rest, terms, terms_trace)
   end
 
-  defp transform([], data, item_path) do
-    [data, item_path]
+  defp transform([], data, trace) do
+    [data, trace]
   end
 
-  defp transform(syntax, data, paths) do
+  defp transform(syntax, data, trace) do
     raise Warpath.UnsupportedExpression,
-          "tokens=#{inspect(syntax)}, data=#{inspect(data)}, paths=#{inspect(paths)}"
+          "tokens=#{inspect(syntax)}, data=#{inspect(data)}, trace=#{inspect(trace)}"
   end
 
-  defp filter({{:property, property}, operator, operand}, data, item_path)
+  defp filter({{:property, property}, operator, operand}, data, trace)
        when is_list(data) and operator in @relation_fun do
     filter_fun = fn item -> apply(Kernel, operator, [item[property], operand]) end
-    do_filter(data, filter_fun, item_path)
+    do_filter(data, filter_fun, trace)
   end
 
-  defp filter({:contains, {:property, property}}, data, item_path) when is_list(data) do
-    do_filter(data, &Map.has_key?(&1, property), item_path)
+  defp filter({:contains, {:property, property}}, data, trace) when is_list(data) do
+    do_filter(data, &Map.has_key?(&1, property), trace)
   end
 
-  defp do_filter(data, filter_fun, item_path) do
-    [itens, paths] =
+  defp do_filter(data, filter_fun, trace) do
+    [terms, terms_trace] =
       data
       |> Stream.with_index()
-      |> Stream.filter(fn {item, _index} -> filter_fun.(item) end)
-      |> Stream.map(fn {item, index} -> {item, [{:index_access, index} | item_path]} end)
-      |> Enum.reduce([_itens_acc = [], _path_acc = []], fn {item, path}, [itens, paths] ->
-        [[item | itens], [List.flatten(path) | paths]]
+      |> Stream.filter(fn {term, _index} -> filter_fun.(term) end)
+      |> Stream.map(fn {term, index} -> {term, [{:index_access, index} | trace]} end)
+      |> Enum.reduce([[], []], fn {term, path}, [terms_acc, trace_acc] ->
+        [[term | terms_acc], [List.flatten(path) | trace_acc]]
       end)
 
-    [Enum.reverse(itens), Enum.map(paths, &Enum.reverse/1)]
+    [Enum.reverse(terms), Enum.map(terms_trace, &Enum.reverse/1)]
   end
 end
 
