@@ -4,13 +4,11 @@ defmodule Warpath do
   """
   alias Warpath.{Expression, Engine}
 
+  @spec query(any, String.t(), result_type: :both | :values | :path) :: any
   def query(data, expression, opts \\ []) when is_binary(expression) do
     with {:ok, expression} <- Expression.compile(expression),
-         {:ok, [itens | trace]} <- Engine.query(data, expression) do
-      case opts[:result_type] do
-        :trace -> Engine.ItemPath.bracketify(trace)
-        _ -> itens
-      end
+         {:ok, query_result} <- Engine.query(data, expression, opts) do
+      query_result
     else
       error ->
         error

@@ -15,7 +15,7 @@
 |Unsupported  | $..book[1:2]                           | All books from index 1 (inclusive) until index 2 (exclusive)|
 |Unsupported  | $..book[-2:]                           | Last two books                                              |
 |Unsupported  | $..book[2:]                            | Book number two from tail                                   |
-|Unsupported  | $..book[?(@.isbn)]                     | All books with an ISBN number                               |
+|Supported    | $..book[?(@.isbn)]                     | All books with an ISBN number                               |
 |Supported    | $.store.book[?(@.price < 10)]          | All books in store cheaper than 10                          |
 |Unsupported  | $..book[?(@.price <= $['expensive'])]  | All books in store that are not "expensive"                 |
 |Unsupported  | $..book[?(@.author =~ /.*REES/i)]      | All books matching regex (ignore case)                      |

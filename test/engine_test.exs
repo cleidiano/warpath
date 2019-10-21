@@ -2,7 +2,7 @@ defmodule EngineTest do
   use ExUnit.Case, async: true
   alias Warpath.Engine
 
-  @trace [result_type: :trace]
+  @value_and_path [result_type: :value_and_path]
 
   setup do
     store = %{
@@ -45,68 +45,48 @@ defmodule EngineTest do
     [data: store]
   end
 
-  describe "query/3 return value on" do
+  describe "query/3" do
     test "evaluate root expression", context do
-      assert Engine.query(context[:data], tokens("$")) == context[:data]
+      assert Engine.query(context[:data], tokens("$"), @value_and_path) ==
+               ok({context[:data], "$"})
     end
 
-    test "evaluate property expression ", context do
-      assert Engine.query(context[:data], tokens("$.store.bicycle")) == %{
-               "color" => "red",
-               "price" => 19.95
-             }
+    test "evaluate property expression", context do
+      path = "$['store']['bicycle']"
+      value = %{"color" => "red", "price" => 19.95}
+
+      assert Engine.query(context[:data], tokens("$.store.bicycle"), @value_and_path) ==
+               ok({value, path})
     end
+  end
 
-    test "evaluate array index expression ", context do
-      nigel_rees = %{
-        "category" => "reference",
-        "author" => "Nigel Rees",
-        "title" => "Sayings of the Century",
-        "price" => 8.95
-      }
-
-      assert Engine.query(context[:data], tokens("$.store.book[0]")) == [nigel_rees]
-    end
-
-    test "evaluate scan property expression ", context do
-      prices = [8.95, 12.99, 8.99, 22.99, 19.95]
-      assert Engine.query(context[:data], tokens("$..price")) == prices
-    end
-
-    test "evaluate many array indexes expression", context do
-      books = [
-        %{
-          "category" => "fiction",
-          "author" => "Evelyn Waugh",
-          "title" => "Sword of Honour",
-          "price" => 12.99
-        },
-        %{
-          "category" => "fiction",
-          "author" => "Herman Melville",
-          "title" => "Moby Dick",
-          "isbn" => "0-553-21311-3",
-          "price" => 8.99
-        }
+  describe "query/3 evaluate a scan expression" do
+    test "that is terminal", context do
+      prices = [
+        {8.95, "$['store']['book'][0]['price']"},
+        {12.99, "$['store']['book'][1]['price']"},
+        {8.99, "$['store']['book'][2]['price']"},
+        {22.99, "$['store']['book'][3]['price']"},
+        {19.95, "$['store']['bicycle']['price']"}
       ]
 
-      assert Engine.query(context[:data], tokens("$.store.book[1, 2]")) == books
+      assert Engine.query(context[:data], tokens("$..price"), @value_and_path) == ok(prices)
     end
 
-    test "evaluate wildcard array expression", context do
-      expected = context[:data]["store"]["book"]
-      assert Engine.query(context[:data], tokens("$.store.book[*]")) == expected
-    end
+    test "that is on middle", context do
+      prices = [
+        {8.95, "$['store']['book'][0]['price']"},
+        {12.99, "$['store']['book'][1]['price']"},
+        {8.99, "$['store']['book'][2]['price']"},
+        {22.99, "$['store']['book'][3]['price']"}
+      ]
 
-    test "evaluate wildcard array expression with property after it", context do
-      assert Engine.query(context[:data], tokens("$.store.book[*].author")) == [
-               "Nigel Rees",
-               "Evelyn Waugh",
-               "Herman Melville",
-               "J. R. R. Tolkien"
-             ]
+      assert Engine.query(context[:data], tokens("$.store..book[*].price"), @value_and_path) ==
+               ok(prices)
     end
+  end
 
+  describe "query/3 handle filter expression" do
     test "evaluate filter expression for relation >", context do
       tolkien = %{
         "category" => "fiction",
@@ -116,150 +96,155 @@ defmodule EngineTest do
         "price" => 22.99
       }
 
-      assert Engine.query(context[:data], tokens("$.store.book[?(@.price > 22)]")) == [tolkien]
+      assert Engine.query(
+               context[:data],
+               tokens("$.store.book[?(@.price > 22)]"),
+               @value_and_path
+             ) == ok([{tolkien, "$['store']['book'][3]"}])
     end
 
     test "evaluate filter expression for relation <", context do
       books = [
-        %{
-          "category" => "reference",
-          "author" => "Nigel Rees",
-          "title" => "Sayings of the Century",
-          "price" => 8.95
-        },
-        %{
-          "category" => "fiction",
-          "author" => "Herman Melville",
-          "title" => "Moby Dick",
-          "isbn" => "0-553-21311-3",
-          "price" => 8.99
-        }
+        {%{
+           "category" => "reference",
+           "author" => "Nigel Rees",
+           "title" => "Sayings of the Century",
+           "price" => 8.95
+         }, "$['store']['book'][0]"},
+        {%{
+           "category" => "fiction",
+           "author" => "Herman Melville",
+           "title" => "Moby Dick",
+           "isbn" => "0-553-21311-3",
+           "price" => 8.99
+         }, "$['store']['book'][2]"}
       ]
 
-      assert Engine.query(context[:data], tokens("$.store.book[?(@.price < 9)]")) == books
+      assert Engine.query(context[:data], tokens("$.store.book[?(@.price < 9)]"), @value_and_path) ==
+               ok(books)
     end
 
     test "evaluate filter expression for relation ==", context do
-      tolkien = [
-        %{
-          "category" => "fiction",
-          "author" => "J. R. R. Tolkien",
-          "title" => "The Lord of the Rings",
-          "isbn" => "0-395-19395-8",
-          "price" => 22.99
-        }
+      book = [
+        {%{
+           "category" => "fiction",
+           "author" => "J. R. R. Tolkien",
+           "title" => "The Lord of the Rings",
+           "isbn" => "0-395-19395-8",
+           "price" => 22.99
+         }, "$['store']['book'][3]"}
       ]
 
-      assert Engine.query(context[:data], tokens("$.store.book[?(@.price == 22.99)]")) == tolkien
+      assert Engine.query(
+               context[:data],
+               tokens("$.store.book[?(@.price == 22.99)]"),
+               @value_and_path
+             ) == ok(book)
     end
 
     test "evaluate filter expression for contains operation", context do
       books = [
-        %{
-          "category" => "fiction",
-          "author" => "Herman Melville",
-          "title" => "Moby Dick",
-          "isbn" => "0-553-21311-3",
-          "price" => 8.99
-        },
-        %{
-          "category" => "fiction",
-          "author" => "J. R. R. Tolkien",
-          "title" => "The Lord of the Rings",
-          "isbn" => "0-395-19395-8",
-          "price" => 22.99
-        }
+        {%{
+           "category" => "fiction",
+           "author" => "Herman Melville",
+           "title" => "Moby Dick",
+           "isbn" => "0-553-21311-3",
+           "price" => 8.99
+         }, "$['store']['book'][2]"},
+        {%{
+           "category" => "fiction",
+           "author" => "J. R. R. Tolkien",
+           "title" => "The Lord of the Rings",
+           "isbn" => "0-395-19395-8",
+           "price" => 22.99
+         }, "$['store']['book'][3]"}
       ]
 
-      assert Engine.query(context[:data], tokens("$.store.book[?(@.isbn)]")) == books
+      assert Engine.query(context[:data], tokens("$.store.book[?(@.isbn)]"), @value_and_path) ==
+               ok(books)
     end
   end
 
-  describe "query/3 return trace on" do
-    test "evaluate root expression", context do
-      trace = [root: "$"]
-      assert Engine.query(context[:data], tokens("$"), @trace) == trace
+  describe "query/3 handle array" do
+    test "index access expression", context do
+      trace = "$['store']['book'][0]"
+
+      book = %{
+        "category" => "reference",
+        "author" => "Nigel Rees",
+        "title" => "Sayings of the Century",
+        "price" => 8.95
+      }
+
+      assert Engine.query(context[:data], tokens("$.store.book[0]"), @value_and_path) ==
+               ok([{book, trace}])
     end
 
-    test "evaluate property expression ", context do
-      trace = [root: "$", property: "store", property: "bicycle"]
-      assert Engine.query(context[:data], tokens("$.store.bicycle"), @trace) == trace
-    end
-
-    test "evaluate array index expression ", context do
-      trace = [[root: "$", property: "store", property: "book", index_access: 0]]
-
-      assert Engine.query(context[:data], tokens("$.store.book[0]"), @trace) == trace
-    end
-
-    test "evaluate scan property expression ", context do
-      prices = [
-        [root: "$", property: "store", property: "book", index_access: 0, property: "price"],
-        [root: "$", property: "store", property: "book", index_access: 1, property: "price"],
-        [root: "$", property: "store", property: "book", index_access: 2, property: "price"],
-        [root: "$", property: "store", property: "book", index_access: 3, property: "price"],
-        [root: "$", property: "store", property: "bicycle", property: "price"]
-      ]
-
-      assert Engine.query(context[:data], tokens("$..price"), @trace) == prices
-    end
-
-    test "evaluate many array indexes expression", context do
+    test "index access with many indexes", context do
       trace = [
-        [root: "$", property: "store", property: "book", index_access: 1],
-        [root: "$", property: "store", property: "book", index_access: 2]
+        {
+          %{
+            "category" => "fiction",
+            "author" => "Evelyn Waugh",
+            "title" => "Sword of Honour",
+            "price" => 12.99
+          },
+          "$['store']['book'][1]"
+        },
+        {
+          %{
+            "category" => "fiction",
+            "author" => "Herman Melville",
+            "title" => "Moby Dick",
+            "isbn" => "0-553-21311-3",
+            "price" => 8.99
+          },
+          "$['store']['book'][2]"
+        }
       ]
 
-      assert Engine.query(context[:data], tokens("$.store.book[1, 2]"), @trace) ==
-               trace
+      assert Engine.query(context[:data], tokens("$.store.book[1, 2]"), @value_and_path) ==
+               ok(trace)
     end
 
     test "evaluate wildcard array expression", context do
-      trace = [root: "$", property: "store", property: "book"]
-      assert Engine.query(context[:data], tokens("$.store.book[*]"), @trace) == trace
+      expected = context[:data]["store"]["book"]
+      trace = "$['store']['book']"
+
+      assert Engine.query(context[:data], tokens("$.store.book[*]"), @value_and_path) ==
+               ok({expected, trace})
     end
 
     test "evaluate wildcard array expression with property after it", context do
-      trace = [
-        [root: "$", property: "store", property: "book", index_access: 0, property: "author"],
-        [root: "$", property: "store", property: "book", index_access: 1, property: "author"],
-        [root: "$", property: "store", property: "book", index_access: 2, property: "author"],
-        [root: "$", property: "store", property: "book", index_access: 3, property: "author"]
+      query_result = [
+        {"Nigel Rees", "$['store']['book'][0]['author']"},
+        {"Evelyn Waugh", "$['store']['book'][1]['author']"},
+        {"Herman Melville", "$['store']['book'][2]['author']"},
+        {"J. R. R. Tolkien", "$['store']['book'][3]['author']"}
       ]
 
-      assert Engine.query(context[:data], tokens("$.store.book[*].author"), @trace) == trace
+      assert Engine.query(context[:data], tokens("$.store.book[*].author"), @value_and_path) ==
+               ok(query_result)
+    end
+  end
+
+  describe "query/3 handle options" do
+    test "result_type: :path", context do
+      trace = "$['store']['book'][0]"
+
+      assert Engine.query(context[:data], tokens("$.store.book[0]"), result_type: :path) ==
+               ok([trace])
     end
 
-    test "evaluate filter expression for relation >", context do
-      trace = [root: "$", property: "store", property: "book", index_access: 3]
+    test "default result_type is value", context do
+      book = %{
+        "author" => "Nigel Rees",
+        "category" => "reference",
+        "price" => 8.95,
+        "title" => "Sayings of the Century"
+      }
 
-      assert Engine.query(context[:data], tokens("$.store.book[?(@.price > 22)]"), @trace) ==
-               [trace]
-    end
-
-    test "evaluate filter expression for relation <", context do
-      trace = [
-        [root: "$", property: "store", property: "book", index_access: 0],
-        [root: "$", property: "store", property: "book", index_access: 2]
-      ]
-
-      assert Engine.query(context[:data], tokens("$.store.book[?(@.price < 9)]"), @trace) == trace
-    end
-
-    test "evaluate filter expression for relation ==", context do
-      trace = [root: "$", property: "store", property: "book", index_access: 3]
-
-      assert Engine.query(context[:data], tokens("$.store.book[?(@.price == 22.99)]"), @trace) ==
-               [trace]
-    end
-
-    test "evaluate filter expression for contains operation", context do
-      trace = [
-        [root: "$", property: "store", property: "book", index_access: 2],
-        [root: "$", property: "store", property: "book", index_access: 3]
-      ]
-
-      assert Engine.query(context[:data], tokens("$.store.book[?(@.isbn)]"), @trace) == trace
+      assert Engine.query(context[:data], tokens("$.store.book[0]")) == ok([book])
     end
   end
 
@@ -279,4 +264,6 @@ defmodule EngineTest do
       error -> raise RuntimeError, "#{inspect(error)}"
     end
   end
+
+  defp ok(term), do: {:ok, term}
 end
