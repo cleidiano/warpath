@@ -1,48 +1,11 @@
-defmodule EngineTest do
+defmodule Warpath.EngineTest do
   use ExUnit.Case, async: true
   alias Warpath.Engine
 
   @value_and_path [result_type: :value_and_path]
 
-  setup do
-    store = %{
-      "store" => %{
-        "book" => [
-          %{
-            "category" => "reference",
-            "author" => "Nigel Rees",
-            "title" => "Sayings of the Century",
-            "price" => 8.95
-          },
-          %{
-            "category" => "fiction",
-            "author" => "Evelyn Waugh",
-            "title" => "Sword of Honour",
-            "price" => 12.99
-          },
-          %{
-            "category" => "fiction",
-            "author" => "Herman Melville",
-            "title" => "Moby Dick",
-            "isbn" => "0-553-21311-3",
-            "price" => 8.99
-          },
-          %{
-            "category" => "fiction",
-            "author" => "J. R. R. Tolkien",
-            "title" => "The Lord of the Rings",
-            "isbn" => "0-395-19395-8",
-            "price" => 22.99
-          }
-        ],
-        "bicycle" => %{
-          "color" => "red",
-          "price" => 19.95
-        }
-      }
-    }
-
-    [data: store]
+  setup_all do
+    [data: JayWayOracle.json_store()]
   end
 
   describe "query/3" do
@@ -60,8 +23,8 @@ defmodule EngineTest do
     end
   end
 
-  describe "query/3 evaluate a scan expression" do
-    test "that is terminal", context do
+  describe "query/3 handle a scan expression" do
+    test "that use a property and is terminal", context do
       prices = [
         {8.95, "$['store']['book'][0]['price']"},
         {12.99, "$['store']['book'][1]['price']"},
@@ -73,7 +36,7 @@ defmodule EngineTest do
       assert Engine.query(context[:data], tokens("$..price"), @value_and_path) == ok(prices)
     end
 
-    test "that is on middle", context do
+    test "that use a property and is on middle", context do
       prices = [
         {8.95, "$['store']['book'][0]['price']"},
         {12.99, "$['store']['book'][1]['price']"},
@@ -83,6 +46,84 @@ defmodule EngineTest do
 
       assert Engine.query(context[:data], tokens("$.store..book[*].price"), @value_and_path) ==
                ok(prices)
+    end
+
+    test "that use a array index access", context do
+      trace = "$['store']['book'][0]"
+
+      book = %{
+        "category" => "reference",
+        "author" => "Nigel Rees",
+        "title" => "Sayings of the Century",
+        "price" => 8.95
+      }
+
+      assert Engine.query(context[:data], tokens("$..[0]"), @value_and_path) ==
+               ok([{book, trace}])
+    end
+
+    test "that use a wildcard as a scan operation", context do
+      values = Engine.query(context[:data], tokens("$..*"), @value_and_path)
+
+      assert values ==
+               Enum.zip(JayWayOracle.scaned_elements(), JayWayOracle.scaned_paths()) |> ok()
+    end
+
+    test "that use a wildcard folowed by comparator filter", context do
+      values = Engine.query(context[:data], tokens("$..*.[?(@.price > 22)]"), @value_and_path)
+
+      expected = {
+        %{
+          "category" => "fiction",
+          "author" => "J. R. R. Tolkien",
+          "title" => "The Lord of the Rings",
+          "isbn" => "0-395-19395-8",
+          "price" => 22.99
+        },
+        "$['store']['book'][3]"
+      }
+
+      assert values == ok([expected, expected])
+    end
+
+    test "that use a wildcard folowed by contains filter", context do
+      values = Engine.query(context[:data], tokens("$..*.[?(@.isbn)]"), @value_and_path)
+
+      books = [
+        {%{
+           "category" => "fiction",
+           "author" => "Herman Melville",
+           "title" => "Moby Dick",
+           "isbn" => "0-553-21311-3",
+           "price" => 8.99
+         }, "$['store']['book'][2]"},
+        {%{
+           "category" => "fiction",
+           "author" => "J. R. R. Tolkien",
+           "title" => "The Lord of the Rings",
+           "isbn" => "0-395-19395-8",
+           "price" => 22.99
+         }, "$['store']['book'][3]"}
+      ]
+
+      assert values == ok(books ++ books)
+    end
+
+    test "that use a filter", context do
+      values = Engine.query(context[:data], tokens("$..[?(@.price > 22)]"), @value_and_path)
+
+      expected = {
+        %{
+          "category" => "fiction",
+          "author" => "J. R. R. Tolkien",
+          "title" => "The Lord of the Rings",
+          "isbn" => "0-395-19395-8",
+          "price" => 22.99
+        },
+        "$['store']['book'][3]"
+      }
+
+      assert values == ok([expected])
     end
   end
 

@@ -1,8 +1,17 @@
 defmodule Warpath.Engine.ItemPath do
   @moduledoc false
 
+  @type token ::
+          {:root, String.t()}
+          | {:property, String.t()}
+          | {:index_access, integer}
+
+  @type t :: [token, ...]
+
+  @spec bracketify(t) :: binary
   def bracketify(paths), do: make_path(paths, :bracketify)
 
+  @spec dotify(t) :: binary
   def dotify(paths), do: make_path(paths, :dotify)
 
   defp make_path([h | _] = data, option) when is_tuple(h) do

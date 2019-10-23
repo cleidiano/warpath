@@ -1,48 +1,46 @@
 defmodule Warpath.Engine.Scanner do
   @moduledoc false
+  alias Warpath.Engine.{EnumWalker, Scanner.PropertySearch}
 
-  def deep_scan(data, property, trace) when is_map(data) and is_list(trace) do
-    data
-    |> Enum.map(fn {key, value} -> match_and_search(property, key, value, trace) end)
-    |> Enum.reverse()
-    |> List.flatten()
-    |> Enum.reject(&(&1 == {}))
-  end
+  def scan(term, {:property, _} = search_criteria),
+    do: PropertySearch.search(term, search_criteria)
 
-  def deep_scan(data, property, trace) when is_list(data) and is_list(trace) do
-    Enum.map(data, &deep_scan(&1, property, trace))
-  end
+  def scan(term, {:wildcard, :*}), do: EnumWalker.recursive_descent(term)
 
-  defp match_and_search({:property, property_name} = property, current_key, current_value, trace)
-       when property_name == current_key and (is_map(current_value) or is_list(current_value)) do
-    new_trace = [property | trace]
+  defmodule PropertySearch do
+    def search({data, trace}, {:property, _} = property) when is_map(data) do
+      data
+      |> Enum.map(fn {key, value} -> walk(property, {key, value, trace}) end)
+      |> Enum.reverse()
+      |> List.flatten()
+      |> Enum.reject(&(&1 == {}))
+    end
 
-    [
-      {current_value, new_trace},
-      deep_scan(current_value, property, new_trace)
-    ]
-  end
+    def search({data, trace}, {:property, _} = property) when is_list(data) do
+      Enum.map(data, &search({&1, trace}, property))
+    end
 
-  defp match_and_search(property, current_key, current_value, trace)
-       when is_map(current_value) do
-    deep_scan(current_value, property, [{:property, current_key} | trace])
-  end
+    defp walk({:property, property_name} = search_criteria, {key, value, trace})
+         when property_name == key do
+      pair = {value, [search_criteria | trace]}
 
-  defp match_and_search({:property, _property_name} = property, current_key, current_value, trace)
-       when is_list(current_value) do
-    current_value
-    |> Stream.map(fn term -> {term, [{:property, current_key} | trace]} end)
-    |> Stream.with_index()
-    |> Stream.map(fn {{term, term_trace}, i} -> {term, [{:index_access, i} | term_trace]} end)
-    |> Enum.map(fn {item, term_trace} -> deep_scan(item, property, term_trace) end)
-  end
+      if is_map(value) or is_list(value),
+        do: [pair, search(pair, search_criteria)],
+        else: pair
+    end
 
-  defp match_and_search({:property, property_name} = property, current_key, current_value, trace)
-       when property_name == current_key do
-    {current_value, [property | trace]}
-  end
+    defp walk({:property, _} = search_criteria, {key, value, trace}) when is_map(value) do
+      search({value, [{:property, key} | trace]}, search_criteria)
+    end
 
-  defp match_and_search({:property, _}, _current_key, _current_value, _trace) do
-    {}
+    defp walk({:property, _} = search_criteria, {key, value, trace}) when is_list(value) do
+      value
+      |> Stream.map(fn term -> {term, [{:property, key} | trace]} end)
+      |> Stream.with_index()
+      |> Stream.map(fn {{term, term_trace}, i} -> {term, [{:index_access, i} | term_trace]} end)
+      |> Enum.map(fn term -> search(term, search_criteria) end)
+    end
+
+    defp walk({:property, _}, {_, _, _}), do: {}
   end
 end

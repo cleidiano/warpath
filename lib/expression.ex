@@ -2,23 +2,23 @@ defmodule Warpath.Expression do
   @moduledoc false
   alias Warpath.ExpressionError
 
-  @typep root :: {:root, String.t()}
-  @typep property :: {:property, String.t()}
-  @typep dot_access :: {:dot, property}
-  @typep index_access :: {:index_access, integer}
-  @typep array_indexes :: {:array_indexes, list(index_access)}
-  @typep array_wildcard :: {:array_wildcard, atom}
-  @typep operator :: :> | :< | :==
-  @typep filter :: {:filter, {property, operator, number}}
-  @typep scan :: {:scan, property}
+  @type root :: {:root, String.t()}
+  @type property :: {:property, String.t()}
+  @type dot_access :: {:dot, property}
+  @type index_access :: {:index_access, integer}
+  @type array_indexes :: {:array_indexes, list(index_access)}
+  @type array_wildcard :: {:array_wildcard, atom}
+  @type operator :: :> | :< | :==
+  @type filter :: {:filter, {property, operator, number}}
+  @type scan :: {:scan, property}
 
-  @typep token ::
-           root
-           | dot_access
-           | array_indexes
-           | array_wildcard
-           | filter
-           | scan
+  @type token ::
+          root
+          | dot_access
+          | array_indexes
+          | array_wildcard
+          | filter
+          | scan
 
   @spec compile(String.t()) :: {:ok, list(token)} | {:error, ExpressionError.t()}
   def compile(expression) when is_binary(expression) do
@@ -26,15 +26,18 @@ defmodule Warpath.Expression do
          {:ok, _} = expression_tokens <- Warpath.Parser.parse(tokens) do
       expression_tokens
     else
-      {:error, {_, :tokenizer, _} = tokenizer_error, _} ->
-        {:error, exception(tokenizer_error)}
+      {:error, {line, _module, message}, _} ->
+        exception("Invalid syntax on line #{line}, #{inspect(message)}")
+
+      {:error, {line, _module, message}} ->
+        exception("Parser error: Invalid token on line #{line}, #{List.to_string(message)}")
 
       {:error, error} ->
-        {:error, exception(error)}
+        {:error, inspect(error) |> exception()}
     end
   end
 
-  defp exception(error), do: inspect(error) |> ExpressionError.exception()
+  defp exception(message), do: {:error, ExpressionError.exception(message)}
 end
 
 defmodule Warpath.ExpressionError do
