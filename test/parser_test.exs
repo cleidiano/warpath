@@ -7,39 +7,39 @@ defmodule ParserTest do
     test "root token expression" do
       tokens = Tokenizer.tokenize!("$")
 
-      assert Parser.parser(tokens) == {:ok, [{:root, "$"}]}
+      assert Parser.parse(tokens) == {:ok, [{:root, "$"}]}
     end
 
     test "dot property access" do
       tokens = Tokenizer.tokenize!("$.name")
 
-      assert Parser.parser(tokens) == {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
+      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
     end
 
     test "index based access" do
       tokens = Tokenizer.tokenize!("$[0]")
 
-      assert Parser.parser(tokens) ==
+      assert Parser.parse(tokens) ==
                {:ok, [{:root, "$"}, {:array_indexes, [{:index_access, 0}]}]}
     end
 
     test "wildcard property access" do
       tokens = Tokenizer.tokenize!("$.persons.*")
 
-      assert Parser.parser(tokens) == {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}]}
+      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}]}
     end
 
     test "array wildcard access" do
       tokens = Tokenizer.tokenize!("$.persons[*]")
 
-      assert Parser.parser(tokens) ==
+      assert Parser.parse(tokens) ==
                {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}, {:array_wildcard, :*}]}
     end
 
     test "access many array index" do
       tokens = Tokenizer.tokenize!("$[0, 1, 2]")
 
-      assert Parser.parser(tokens) ==
+      assert Parser.parse(tokens) ==
                {:ok,
                 [
                   {:root, "$"},
@@ -52,27 +52,27 @@ defmodule ParserTest do
     test "property expression" do
       tokens = Tokenizer.tokenize!("$..name")
 
-      assert Parser.parser(tokens) == {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
+      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
     end
 
     test "array indexes access expression" do
       tokens = Tokenizer.tokenize!("$..[1]")
 
-      assert Parser.parser(tokens) ==
+      assert Parser.parse(tokens) ==
                {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
     end
 
     test "wildcard expression" do
       tokens = Tokenizer.tokenize!("$..*")
 
-      assert Parser.parser(tokens) == {:ok, [{:root, "$"}, {:scan, {:wildcard, :*}}]}
+      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:scan, {:wildcard, :*}}]}
     end
 
     test "wildcard followed by array access expression reduce to scan array index" do
       expected = {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
 
-      assert Tokenizer.tokenize!("$..*[1]") |> Parser.parser() == expected
-      assert Tokenizer.tokenize!("$..[*][1]") |> Parser.parser() == expected
+      assert Tokenizer.tokenize!("$..*[1]") |> Parser.parse() == expected
+      assert Tokenizer.tokenize!("$..[*][1]") |> Parser.parse() == expected
     end
 
     test "wildcard followed by dot call and array access expression reduce to scan array index" do
@@ -113,7 +113,7 @@ defmodule ParserTest do
     test "with filter expression" do
       tokens = Tokenizer.tokenize!("$..[?(@.age > 18)]")
 
-      assert Parser.parser(tokens) ==
+      assert Parser.parse(tokens) ==
                {:ok,
                 [
                   {:root, "$"},
@@ -124,7 +124,7 @@ defmodule ParserTest do
     test "with contains filter expression" do
       tokens = Tokenizer.tokenize!("$..[?(@.age)]")
 
-      assert Parser.parser(tokens) ==
+      assert Parser.parse(tokens) ==
                {:ok,
                 [
                   {:root, "$"},
@@ -137,7 +137,7 @@ defmodule ParserTest do
     test "@.age > 10" do
       tokens = Tokenizer.tokenize!("$.persons[?(@.age > 10)]")
 
-      assert Parser.parser(tokens) ==
+      assert Parser.parse(tokens) ==
                {:ok,
                 [
                   {:root, "$"},
@@ -149,7 +149,7 @@ defmodule ParserTest do
     test "@.age < 10" do
       tokens = Tokenizer.tokenize!("$.persons[?(@.age < 10)]")
 
-      assert Parser.parser(tokens) ==
+      assert Parser.parse(tokens) ==
                {:ok,
                 [
                   {:root, "$"},
@@ -161,7 +161,7 @@ defmodule ParserTest do
     test "@.age == 10" do
       tokens = Tokenizer.tokenize!("$.persons[?(@.age == 10)]")
 
-      assert Parser.parser(tokens) ==
+      assert Parser.parse(tokens) ==
                {:ok,
                 [
                   {:root, "$"},
@@ -173,7 +173,7 @@ defmodule ParserTest do
     test "contains @.age" do
       tokens = Tokenizer.tokenize!("$.persons[?(@.age)]")
 
-      assert Parser.parser(tokens) ==
+      assert Parser.parse(tokens) ==
                {:ok,
                 [
                   {:root, "$"},

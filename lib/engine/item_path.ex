@@ -1,12 +1,12 @@
 defmodule Warpath.Engine.ItemPath do
   @moduledoc false
 
-  @type token ::
+  @type path ::
           {:root, String.t()}
           | {:property, String.t()}
           | {:index_access, integer}
 
-  @type t :: [token, ...]
+  @type t :: [path, ...]
 
   @spec bracketify(t) :: binary
   def bracketify(paths), do: make_path(paths, :bracketify)
@@ -20,6 +20,7 @@ defmodule Warpath.Engine.ItemPath do
 
   defp make_path([h | _] = data, option) when is_list(h) do
     data
+    |> IO.inspect()
     |> Enum.map(&make_path(&1, option))
     |> List.flatten()
   end
@@ -31,8 +32,8 @@ defmodule Warpath.Engine.ItemPath do
   end
 
   defp path({:root, root}, :bracketify), do: root
-  defp path({:property, property}, :bracketify), do: "['#{property}']"
-  defp path({:index_access, index}, _), do: "[#{index}]"
   defp path({:root, root}, :dotify), do: root
+  defp path({:property, property}, :bracketify), do: "['#{property}']"
   defp path({:property, property}, :dotify), do: ".#{property}"
+  defp path({:index_access, index}, _), do: "[#{index}]"
 end

@@ -1,17 +1,17 @@
 defmodule Warpath.Engine do
+  @moduledoc false
+
   import Warpath.Engine.Trace
 
-  alias Warpath.Engine.ItemPath
-  alias Warpath.Engine.Scanner
-  alias Warpath.Engine.Filter
-  alias Warpath.Engine.EnumWalker
+  alias Warpath.Engine.{ItemPath, Trace, Scanner, Filter, EnumWalker}
+  alias Warpath.Expression
 
-  @spec query(any, maybe_improper_list, any) :: {:error, RuntimeError.t()} | {:ok, any}
+  @spec query(any, list(Expression.token()), any) :: {:error, RuntimeError.t()} | {:ok, any}
   def query(data, tokens, opts \\ []) when is_list(tokens) do
     try do
       terms =
-        {data, []}
-        |> transform(tokens)
+        tokens
+        |> Enum.reduce({data, []}, fn token, acc -> transform(acc, token) end)
         |> collect(Keyword.get(opts, :result_type))
 
       {:ok, terms}
@@ -20,118 +20,93 @@ defmodule Warpath.Engine do
     end
   end
 
-  defp collect({item, path}, :value_and_path), do: {item, ItemPath.bracketify(path)}
-  defp collect({_, path}, :path), do: ItemPath.bracketify(path)
-  defp collect({item, _}, _), do: item
-
-  defp collect(query_result, opt) when is_list(query_result),
-    do: Enum.map(query_result, &collect(&1, opt))
-
-  defguard no_empty_container(term)
-           when (is_list(term) and length(term) > 0) or (is_map(term) and map_size(term) > 0)
-
-  defp transform({data, trace}, [segment = {:root, _} | rest]) do
-    transform({data, [segment | trace]}, rest)
+  defp collect(term, opt) when is_list(term) do
+    Enum.map(term, &collect(&1, opt))
   end
 
-  defp transform({data, trace}, [{:dot, segment = {:property, property}} | _])
-       when is_list(data) do
-    base_trace = Enum.reverse(trace)
+  defp collect({item, path}, :both) do
+    {item, ItemPath.bracketify(path)}
+  end
 
+  defp collect({_, path}, :path) do
+    ItemPath.bracketify(path)
+  end
+
+  defp collect({item, _}, _) do
+    item
+  end
+
+  defp transform({data, trace}, {:root, _} = segment) do
+    {data, Trace.append(trace, segment)}
+  end
+
+  defp transform({data, trace}, {:dot, {:property, property} = segment})
+       when is_list(data) do
     message =
       "You are trying to traverse a list using dot " <>
-        "notation '#{ItemPath.dotify(base_trace ++ [segment])}', " <>
+        "notation '#{ItemPath.dotify(trace ++ [segment])}', " <>
         "that it's not allowed for list type. " <>
-        "You can use something like '#{ItemPath.dotify(base_trace)}[*].#{property}' instead."
+        "You can use something like '#{ItemPath.dotify(trace)}[*].#{property}' instead."
 
     raise RuntimeError, message
   end
 
-  defp transform(data, [{:dot, {:property, property} = segment} | rest])
+  defp transform({data, trace}, {:dot, {:property, property} = segment}) do
+    {data[property], Trace.append(trace, segment)}
+  end
+
+  defp transform({data, trace}, {:index_access, index} = segment)
        when is_list(data) do
-    Enum.map(data, fn {term, trace} -> transform({term[property], [segment | trace]}, rest) end)
-  end
-
-  defp transform({data, trace}, [{:dot, {:property, property} = segment} | rest]) do
-    transform({data[property], [segment | trace]}, rest)
-  end
-
-  defp transform({data, trace}, [{:index_access, index} = segment | rest])
-       when is_list(data) or is_map(data) do
     term = get_in(data, [Access.at(index)])
 
-    transform({term, [segment | trace]}, rest)
+    {term, Trace.append(trace, segment)}
   end
 
-  defp transform({data, trace}, [{:array_indexes, indexes} | rest]) do
-    terms_indexes =
-      indexes
-      |> Stream.map(&transform({data, trace}, [&1]))
-      |> Stream.map(fn {item, item_trace} -> {item, Enum.reverse(item_trace)} end)
-      |> Enum.to_list()
-
-    transform(terms_indexes, rest)
+  defp transform({_, _} = term, {:array_indexes, indexes}) do
+    Enum.map(indexes, &transform(term, &1))
   end
 
-  defp transform({data, _} = item, [{:array_wildcard, _} | rest])
-       when is_list(data) and length(rest) > 0 do
+  defp transform({data, _} = item, {:array_wildcard, _}) when is_list(data) do
     item
-    |> stream()
-    |> Stream.map(fn term -> transform(term, rest) end)
+    |> stream(&Trace.append/2)
     |> Enum.to_list()
   end
 
-  defp transform({term, trace}, [{:array_wildcard, _} | []]) do
-    transform({term, trace}, [])
+  defp transform({_, _} = term, {:filter, filter_expression}) do
+    Filter.filter(term, filter_expression)
   end
 
-  defp transform({data, trace}, [{:filter, filter_expression} | rest]) do
-    data
-    |> Filter.filter(filter_expression, trace)
-    |> transform(rest)
+  defp transform({_, _} = term, {:scan, {:property, _} = property}) do
+    Scanner.scan(term, property, &Trace.append/2)
   end
 
-  defp transform({term, trace}, [{:scan, {:property, _} = property} | rest]) do
+  defp transform({term, trace}, {:scan, {:wildcard, _} = wildcard}) do
     {term, trace}
-    |> Scanner.scan(property)
-    |> Enum.map(fn item -> transform(item, rest) end)
-    |> List.flatten()
+    |> Scanner.scan(wildcard, &Trace.append/2)
   end
 
-  defp transform({term, trace}, [{:scan, {:wildcard, _} = wildcard} | []]) do
-    {term, trace}
-    |> Scanner.scan(wildcard)
-    |> Enum.map(&transform(&1, []))
-  end
+  defp transform(term, {:scan, {:filter, _} = filter}),
+    do: do_scan_filter([term], filter)
 
-  defp transform(term, [{:scan, {:filter, _} = filter} | rest]),
-    do: do_scan_filter([term], filter, rest)
-
-  defp transform(term, [
-         {:scan, {{:wildcard, :*} = wildcard, {:filter, _} = filter}} | rest
-       ]) do
+  defp transform(term, {:scan, {{:wildcard, :*} = wildcard, {:filter, _} = filter}}) do
     term
-    |> Scanner.scan(wildcard)
-    |> do_scan_filter(filter, rest)
+    |> Scanner.scan(wildcard, &Trace.append/2)
+    |> do_scan_filter(filter)
   end
 
-  defp transform(term, [{:scan, {:array_indexes, _} = indexes} | rest]) do
+  defp transform(term, {:scan, {:array_indexes, _} = indexes}) do
     reducer = container_reducer()
 
     [term]
-    |> EnumWalker.reduce_while([], reducer)
+    |> EnumWalker.reduce_while([], reducer, &Trace.append/2)
     |> Stream.filter(fn {item, _} -> is_list(item) end)
-    |> Stream.flat_map(&transform(&1, [indexes]))
-    |> Stream.map(fn {item, trace} -> {item, Enum.reverse(trace)} end)
-    |> Enum.map(&transform(&1, rest))
+    |> Enum.flat_map(&transform(&1, indexes))
   end
 
-  defp transform({data, trace}, []) do
-    {data, List.flatten(trace) |> Enum.reverse()}
-  end
+  defp transform([term | []], segment), do: transform(term, segment)
 
-  defp transform(term, []) when is_list(term) do
-    Enum.map(term, fn {item, trace} -> {item, List.flatten(trace) |> Enum.reverse()} end)
+  defp transform(data, segment) when is_list(data) do
+    Enum.map(data, fn term -> transform(term, segment) end)
   end
 
   defp transform({data, trace}, syntax) do
@@ -139,19 +114,24 @@ defmodule Warpath.Engine do
           "tokens=#{inspect(syntax)}, data=#{inspect(data)}, trace=#{inspect(trace)}"
   end
 
-  defp do_scan_filter(enumerable, filter, rest) do
+  defp do_scan_filter(enumerable, filter) do
     enumerable
-    |> EnumWalker.reduce_while([], container_reducer())
+    |> EnumWalker.reduce_while([], container_reducer(), &Trace.append/2)
     |> Stream.filter(fn {term, _} -> is_list(term) end)
-    |> Stream.flat_map(fn term -> transform(term, [filter | rest]) end)
-    |> Enum.to_list()
+    |> Enum.flat_map(fn term -> transform(term, filter) end)
   end
+
+  defguard has_itens(term)
+           when (is_list(term) and term != []) or (is_map(term) and map_size(term) > 0)
 
   defp container_reducer do
     fn {container, _} = term, acc ->
       case container do
-        container when no_empty_container(container) -> {:walk, [term | acc]}
-        _ -> {:skip, acc}
+        container when has_itens(container) ->
+          {:walk, [term | acc]}
+
+        _ ->
+          {:skip, acc}
       end
     end
   end

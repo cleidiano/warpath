@@ -25,7 +25,7 @@ defmodule Warpath.Engine.ScannerTest do
 
     assert oracle_paths ==
              all_elements
-             |> Stream.map(fn {_term, path} -> Enum.reverse(path) end)
+             |> Stream.map(fn {_term, path} -> path end)
              |> Stream.map(&ItemPath.bracketify(&1))
              |> Enum.to_list()
   end

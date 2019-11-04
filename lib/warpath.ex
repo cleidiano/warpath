@@ -4,7 +4,7 @@ defmodule Warpath do
   """
   alias Warpath.{Expression, Engine}
 
-  @spec query(any, String.t(), result_type: :value | :path | :value_and_path) :: any
+  @spec query(any, String.t(), result_type: :value | :path | :both) :: any
   def query(data, expression, opts \\ []) when is_binary(expression) do
     with {:ok, expression} <- Expression.compile(expression),
          {:ok, query_result} <- Engine.query(data, expression, opts) do

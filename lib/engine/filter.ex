@@ -1,29 +1,40 @@
 defmodule Warpath.Engine.Filter do
-  @operators [:>, :<, :==]
+  @moduledoc false
 
-  # TODO Join data and trace on tuple
-  def filter(data, {{:property, property}, operator, operand}, trace)
-      when operator in @operators do
+  alias Warpath.Engine.Trace
+  alias Warpath.Engine.ItemPath
+  alias Warpath.Expression
+
+  @comparators [:>, :<, :==]
+
+  @type filter_exp ::
+          Expression.contains() | {Expression.property(), Expression.comparator(), any}
+
+  @spec filter({any, ItemPath.t()}, filter_exp) :: [{any, ItemPath.t()}, ...]
+  def filter(any, filter_exp)
+
+  def filter({_, _} = term, {{:property, property}, comparator, operand})
+      when comparator in @comparators do
     filter_fun = fn item ->
-      apply(Kernel, operator, [item[property], operand])
+      apply(Kernel, comparator, [item[property], operand])
     end
 
-    do_filter(data, filter_fun, trace)
+    do_filter(term, filter_fun)
   end
 
-  def filter(data, {:contains, {:property, property}}, trace),
-    do: do_filter(data, &Map.has_key?(&1, property), trace)
-
-  defp do_filter(data, filter_fun, trace) when is_map(data),
-    do: if(filter_fun.(data), do: [{data, trace}], else: [])
-
-  defp do_filter(data, filter_fun, trace) when is_list(data) do
-    data
-    |> Stream.with_index()
-    |> Stream.filter(fn {term, _index} -> filter_fun.(term) end)
-    |> Stream.map(fn {term, index} -> {term, [{:index_access, index} | trace]} end)
-    |> Enum.to_list()
+  def filter({_, _} = term, {:contains, {:property, property}}) do
+    do_filter(term, &Map.has_key?(&1, property))
   end
 
-  defp do_filter(_data, _, _), do: []
+  defp do_filter({data, trace}, filter_fun) when is_map(data) do
+    if(filter_fun.(data), do: [{data, trace}], else: [])
+  end
+
+  defp do_filter({data, _} = term, filter_fun) when is_list(data) do
+    term
+    |> Trace.stream()
+    |> Enum.filter(fn {item, _} -> filter_fun.(item) end)
+  end
+
+  defp do_filter(_, _), do: []
 end

@@ -1,54 +1,84 @@
 defmodule Warpath.Engine.EnumWalker do
   @moduledoc false
-
   import Warpath.Engine.Trace
 
-  require Logger
+  defdelegate recursive_descent(term, trace_fun \\ &append/2), to: RecursiveDescentImpl
 
-  def recursive_descent({_, _} = term), do: elements(term)
+  defdelegate reduce_while(term, acc, reducer, trace_fun \\ &append/2), to: Reducer
+end
 
-  defp elements({terms, _} = item) when is_map(terms) do
-    values = stream(item)
+defmodule RecursiveDescentImpl do
+  @moduledoc false
+
+  alias Warpath.Engine.{Trace, ItemPath}
+
+  @type item :: {any, ItemPath.t()}
+  @type acc :: Enum.t()
+  @type trace_fun :: (acc, ItemPath.token() -> acc)
+
+  @spec recursive_descent(item, trace_fun) :: [item] | item
+  def recursive_descent({_, _} = term, trace_fun) when is_function(trace_fun, 2) do
+    elements(term, trace_fun)
+  end
+
+  defp elements(term, trace_fun)
+
+  defp elements({terms, _} = item, trace_fun) when is_map(terms) do
+    values = Trace.stream(item, trace_fun)
 
     values
-    |> Enum.reduce(Enum.reverse(values), &traverse/2)
+    |> Enum.reduce(Enum.reverse(values), fn item, acc -> traverse(item, acc, trace_fun) end)
     |> Enum.reverse()
   end
 
-  defp elements({terms, _} = item) when is_list(terms) do
-    values = stream(item)
+  defp elements({terms, _} = item, trace_fun) when is_list(terms) do
+    values = Trace.stream(item, trace_fun)
 
     values
-    |> Enum.reduce(Enum.reverse(values), &traverse/2)
+    |> Enum.reduce(Enum.reverse(values), fn item, acc -> traverse(item, acc, trace_fun) end)
     |> Enum.reverse()
   end
 
-  defp elements({_, _} = term), do: term
+  defp elements({_, _} = term, _), do: term
 
-  defguard is_container(term) when is_list(term) or is_map(term)
-
-  defp traverse({terms, _} = pair, acc) when is_container(terms) do
+  defp traverse({terms, _} = pair, acc, trace_fun)
+       when is_map(terms)
+       when is_list(terms) do
     pair
-    |> elements()
+    |> elements(trace_fun)
     |> Enum.reduce(acc, fn term, new_acc -> [term | new_acc] end)
   end
 
-  defp traverse({_term, _trace}, acc), do: acc
+  defp traverse({_term, _trace}, acc, _), do: acc
+end
 
-  @type path :: Warpath.Engine.ItemPath.t()
-  @type item :: {any, [path]}
-  @type acc :: Enum.t()
+defmodule Reducer do
+  @moduledoc false
+
+  require Logger
+
+  alias Warpath.Engine.Trace
+  alias Warpath.Engine.ItemPath
+
+  @type item :: {any, ItemPath.t()}
+  @type acc :: Enumerable.t
   @type reducer :: (item, acc -> {:skip, acc} | {:walk, acc} | {:halt, acc})
+  @type trace_fun :: (acc, ItemPath.token() -> acc)
+  @type t :: item | [item, ...]
 
-  @spec reduce_while([item], acc, reducer) :: acc | {:error, any}
-  def reduce_while(enumerable, acc, fun) when is_list(enumerable) do
-    enumerable |> Enum.reduce(acc, &handle_accumulation(&1, &2, fun))
+  @spec reduce_while(t, acc, reducer, trace_fun) :: acc | {:error, any}
+  def reduce_while(term, acc, reducer, trace_fun)
+
+  def reduce_while(enumerable, acc, fun, trace_fun)
+      when is_function(trace_fun, 2) and is_list(enumerable) do
+    enumerable
+    |> Enum.reduce(acc, &handle_accumulation(&1, &2, fun, trace_fun))
   end
 
-  @spec reduce_while({map, [path]}, acc, reducer) :: acc | {:error, any}
-  def reduce_while({data, _} = term, acc, fun) when is_map(data) do
+  def reduce_while({data, _} = term, acc, reducer, trace_fun)
+      when is_function(trace_fun, 2) and is_map(data) do
     try do
-      traverse(term, fun, acc)
+      traverse(term, reducer, acc, trace_fun)
     rescue
       e in ArgumentError ->
         Logger.error(e.message)
@@ -58,15 +88,17 @@ defmodule Warpath.Engine.EnumWalker do
     end
   end
 
-  defp traverse({data, _trace} = term, fun, accumulator) when is_container(data) do
+  defp traverse({data, _trace} = term, fun, accumulator, trace_fun)
+       when is_map(data)
+       when is_list(data) do
     term
-    |> stream()
-    |> Enum.reduce(accumulator, &handle_accumulation(&1, &2, fun))
+    |> Trace.stream(trace_fun)
+    |> Enum.reduce(accumulator, &handle_accumulation(&1, &2, fun, trace_fun))
   end
 
-  defp traverse(_term, _fun, accumulator), do: accumulator
+  defp traverse(_term, _fun, accumulator, _), do: accumulator
 
-  defp handle_accumulation(item, acc, fun) do
+  defp handle_accumulation(item, acc, fun, trace_fun) do
     item
     |> fun.(acc)
     |> case do
@@ -74,7 +106,7 @@ defmodule Warpath.Engine.EnumWalker do
         fun_acc
 
       {:walk, fun_acc} ->
-        traverse(item, fun, fun_acc)
+        traverse(item, fun, fun_acc, trace_fun)
 
       {:halt, acc} ->
         throw(acc)

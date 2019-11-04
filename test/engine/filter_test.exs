@@ -37,7 +37,7 @@ defmodule Warpath.Engine.FilterTest do
       trace = [{:index_access, 0}]
 
       assert [{List.first(books), trace}] ==
-               Filter.filter(books, {{:property, "price"}, :<, 10}, [])
+               Filter.filter({books, []}, {{:property, "price"}, :<, 10})
     end
 
     test "filter a list of map by contains property", context do
@@ -45,7 +45,7 @@ defmodule Warpath.Engine.FilterTest do
       trace = [{:index_access, 1}]
 
       assert [{List.last(books), trace}] ==
-               Filter.filter(books, {:contains, {:property, "isbn"}}, [])
+               Filter.filter({books, []}, {:contains, {:property, "isbn"}})
     end
 
     test "filter map by property", context do
@@ -53,7 +53,7 @@ defmodule Warpath.Engine.FilterTest do
       trace = [{:property, "bicycle"}, {:store, "store"}]
 
       assert [{bicycle, trace}] ==
-               Filter.filter(bicycle, {{:property, "price"}, :>, 10}, trace)
+               Filter.filter({bicycle, trace}, {{:property, "price"}, :>, 10})
     end
 
     test "filter a map by contains property", context do
@@ -61,14 +61,14 @@ defmodule Warpath.Engine.FilterTest do
       trace = [{:index_access, 1}, {:property, "book"}, {:store, "store"}]
 
       assert [{book, trace}] ==
-               Filter.filter(book, {:contains, {:property, "isbn"}}, trace)
+               Filter.filter({book, trace}, {:contains, {:property, "isbn"}})
     end
 
     test "empty list for data type that doesn't support Access behaviour" do
       invalid_types = [10, "Test", {:some, 10}]
 
       for type <- invalid_types do
-        assert [] == Filter.filter(type, {:contains, {:property, "any"}}, [])
+        assert [] == Filter.filter({type, []}, {:contains, {:property, "any"}})
       end
     end
   end
