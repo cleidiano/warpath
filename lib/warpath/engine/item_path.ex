@@ -20,7 +20,6 @@ defmodule Warpath.Engine.ItemPath do
 
   defp make_path([h | _] = data, option) when is_list(h) do
     data
-    |> IO.inspect()
     |> Enum.map(&make_path(&1, option))
     |> List.flatten()
   end
