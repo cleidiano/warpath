@@ -1,12 +1,15 @@
-defmodule Warpath.Engine.ItemPath do
+defmodule Warpath.Element.Path do
   @moduledoc false
 
-  @type path ::
+  @type token ::
           {:root, String.t()}
           | {:property, String.t()}
           | {:index_access, integer}
 
-  @type t :: [path, ...]
+  @type t :: [token, ...]
+
+  @spec accumulate(token, list) :: list
+  def accumulate(token, acc) when is_list(acc), do: [token | acc]
 
   @spec bracketify(t) :: binary
   def bracketify(paths), do: make_path(paths, :bracketify)
@@ -26,6 +29,7 @@ defmodule Warpath.Engine.ItemPath do
 
   defp join(data, opts) do
     data
+    |> Enum.reverse()
     |> Enum.map(&path(&1, opts))
     |> Enum.join()
   end

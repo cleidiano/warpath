@@ -1,7 +1,8 @@
 defmodule Warpath.Expression do
   @moduledoc false
+  alias Warpath.Tokenizer
+  alias Warpath.Parser
   alias Warpath.ExpressionError
-  alias Warpath.{Tokenizer, Parser}
 
   @type root :: {:root, String.t()}
   @type property :: {:property, String.t()}
@@ -31,24 +32,12 @@ defmodule Warpath.Expression do
 
   @spec compile(String.t()) :: {:ok, [token, ...]} | {:error, ExpressionError.t()}
   def compile(expression) when is_binary(expression) do
-    with {:ok, tokens, _} <- Tokenizer.tokenize(expression),
+    with {:ok, tokens} <- Tokenizer.tokenize(expression),
          {:ok, _} = expression_tokens <- Parser.parse(tokens) do
       expression_tokens
     else
-      {:error, {line, _module, message}, _} ->
-        exception("Invalid syntax on line #{line}, #{inspect(message)}")
-
-      {:error, {line, _module, message}} ->
-        exception("Parser error: Invalid token on line #{line}, #{List.to_string(message)}")
-
       {:error, error} ->
-        {:error, inspect(error) |> exception()}
+        {:error, Exception.message(error) |> ExpressionError.exception()}
     end
   end
-
-  defp exception(message), do: {:error, ExpressionError.exception(message)}
-end
-
-defmodule Warpath.ExpressionError do
-  defexception [:message]
 end

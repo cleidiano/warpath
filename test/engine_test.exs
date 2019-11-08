@@ -1,11 +1,11 @@
-defmodule Warpath.SmartEngineTest do
+defmodule Warpath.EngineTest do
   use ExUnit.Case, async: true
   alias Warpath.Engine
 
   @value_and_path [result_type: :both]
 
   setup_all do
-    [data: JayWayOracle.json_store()]
+    [data: Oracle.json_store()]
   end
 
   describe "query/3" do
@@ -72,7 +72,7 @@ defmodule Warpath.SmartEngineTest do
       values = Engine.query(context[:data], tokens("$..*"), @value_and_path)
 
       assert values ==
-               Enum.zip(JayWayOracle.scaned_elements(), JayWayOracle.scaned_paths()) |> ok()
+               Enum.zip(Oracle.scaned_elements(), Oracle.scaned_paths()) |> ok()
     end
 
     @tag :disabled
@@ -314,7 +314,9 @@ defmodule Warpath.SmartEngineTest do
     @tag :disabled
     test "trying to traverse a list using dot notation", context do
       {:error, %{message: message}} = Engine.query(context[:data], tokens("$.store.book.price"))
-      assert message =~ "You are trying to traverse a list using dot notation"
+
+      assert message =~
+               "You are trying to traverse a list using dot notation '$.store.book.price'"
     end
   end
 

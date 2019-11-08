@@ -182,4 +182,12 @@ defmodule ParserTest do
                 ]}
     end
   end
+
+  describe "parse!/1 rise" do
+    test "ParserError for invalid tokens" do
+      assert_raise Warpath.ParserError, fn ->
+        Parser.parse!([{:invalid, "token"}])
+      end
+    end
+  end
 end

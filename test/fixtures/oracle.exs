@@ -1,4 +1,4 @@
-defmodule JayWayOracle do
+defmodule Oracle do
   def json_store,
     do: %{
       "store" => %{
