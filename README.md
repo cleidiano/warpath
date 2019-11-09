@@ -17,7 +17,6 @@
 |Unsupported  | $..book[2:]                            | Book number two from tail                                   |
 |Supported    | $..book[?(@.isbn)]                     | All books with an ISBN number                               |
 |Supported    | $.store.book[?(@.price < 10)]          | All books in store cheaper than 10                          |
-|Unsupported  | $..book[?(@.price <= $['expensive'])]  | All books in store that are not "expensive"                 |
 |Unsupported  | $..book[?(@.author =~ /.*REES/i)]      | All books matching regex (ignore case)                      |
 |Supported  | $..*                                   | Give me every thing                                         | 
 |Unsupported  | $..book.length()                       | The number of books                                         |
