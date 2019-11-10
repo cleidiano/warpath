@@ -30,4 +30,10 @@ defmodule Warpath.Engine.ScannerTest do
              |> Stream.map(&Path.bracketify(&1))
              |> Enum.to_list()
   end
+
+  test "should get empty list when property not found" do
+    element = {%{"id" => 9, "tags" => ["one", "two", "three"]}, []}
+
+    assert Scanner.scan(element, {:property, "name"}) == []
+  end
 end

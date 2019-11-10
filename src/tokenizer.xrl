@@ -2,7 +2,7 @@ Definitions.
 
 ROOT                 = \$
 CURRENT_OBJECT       = @
-PROPERTY             = [A-Za-z_][A-Za-z0-9]*
+PROPERTY             = ([A-Za-z_]+[A-Za-z0-9]*)
 COMPARATOR           = (>|<|==)
 PLUS                 = \+
 MINUS                = \-

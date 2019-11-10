@@ -26,7 +26,9 @@ defmodule Warpath.Engine do
   end
 
   defp collect(elements, opt) when is_list(elements) do
-    Enum.map(elements, &collect(&1, opt))
+    elements
+    |> Stream.reject(&(&1 == []))
+    |> Enum.map(&collect(&1, opt))
   end
 
   defp collect({member, path}, :both) do
@@ -40,6 +42,8 @@ defmodule Warpath.Engine do
   defp collect({member, _}, _) do
     member
   end
+
+  defguardp is_accessible(term) when is_list(term) or is_map(term)
 
   defp transform({member, path}, {:root, _} = token) do
     {member, Path.accumulate(token, path)}
@@ -57,7 +61,13 @@ defmodule Warpath.Engine do
   end
 
   defp transform({member, path}, {:dot, {:property, property} = token}) do
-    {member[property], Path.accumulate(token, path)}
+    case member do
+      term when is_accessible(term) ->
+        {member[property], Path.accumulate(token, path)}
+
+      _ ->
+        []
+    end
   end
 
   defp transform({members, path}, {:index_access, index} = token)
@@ -89,8 +99,9 @@ defmodule Warpath.Engine do
     Scanner.scan(element, wildcard, &Path.accumulate/2)
   end
 
-  defp transform(element, {:scan, {:filter, _} = filter}),
-    do: do_scan_filter([element], filter)
+  defp transform(element, {:scan, {:filter, _} = filter}) do
+    do_scan_filter([element], filter)
+  end
 
   defp transform(element, {:scan, {{:wildcard, :*} = wildcard, {:filter, _} = filter}}) do
     element
@@ -113,9 +124,9 @@ defmodule Warpath.Engine do
     Enum.map(members, fn member -> transform(member, token) end)
   end
 
-  defp transform({member, path}, token) do
+  defp transform({_member, path}, token) do
     raise UnsupportedOperationError,
-          "token=#{inspect(token)}, path=#{inspect(path)}, member=#{inspect(member)}"
+          "token=#{inspect(token)}, path=#{inspect(path)}"
   end
 
   defp do_scan_filter(enumerable, filter) do

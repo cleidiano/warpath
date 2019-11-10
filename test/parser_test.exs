@@ -68,20 +68,6 @@ defmodule ParserTest do
       assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:scan, {:wildcard, :*}}]}
     end
 
-    test "wildcard followed by array access expression reduce to scan array index" do
-      expected = {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
-
-      assert Tokenizer.tokenize!("$..*[1]") |> Parser.parse() == expected
-      assert Tokenizer.tokenize!("$..[*][1]") |> Parser.parse() == expected
-    end
-
-    test "wildcard followed by dot call and array access expression reduce to scan array index" do
-      expected = {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
-
-      assert Tokenizer.tokenize!("$..*.[1]") |> Parser.parse() == expected
-      assert Tokenizer.tokenize!("$..[*].[1]") |> Parser.parse() == expected
-    end
-
     test "wildcard with comparator filter expression" do
       expression =
         {:ok,
@@ -130,6 +116,32 @@ defmodule ParserTest do
                   {:root, "$"},
                   {:scan, {:filter, {:contains, {:property, "age"}}}}
                 ]}
+    end
+
+    test "wildcard followed by array access expression reduce to scan array index" do
+      expected = {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
+
+      assert Tokenizer.tokenize!("$..*[1]") |> Parser.parse() == expected
+      assert Tokenizer.tokenize!("$..[*][1]") |> Parser.parse() == expected
+    end
+
+    test "wildcard followed by dot call and array access expression reduce to scan array index" do
+      expected = {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
+
+      assert Tokenizer.tokenize!("$..*.[1]") |> Parser.parse() == expected
+      assert Tokenizer.tokenize!("$..[*].[1]") |> Parser.parse() == expected
+    end
+
+    test "wildcard followed by dot property expression reduce to scan property expression" do
+      tokens = Tokenizer.tokenize!("$..*.name")
+
+      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
+    end
+
+    test "array wildcard followed by dot property expression reduce to scan property expression" do
+      tokens = Tokenizer.tokenize!("$..[*].name")
+
+      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
     end
   end
 

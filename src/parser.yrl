@@ -36,8 +36,8 @@ scan_rewrite   -> wildcard dot array_indexes                              :     
 scan_rewrite   -> array_wildcard array_indexes                            :     '$2'.
 scan_rewrite   -> array_wildcard dot array_indexes                        :     '$3'.
 
-scan_rewrite   -> wildcard dot property                                   :     '$3'.
-scan_rewrite   -> array_wildcard dot property                             :     '$3'.
+scan_rewrite   -> wildcard dot property                                   :     unwrap('$3').
+scan_rewrite   -> array_wildcard dot property                             :     unwrap('$3').
 
 %Arrays access
 array_indexes  -> open_bracket int close_bracket                          :     {array_indexes, [index_access_exp('$2')]}.

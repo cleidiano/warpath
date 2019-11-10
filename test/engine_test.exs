@@ -9,13 +9,11 @@ defmodule Warpath.EngineTest do
   end
 
   describe "query/3" do
-    @tag :disabled
     test "evaluate root expression", context do
       assert Engine.query(context[:data], tokens("$"), @value_and_path) ==
                ok({context[:data], "$"})
     end
 
-    @tag :disabled
     test "evaluate property expression", context do
       path = "$['store']['bicycle']"
       value = %{"color" => "red", "price" => 19.95}
@@ -23,23 +21,28 @@ defmodule Warpath.EngineTest do
       assert Engine.query(context[:data], tokens("$.store.bicycle"), @value_and_path) ==
                ok({value, path})
     end
+
+    test "result nil for property expression that not exists", context do
+      document = context[:data]
+
+      assert Engine.query(document, tokens("$.dont_exist"), @value_and_path) ==
+               ok({nil, "$['dont_exist']"})
+    end
   end
 
   describe "query/3 handle a scan expression" do
-    @tag :disabled
     test "that use a property and is terminal", context do
       prices = [
+        {19.95, "$['store']['bicycle']['price']"},
         {8.95, "$['store']['book'][0]['price']"},
         {12.99, "$['store']['book'][1]['price']"},
         {8.99, "$['store']['book'][2]['price']"},
-        {22.99, "$['store']['book'][3]['price']"},
-        {19.95, "$['store']['bicycle']['price']"}
+        {22.99, "$['store']['book'][3]['price']"}
       ]
 
       assert Engine.query(context[:data], tokens("$..price"), @value_and_path) == ok(prices)
     end
 
-    #  @tag :disabled
     test "that use a property and is on middle", context do
       prices = [
         {8.95, "$['store']['book'][0]['price']"},
@@ -52,7 +55,6 @@ defmodule Warpath.EngineTest do
                ok(prices)
     end
 
-    # @tag :disabled
     test "that use a array index access", context do
       trace = "$['store']['book'][0]"
 
@@ -67,7 +69,6 @@ defmodule Warpath.EngineTest do
                ok([{book, trace}])
     end
 
-    # @tag :disabled
     test "that use a wildcard as a scan operation", context do
       values = Engine.query(context[:data], tokens("$..*"), @value_and_path)
 
@@ -75,7 +76,6 @@ defmodule Warpath.EngineTest do
                Enum.zip(Oracle.scaned_elements(), Oracle.scaned_paths()) |> ok()
     end
 
-    @tag :disabled
     test "that use a wildcard folowed by comparator filter", context do
       values = Engine.query(context[:data], tokens("$..*.[?(@.price > 22)]"), @value_and_path)
 
@@ -93,7 +93,6 @@ defmodule Warpath.EngineTest do
       assert values == ok([expected, expected])
     end
 
-    @tag :disabled
     test "that use a wildcard folowed by contains filter", context do
       values = Engine.query(context[:data], tokens("$..*.[?(@.isbn)]"), @value_and_path)
 
@@ -117,7 +116,6 @@ defmodule Warpath.EngineTest do
       assert values == ok(books ++ books)
     end
 
-    @tag :disabled
     test "that use a filter", context do
       values = Engine.query(context[:data], tokens("$..[?(@.price > 22)]"), @value_and_path)
 
@@ -137,7 +135,6 @@ defmodule Warpath.EngineTest do
   end
 
   describe "query/3 handle filter expression" do
-    @tag :disabled
     test "for relation >", context do
       tolkien = %{
         "category" => "fiction",
@@ -154,7 +151,6 @@ defmodule Warpath.EngineTest do
              ) == ok([{tolkien, "$['store']['book'][3]"}])
     end
 
-    @tag :disabled
     test "for relation <", context do
       books = [
         {%{
@@ -176,7 +172,6 @@ defmodule Warpath.EngineTest do
                ok(books)
     end
 
-    @tag :disabled
     test "for relation ==", context do
       book = [
         {%{
@@ -195,7 +190,6 @@ defmodule Warpath.EngineTest do
              ) == ok(book)
     end
 
-    @tag :disabled
     test "for contains operation", context do
       books = [
         {%{
@@ -220,7 +214,6 @@ defmodule Warpath.EngineTest do
   end
 
   describe "query/3 handle array" do
-    @tag :disabled
     test "index access expression", context do
       trace = "$['store']['book'][0]"
 
@@ -235,7 +228,6 @@ defmodule Warpath.EngineTest do
                ok([{book, trace}])
     end
 
-    @tag :disabled
     test "index access with many indexes", context do
       trace = [
         {
@@ -263,7 +255,6 @@ defmodule Warpath.EngineTest do
                ok(trace)
     end
 
-    @tag :disabled
     test "wildcard expression", context do
       expected =
         context[:data]["store"]["book"]
@@ -274,7 +265,6 @@ defmodule Warpath.EngineTest do
                ok(expected)
     end
 
-    @tag :disabled
     test "wildcard expression with property after it", context do
       query_result = [
         {"Nigel Rees", "$['store']['book'][0]['author']"},
@@ -289,7 +279,6 @@ defmodule Warpath.EngineTest do
   end
 
   describe "query/3 handle options" do
-    @tag :disabled
     test "result_type: :path", context do
       trace = "$['store']['book'][0]"
 
@@ -297,7 +286,6 @@ defmodule Warpath.EngineTest do
                ok([trace])
     end
 
-    @tag :disabled
     test "default result_type is value", context do
       book = %{
         "author" => "Nigel Rees",
@@ -311,7 +299,6 @@ defmodule Warpath.EngineTest do
   end
 
   describe "query/3 return error when" do
-    @tag :disabled
     test "trying to traverse a list using dot notation", context do
       {:error, %{message: message}} = Engine.query(context[:data], tokens("$.store.book.price"))
 

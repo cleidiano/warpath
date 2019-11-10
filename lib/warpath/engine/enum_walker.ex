@@ -5,8 +5,6 @@ defmodule Warpath.Engine.EnumWalker do
   alias Warpath.Engine.EnumRecursiveDescent
   alias Warpath.Engine.PathMarker
 
-  defdelegate recursive_descent(term, path_fun \\ &Path.accumulate/2), to: EnumRecursiveDescent
-
   @type member :: any
   @type element :: {member, Path.t()}
   @type acc :: Enumerable.t()
@@ -14,11 +12,16 @@ defmodule Warpath.Engine.EnumWalker do
   @type path_fun :: (acc, Path.token() -> acc)
   @type t :: element | [element, ...]
 
+  defguardp is_container(container)
+            when is_list(container) or is_map(container)
+
+  @spec recursive_descent(element, path_fun) :: element | [element, ...]
+  defdelegate recursive_descent(term, path_fun \\ &Path.accumulate/2), to: EnumRecursiveDescent
+
   @spec reduce_while(t, acc, walk_reducer, path_fun) :: acc | {:error, any}
   def reduce_while(element, acc, walk_reducer, path_fun \\ &Path.accumulate/2)
 
-  def reduce_while(elements, acc, walk_reducer, path_fun)
-      when is_function(path_fun, 2) and is_list(elements) do
+  def reduce_while(elements, acc, walk_reducer, path_fun) when is_list(elements) do
     fun = fn ->
       Enum.reduce(elements, acc, &handle_accumulation(&1, &2, walk_reducer, path_fun))
     end
@@ -27,7 +30,7 @@ defmodule Warpath.Engine.EnumWalker do
   end
 
   def reduce_while({member, _} = element, acc, walk_reducer, path_fun)
-      when is_function(path_fun, 2) and is_map(member) do
+      when is_container(member) do
     capture_throw(fn -> traverse(element, acc, walk_reducer, path_fun) end)
   end
 
@@ -42,8 +45,7 @@ defmodule Warpath.Engine.EnumWalker do
   end
 
   defp traverse({member, _path} = element, accumulator, walk_reducer, path_fun)
-       when is_map(member)
-       when is_list(member) do
+       when is_container(member) do
     element
     |> PathMarker.stream(path_fun)
     |> Enum.reduce(accumulator, &handle_accumulation(&1, &2, walk_reducer, path_fun))
@@ -83,16 +85,20 @@ defmodule Warpath.Engine.EnumRecursiveDescent do
   @type acc :: Enumerable.t()
   @type path_fun :: (acc, Path.token() -> acc)
 
+  defguard is_container(container) when is_list(container) or is_map(container)
+
   @spec recursive_descent(element, path_fun) :: element | [element, ...]
-  def recursive_descent({_, _} = element, path_fun) when is_function(path_fun, 2) do
+  def recursive_descent({_, _} = element, path_fun) do
     get_members(element, path_fun)
+  end
+
+  def recursive_descent(elements, path_fun) when is_list(elements) do
+    Enum.flat_map(elements, &recursive_descent(&1, path_fun))
   end
 
   defp get_members(term, path_fun)
 
-  defp get_members({member, _} = element, path_fun)
-       when is_map(member)
-       when is_list(member) do
+  defp get_members({member, _} = element, path_fun) when is_container(member) do
     members = PathMarker.stream(element, path_fun)
 
     members
@@ -102,9 +108,7 @@ defmodule Warpath.Engine.EnumRecursiveDescent do
 
   defp get_members({_, _} = element, _), do: element
 
-  defp traverse({member, _} = element, acc, path_fun)
-       when is_map(member)
-       when is_list(member) do
+  defp traverse({member, _} = element, acc, path_fun) when is_container(member) do
     element
     |> get_members(path_fun)
     |> Enum.reduce(acc, fn term, new_acc -> [term | new_acc] end)
