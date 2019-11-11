@@ -1,7 +1,8 @@
 defmodule ParserTest do
   use ExUnit.Case, async: true
 
-  alias Warpath.{Tokenizer, Parser}
+  alias Warpath.Parser
+  alias Warpath.Tokenizer
 
   describe "parse/1 parse basic" do
     test "root token expression" do

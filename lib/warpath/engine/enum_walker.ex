@@ -2,8 +2,8 @@ defmodule Warpath.Engine.EnumWalker do
   @moduledoc false
 
   alias Warpath.Element.Path
+  alias Warpath.Element.PathMarker
   alias Warpath.Engine.EnumRecursiveDescent
-  alias Warpath.Engine.PathMarker
 
   @type member :: any
   @type element :: {member, Path.t()}
@@ -35,13 +35,11 @@ defmodule Warpath.Engine.EnumWalker do
   end
 
   defp capture_throw(fun) when is_function(fun, 0) do
-    try do
-      fun.()
-    rescue
-      e in ArgumentError -> {:error, e}
-    catch
-      value -> value
-    end
+    fun.()
+  rescue
+    e in ArgumentError -> {:error, e}
+  catch
+    value -> value
   end
 
   defp traverse({member, _path} = element, accumulator, walk_reducer, path_fun)
@@ -77,8 +75,8 @@ end
 defmodule Warpath.Engine.EnumRecursiveDescent do
   @moduledoc false
 
-  alias Warpath.Engine.Path
-  alias Warpath.Engine.PathMarker
+  alias Warpath.Element.Path
+  alias Warpath.Element.PathMarker
 
   @type member :: any
   @type element :: {member, Path.t()}

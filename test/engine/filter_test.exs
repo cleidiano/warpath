@@ -1,7 +1,8 @@
 defmodule Warpath.Engine.FilterTest do
   use ExUnit.Case, async: true
+
+  alias Warpath.Element.PathMarker
   alias Warpath.Engine.Filter
-  alias Warpath.Engine.PathMarker
 
   setup_all do
     data = %{

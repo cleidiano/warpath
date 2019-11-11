@@ -1,6 +1,6 @@
-defmodule Warpath.Engine.PathMarkerTest do
+defmodule Warpath.Element.PathMarkerTest do
   use ExUnit.Case, async: true
-  alias Warpath.Engine.PathMarker
+  alias Warpath.Element.PathMarker
 
   test "should generate index token for each item on list " do
     marked_paths =

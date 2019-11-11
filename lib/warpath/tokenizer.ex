@@ -1,7 +1,8 @@
 defmodule Warpath.Tokenizer do
+  @moduledoc false
+
   alias Warpath.TokenizerError
 
-  @moduledoc false
   def tokenize(term) when is_binary(term) do
     term
     |> String.to_charlist()

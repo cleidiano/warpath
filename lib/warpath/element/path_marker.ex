@@ -1,4 +1,4 @@
-defmodule Warpath.Engine.PathMarker do
+defmodule Warpath.Element.PathMarker do
   @moduledoc false
 
   alias Warpath.Element.Path

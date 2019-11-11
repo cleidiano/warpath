@@ -1,7 +1,8 @@
 defmodule Warpath.Parser do
+  @moduledoc false
+
   alias Warpath.ParserError
 
-  @moduledoc false
   def parse(tokens) when is_list(tokens) do
     tokens
     |> :parser.parse()

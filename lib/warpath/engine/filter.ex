@@ -1,14 +1,17 @@
 defmodule Warpath.Engine.Filter do
   @moduledoc false
 
-  alias Warpath.Engine.PathMarker
-  alias Warpath.Expression
   alias Warpath.Element
-  @comparators [:>, :<, :==]
+  alias Warpath.Element.PathMarker
+  alias Warpath.Expression
 
+  @type contains :: Expression.contains()
+  @type property :: Expression.property()
+  @type comparator :: Expression.comparator()
   @type member :: any
-  @type filter_exp ::
-          Expression.contains() | {Expression.property(), Expression.comparator(), any}
+  @type filter_exp :: contains() | {property(), comparator(), any}
+
+  @comparators [:>, :<, :==]
 
   @spec filter({member, Element.Path.t()}, filter_exp) :: [{member, Element.Path.t()}, ...]
   def filter(member, filter_exp)

@@ -1,28 +1,26 @@
 defmodule Warpath.Engine do
   @moduledoc false
 
-  alias Warpath.Expression
   alias Warpath.Element.Path
+  alias Warpath.Element.PathMarker
   alias Warpath.Engine.EnumWalker
   alias Warpath.Engine.Filter
-  alias Warpath.Engine.PathMarker
   alias Warpath.Engine.Scanner
+  alias Warpath.Expression
   alias Warpath.UnsupportedOperationError
 
   @type document :: map | list
 
   @spec query(document, list(Expression.token()), any) :: {:error, RuntimeError.t()} | {:ok, any}
   def query(document, tokens, opts \\ []) when is_list(tokens) do
-    try do
-      terms =
-        tokens
-        |> Enum.reduce({document, []}, fn token, acc -> transform(acc, token) end)
-        |> collect(Keyword.get(opts, :result_type))
+    terms =
+      tokens
+      |> Enum.reduce({document, []}, fn token, acc -> transform(acc, token) end)
+      |> collect(Keyword.get(opts, :result_type))
 
-      {:ok, terms}
-    rescue
-      e in RuntimeError -> {:error, e}
-    end
+    {:ok, terms}
+  rescue
+    e in RuntimeError -> {:error, e}
   end
 
   defp collect(elements, opt) when is_list(elements) do
