@@ -1,6 +1,6 @@
 defmodule Warpath.Expression do
   @moduledoc false
-
+  # TODO Document this module
   alias Warpath.ExpressionError
   alias Warpath.Parser
   alias Warpath.Tokenizer
@@ -12,9 +12,9 @@ defmodule Warpath.Expression do
   @type array_indexes :: {:array_indexes, [index_access, ...]}
   @type wildcard :: {:wildcard, :*}
   @type array_wildcard :: {:array_wildcard, :*}
-  @type comparator :: :> | :< | :==
+  @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!==
   @type contains :: {:contains, property}
-  @type filter :: {:filter, contains | {property, comparator, any}}
+  @type filter :: {:filter, contains | {property, operator, any}}
 
   @type scan ::
           {:scan, property}

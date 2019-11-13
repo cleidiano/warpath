@@ -4,9 +4,9 @@ defmodule Warpath.Engine do
   alias Warpath.Element.Path
   alias Warpath.Element.PathMarker
   alias Warpath.Engine.EnumWalker
-  alias Warpath.Engine.Filter
   alias Warpath.Engine.Scanner
   alias Warpath.Expression
+  alias Warpath.Filter
   alias Warpath.UnsupportedOperationError
 
   @type document :: map | list

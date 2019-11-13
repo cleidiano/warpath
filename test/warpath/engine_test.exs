@@ -135,7 +135,7 @@ defmodule Warpath.EngineTest do
   end
 
   describe "query/3 handle filter expression" do
-    test "for relation >", context do
+    test "that use a operator", context do
       tolkien = %{
         "category" => "fiction",
         "author" => "J. R. R. Tolkien",
@@ -151,46 +151,7 @@ defmodule Warpath.EngineTest do
              ) == ok([{tolkien, "$['store']['book'][3]"}])
     end
 
-    test "for relation <", context do
-      books = [
-        {%{
-           "category" => "reference",
-           "author" => "Nigel Rees",
-           "title" => "Sayings of the Century",
-           "price" => 8.95
-         }, "$['store']['book'][0]"},
-        {%{
-           "category" => "fiction",
-           "author" => "Herman Melville",
-           "title" => "Moby Dick",
-           "isbn" => "0-553-21311-3",
-           "price" => 8.99
-         }, "$['store']['book'][2]"}
-      ]
-
-      assert Engine.query(context[:data], tokens("$.store.book[?(@.price < 9)]"), @value_and_path) ==
-               ok(books)
-    end
-
-    test "for relation ==", context do
-      book = [
-        {%{
-           "category" => "fiction",
-           "author" => "J. R. R. Tolkien",
-           "title" => "The Lord of the Rings",
-           "isbn" => "0-395-19395-8",
-           "price" => 22.99
-         }, "$['store']['book'][3]"}
-      ]
-
-      assert Engine.query(
-               context[:data],
-               tokens("$.store.book[?(@.price == 22.99)]"),
-               @value_and_path
-             ) == ok(book)
-    end
-
-    test "for contains operation", context do
+    test "that use a contains operation", context do
       books = [
         {%{
            "category" => "fiction",
@@ -210,6 +171,13 @@ defmodule Warpath.EngineTest do
 
       assert Engine.query(context[:data], tokens("$.store.book[?(@.isbn)]"), @value_and_path) ==
                ok(books)
+    end
+
+    test "that use a guard function" do
+      data = %{"list" => [1.0, 2, 3, "string"], "integer" => 1}
+
+      assert Engine.query(data, tokens("$.list[?(is_integer(@))]")) ==
+               ok([2, 3])
     end
   end
 

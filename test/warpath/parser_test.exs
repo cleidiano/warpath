@@ -1,7 +1,10 @@
-defmodule ParserTest do
+defmodule Warpath.ParserTest do
   use ExUnit.Case, async: true
 
+  import Match
+
   alias Warpath.Parser
+  alias Warpath.ParserError
   alias Warpath.Tokenizer
 
   describe "parse/1 parse basic" do
@@ -74,7 +77,7 @@ defmodule ParserTest do
         {:ok,
          [
            {:root, "$"},
-           {:scan, {{:wildcard, :*}, {:filter, {{:property, "age"}, :>, 18}}}}
+           {:scan, {{:wildcard, :*}, {:filter, {:>, [{:property, "age"}, 18]}}}}
          ]}
 
       assert Tokenizer.tokenize!("$..*.[?(@.age > 18)]") |> Parser.parse() == expression
@@ -104,7 +107,7 @@ defmodule ParserTest do
                {:ok,
                 [
                   {:root, "$"},
-                  {:scan, {:filter, {{:property, "age"}, :>, 18}}}
+                  {:scan, {:filter, {:>, [{:property, "age"}, 18]}}}
                 ]}
     end
 
@@ -147,43 +150,68 @@ defmodule ParserTest do
   end
 
   describe "parse/1 parse filter expression" do
-    test "@.age > 10" do
-      tokens = Tokenizer.tokenize!("$.persons[?(@.age > 10)]")
+    test "that have a and operator" do
+      tokens = Tokenizer.tokenize!("$[?(true and true)]")
+
+      assert Parser.parse(tokens) ==
+               ok([
+                 {:root, "$"},
+                 {:filter, {:and, [true, true]}}
+               ])
+    end
+
+    test "that have or operator" do
+      tokens = Tokenizer.tokenize!("$[?(true or true)]")
+
+      assert Parser.parse(tokens) ==
+               ok([
+                 {:root, "$"},
+                 {:filter, {:or, [true, true]}}
+               ])
+    end
+
+    test "that is a or precedence" do
+      tokens = Tokenizer.tokenize!("$[?(true and true or false)]")
+
+      assert Parser.parse(tokens) ==
+               ok([
+                 {:root, "$"},
+                 {:filter, {:or, [{:and, [true, true]}, false]}}
+               ])
+    end
+
+    test "that is a parenthesis precedence" do
+      tokens = Tokenizer.tokenize!("$[?(true and (true or false))]")
+
+      assert Parser.parse(tokens) ==
+               ok([
+                 {:root, "$"},
+                 {:filter, {:and, [true, {:or, [true, false]}]}}
+               ])
+    end
+
+    test "that is a negation operator" do
+      tokens = Tokenizer.tokenize!("$[?(not true)]")
+
+      assert Parser.parse(tokens) ==
+               ok([
+                 {:root, "$"},
+                 {:filter, {:not, true}}
+               ])
+    end
+
+    test "that have a property on it" do
+      tokens = Tokenizer.tokenize!("$[?(@.age > 10)]")
 
       assert Parser.parse(tokens) ==
                {:ok,
                 [
                   {:root, "$"},
-                  {:dot, {:property, "persons"}},
-                  {:filter, {{:property, "age"}, :>, 10}}
+                  {:filter, {:>, [{:property, "age"}, 10]}}
                 ]}
     end
 
-    test "@.age < 10" do
-      tokens = Tokenizer.tokenize!("$.persons[?(@.age < 10)]")
-
-      assert Parser.parse(tokens) ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:dot, {:property, "persons"}},
-                  {:filter, {{:property, "age"}, :<, 10}}
-                ]}
-    end
-
-    test "@.age == 10" do
-      tokens = Tokenizer.tokenize!("$.persons[?(@.age == 10)]")
-
-      assert Parser.parse(tokens) ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:dot, {:property, "persons"}},
-                  {:filter, {{:property, "age"}, :==, 10}}
-                ]}
-    end
-
-    test "contains @.age" do
+    test "that is a contains operator" do
       tokens = Tokenizer.tokenize!("$.persons[?(@.age)]")
 
       assert Parser.parse(tokens) ==
@@ -193,6 +221,76 @@ defmodule ParserTest do
                   {:dot, {:property, "persons"}},
                   {:filter, {:contains, {:property, "age"}}}
                 ]}
+    end
+
+    test "that is any of [:<, :>, :<=, :>=, :==, :!=, :===, :!==]" do
+      operators = [:<, :>, :<=, :>=, :==, :!=, :===, :!==]
+
+      expected =
+        Enum.map(operators, fn operator ->
+          {:ok,
+           [
+             {:root, "$"},
+             {:filter, {operator, [{:property, "age"}, 1]}}
+           ]}
+        end)
+
+      expression_tokens =
+        operators
+        |> Enum.map(&Tokenizer.tokenize!("$[?(@.age #{&1} 1)]"))
+        |> Enum.map(&Parser.parse/1)
+
+      assert expression_tokens == expected
+    end
+
+    test "that is allowed function call of " do
+      functions = [
+        :is_atom,
+        :is_binary,
+        :is_boolean,
+        :is_float,
+        :is_integer,
+        :is_list,
+        :is_map,
+        :is_nil,
+        :is_number,
+        :is_tuple
+      ]
+
+      expected =
+        Enum.map(functions, fn function ->
+          {:ok,
+           [
+             {:root, "$"},
+             {:filter, {function, {:property, "any"}}}
+           ]}
+        end)
+
+      expression_tokens =
+        functions
+        |> Enum.map(&Tokenizer.tokenize!("$[?(#{Atom.to_string(&1)}(@.any))]"))
+        |> Enum.map(&Parser.parse/1)
+
+      assert expression_tokens == expected
+    end
+
+    test "that is a invalid function call" do
+      tokens = Tokenizer.tokenize!("$[?(function_name(@.any))]")
+
+      assert {:error,
+              %ParserError{
+                message: "Parser error: Invalid token on line 1, 'function_name'"
+              }} = Parser.parse(tokens)
+    end
+
+    test "that use current object as a target" do
+      tokens = Tokenizer.tokenize!("$[?(@ == 10)]")
+
+      assert Parser.parse(tokens) ==
+               ok([
+                 {:root, "$"},
+                 {:filter, {:==, [:current_object, 10]}}
+               ])
     end
   end
 
