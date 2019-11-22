@@ -28,6 +28,8 @@ false                   : {token, {false,           TokenLine}}.
 
 {ROOT}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
 {WORD}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
+{OPEN_BRACKET}{SINGLE_QUOTED_WORD}{CLOSE_BRACKET}
+                        : {skip_token, to_dot_access(TokenChars)}.
 {SINGLE_QUOTED_WORD}    : {token, {word,            TokenLine, unquote(TokenChars)}}.
 {CURRENT_OBJECT}        : {token, {current_object,  TokenLine, list_to_binary(TokenChars)}}.
 {COMPARATOR}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
@@ -56,3 +58,10 @@ unquote("'" ++ Tail) ->
         Other ->
             {error, Other} 
     end.
+
+to_dot_access("[" ++ Tail) ->
+    BracketAccess = lists:reverse(Tail),
+    to_dot_access(BracketAccess);
+to_dot_access("]" ++ TokenChars) ->
+    Word = lists:reverse(TokenChars),
+    lists:append(".", Word).
