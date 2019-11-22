@@ -14,7 +14,19 @@ defmodule Warpath.Expression do
   @type array_wildcard :: {:array_wildcard, :*}
   @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!==
   @type contains :: {:contains, property}
-  @type filter :: {:filter, contains | {property, operator, any}}
+  @type fun ::
+          :is_atom
+          | :is_binary
+          | :is_boolean
+          | :is_float
+          | :is_integer
+          | :is_list
+          | :is_map
+          | :is_nil
+          | :is_number
+          | :is_tuple
+
+  @type filter :: {:filter, contains | {operator | fun, term}}
 
   @type scan ::
           {:scan, property}
