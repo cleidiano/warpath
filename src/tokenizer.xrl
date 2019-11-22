@@ -27,8 +27,8 @@ true                    : {token, {true,            TokenLine}}.
 false                   : {token, {false,           TokenLine}}.
 
 {ROOT}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
-{WORD}                  : {token, {property,        TokenLine, list_to_binary(TokenChars)}}.
-{SINGLE_QUOTED_WORD}    : {token, {property,        TokenLine, unquote(TokenChars)}}.
+{WORD}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
+{SINGLE_QUOTED_WORD}    : {token, {word,            TokenLine, unquote(TokenChars)}}.
 {CURRENT_OBJECT}        : {token, {current_object,  TokenLine, list_to_binary(TokenChars)}}.
 {COMPARATOR}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
 {INT}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.

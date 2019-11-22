@@ -9,12 +9,12 @@ defmodule Warpath.TokenizerTest do
     end
 
     test "word" do
-      assert Tokenizer.tokenize("any") == {:ok, [{:property, 1, "any"}]}
+      assert Tokenizer.tokenize("any") == {:ok, [{:word, 1, "any"}]}
     end
 
     test "single quoted word" do
       assert Tokenizer.tokenize("'single quoted word'") ==
-               {:ok, [{:property, 1, "single quoted word"}]}
+               {:ok, [{:word, 1, "single quoted word"}]}
     end
 
     test "current object" do
