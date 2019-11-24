@@ -85,6 +85,14 @@ defmodule Warpath.Engine do
     |> Enum.to_list()
   end
 
+  defp transform({members, _} = element, {:wildcard, :*})
+       when is_list(members)
+       when is_map(members) do
+    element
+    |> PathMarker.stream()
+    |> Enum.to_list()
+  end
+
   defp transform(element, {:filter, filter_expression}) do
     Filter.filter(element, filter_expression)
   end
@@ -134,9 +142,9 @@ defmodule Warpath.Engine do
     |> Enum.flat_map(fn element -> transform(element, filter) end)
   end
 
-  defguard has_itens(container)
-           when (is_list(container) and container != []) or
-                  (is_map(container) and map_size(container) > 0)
+  defguardp has_itens(container)
+            when (is_list(container) and container != []) or
+                   (is_map(container) and map_size(container) > 0)
 
   defp container_reducer do
     fn {container, _} = element, acc ->

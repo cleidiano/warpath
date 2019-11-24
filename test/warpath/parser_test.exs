@@ -30,7 +30,8 @@ defmodule Warpath.ParserTest do
     test "wildcard property access" do
       tokens = Tokenizer.tokenize!("$.persons.*")
 
-      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}]}
+      assert Parser.parse(tokens) ==
+               {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}, {:wildcard, :*}]}
     end
 
     test "array wildcard access" do

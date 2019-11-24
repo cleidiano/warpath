@@ -28,6 +28,29 @@ defmodule Warpath.EngineTest do
       assert Engine.query(document, tokens("$.dont_exist"), @value_and_path) ==
                ok({nil, "$['dont_exist']"})
     end
+
+    test "evaluate wildcard expression like $.*", context do
+      values = context[:data] |> Map.values()
+      paths = ["$['expensive']", "$['store']"]
+
+      assert Engine.query(context[:data], tokens("$.*"), @value_and_path) ==
+               ok(Enum.zip(values, paths))
+    end
+
+    test "resolve a wildcard property" do
+      document = %{
+        "store" => %{
+          "car" => %{"price" => 100_000},
+          "bicyle" => %{"price" => 500}
+        }
+      }
+
+      assert Engine.query(document, tokens("$.store.*.price"), @value_and_path) ==
+               ok([
+                 {500, "$['store']['bicyle']['price']"},
+                 {100_000, "$['store']['car']['price']"}
+               ])
+    end
   end
 
   describe "query/3 handle a scan expression" do

@@ -24,7 +24,7 @@ Expect 4.
 
 expression     -> root                                      :   [extract('$1')].
 expression     -> expression '.' word                   	:   '$1' ++ [{dot, property('$3')}].
-expression     -> expression '.' wildcard                   :   '$1'.  
+expression     -> expression '.' wildcard                   :   '$1' ++ [extract('$3')].
 expression     -> expression '.' array_indexes              :   '$1' ++ ['$3'].
 expression     -> expression filter_exp                     :   '$1' ++ ['$2'].
 expression     -> expression array_wildcard                 :   '$1' ++ ['$2'].  
