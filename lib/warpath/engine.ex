@@ -79,12 +79,6 @@ defmodule Warpath.Engine do
     Enum.map(indexes, &transform(element, &1))
   end
 
-  defp transform({members, _} = element, {:array_wildcard, _}) when is_list(members) do
-    element
-    |> PathMarker.stream(&Path.accumulate/2)
-    |> Enum.to_list()
-  end
-
   defp transform({members, _} = element, {:wildcard, :*})
        when is_list(members)
        when is_map(members) do
@@ -97,22 +91,12 @@ defmodule Warpath.Engine do
     Filter.filter(element, filter_expression)
   end
 
-  defp transform(element, {:scan, {:property, _} = property}) do
-    Scanner.scan(element, property, &Path.accumulate/2)
-  end
-
-  defp transform(element, {:scan, {:wildcard, _} = wildcard}) do
-    Scanner.scan(element, wildcard, &Path.accumulate/2)
+  defp transform(element, {:scan, {tag, _} = target}) when tag in [:property, :wildcard] do
+    Scanner.scan(element, target, &Path.accumulate/2)
   end
 
   defp transform(element, {:scan, {:filter, _} = filter}) do
     do_scan_filter([element], filter)
-  end
-
-  defp transform(element, {:scan, {{:wildcard, :*} = wildcard, {:filter, _} = filter}}) do
-    element
-    |> Scanner.scan(wildcard, &Path.accumulate/2)
-    |> do_scan_filter(filter)
   end
 
   defp transform(element, {:scan, {:array_indexes, _} = indexes}) do

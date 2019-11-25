@@ -1,8 +1,5 @@
-Nonterminals expression 
-filter_exp filter
-indexes array_indexes array_wildcard 
-scan_rewrite scan_rwt_rhs
-number boolean boolean_exp predicate predic_term
+Nonterminals expression filter_exp indexes array_indexes
+number boolean boolean_exp predicate item
 .
 
 Terminals  
@@ -18,82 +15,61 @@ Left        100 or_op.
 Left        150 and_op.      
 Left        200 comparator.     
 Nonassoc    250 not_op.
+Left        300 '.'.
+Left        350 scan.
 
-%%Four shift/reduce conflicts coming from scan_rewrite
-Expect 4.
+expression      -> root                                         :   [extract('$1')].
+expression      -> expression '.' word                          :   '$1' ++ [{dot, property('$3')}].
+expression      -> expression '.' wildcard                      :   '$1' ++ [extract('$3')].
+expression      -> expression '.' array_indexes                 :   '$1' ++ ['$3'].
+expression      -> expression '.' filter_exp                    :   '$1' ++ ['$3'].
+expression      -> expression scan word                         :   '$1' ++ [build_scan(property('$3'))].
+expression      -> expression scan array_indexes                :   '$1' ++ [build_scan('$3')].
+expression      -> expression scan filter_exp                   :   '$1' ++ [build_scan('$3')].
+expression      -> expression scan wildcard                     :   '$1' ++ [build_scan(extract('$3'))].
+expression      -> expression filter_exp                        :   '$1' ++ ['$2'].
+expression      -> expression array_indexes                     :   '$1' ++ ['$2'].
 
-expression     -> root                                      :   [extract('$1')].
-expression     -> expression '.' word                   	:   '$1' ++ [{dot, property('$3')}].
-expression     -> expression '.' wildcard                   :   '$1' ++ [extract('$3')].
-expression     -> expression '.' array_indexes              :   '$1' ++ ['$3'].
-expression     -> expression filter_exp                     :   '$1' ++ ['$2'].
-expression     -> expression array_wildcard                 :   '$1' ++ ['$2'].  
-expression     -> expression array_indexes                  :   '$1' ++ ['$2'].
 
-%%Scan expression
-expression     -> expression scan word                  	:   '$1' ++ [build_scan(property('$3'))].
-expression     -> expression scan array_indexes             :   '$1' ++ [build_scan('$3')].
-expression     -> expression scan array_wildcard            :   '$1' ++ [build_scan({wildcard, '*'})].
-expression     -> expression scan filter_exp                :   '$1' ++ [build_scan('$3')].
-expression     -> expression scan wildcard                  :   '$1' ++ [build_scan(extract('$3'))].
-expression     -> expression scan scan_rewrite              :   '$1' ++ [build_scan('$3')].
+%%Array
+array_indexes	-> '[' indexes ']'                              :   {array_indexes, '$2'}.
+indexes         -> int                                          :   [index_access('$1')].
+indexes	        -> indexes ',' int                              :   '$1' ++ [index_access('$3')].
 
-scan_rewrite   -> wildcard filter_exp                       :   {{wildcard, '*'}, '$2'}.               
-scan_rewrite   -> wildcard scan_rwt_rhs                     :   '$2'.
-scan_rewrite   -> wildcard array_indexes                    :   '$2'.
-scan_rewrite   -> array_wildcard filter_exp                 :   {{wildcard, '*'}, '$2'}.               
-scan_rewrite   -> array_wildcard array_indexes              :   '$2'.
-scan_rewrite   -> array_wildcard scan_rwt_rhs               :   '$2'.
-                                                                          
-scan_rwt_rhs   -> '.' word                              	:   property('$2').
-scan_rwt_rhs   -> '.' array_indexes                         :   '$2'.
-scan_rwt_rhs   -> '.' filter_exp                            :   {{wildcard, '*'}, '$2'}.
+%%Filter
+filter_exp      -> '[' '?' '(' boolean_exp ')' ']'              :   {filter, '$4'}.
 
-%%Array access expression
-array_indexes  -> '[' indexes ']'                           :   {array_indexes, '$2'}.
-array_wildcard -> '[' wildcard ']'                          :   {array_wildcard, extract_value('$2')}.
-indexes        -> int                                       :   [index_access('$1')].
-indexes        -> indexes ',' int                           :   '$1' ++ [index_access('$3')].  
-
-%%Filter expression
-filter_exp     -> '[' filter ']'                            :   {filter, '$2'}.
-filter         -> '?' '(' boolean_exp ')'                   :   '$3'.
-
-boolean_exp    -> boolean                                   :   '$1'.
-boolean_exp    -> predicate                                 :   '$1'.     
-boolean_exp    -> current_object '.' word               	:   {contains, property('$3')}.
-boolean_exp    -> boolean_exp or_op boolean_exp             :   {'or',  ['$1', '$3']}.     
-boolean_exp    -> boolean_exp and_op boolean_exp            :   {'and', ['$1', '$3']}.     
-boolean_exp    -> not_op boolean_exp                        :   {'not', '$2'}.
-boolean_exp    -> '(' boolean_exp ')'                       :   '$2'.     
+boolean_exp     -> boolean                                      :   '$1'.
+boolean_exp     -> predicate                                    :   '$1'.     
+boolean_exp     -> current_object '.' word                      :   {contains, property('$3')}.
+boolean_exp     -> boolean_exp or_op boolean_exp                :   {'or',  ['$1', '$3']}.     
+boolean_exp     -> boolean_exp and_op boolean_exp               :   {'and', ['$1', '$3']}.     
+boolean_exp     -> not_op boolean_exp                           :   {'not', '$2'}.
+boolean_exp     -> '(' boolean_exp ')'                          :   '$2'.     
         
-predicate      -> predic_term comparator predic_term        :   {extract_value('$2'), ['$1', '$3']}.                    
-predicate      -> word '(' predic_term ')'              	:   function_call('$1', '$3').
+predicate       -> item comparator item                         :   {extract_value('$2'), ['$1', '$3']}.                    
+predicate       -> word '(' item ')'                            :   function_call('$1', '$3').
 
-predic_term    -> number                                    :   '$1'.
-predic_term    -> boolean                                   :   '$1'.
-predic_term    -> current_object '.' word              		:   property('$3').
-predic_term    -> current_object                            :   current_object.
-predic_term	   -> word										:	extract_value('$1').
+item            -> number                                       :   '$1'.
+item            -> boolean                                      :   '$1'.
+item            -> current_object '.' word                      :   property('$3').
+item            -> current_object                               :   current_object.
+item            -> word                                         :   extract_value('$1').
 
-boolean        -> true                                      :   true.
-boolean        -> false                                     :   false.
+boolean         -> true                                         :   true.
+boolean         -> false                                        :   false.
 
-number         -> int                                       :   extract_value('$1').
-number         -> float                                     :   extract_value('$1').
-number         -> '-' number                                :   -extract_value('$2').
+number          -> int                                          :   extract_value('$1').
+number          -> float                                        :   extract_value('$1').
+number          -> '-' number                                   :   -extract_value('$2').
 
 Erlang code.
 
-extract({Token, _Line, Value})       -> {Token, Value}.
+build_scan(Exp) -> {scan, Exp}.
+
+extract({Token, _Line, Value}) -> {Token, Value}.
 
 extract_value({_Token, _Line, Value}) -> Value.
-
-property({_Token, _Line, Value}) -> {property, Value}.
-
-index_access({_Token, _Line, Value}) -> {index_access, Value}.
-
-build_scan(Exp) -> {scan, Exp}.
 
 function_call({_, Line, FunctionName}, Arguments) ->
     Function = case FunctionName of
@@ -111,3 +87,7 @@ function_call({_, Line, FunctionName}, Arguments) ->
 		     return_error(Line, ["'", UnknownFunction, "'"])
 	       end,
     {Function, Arguments}.
+
+index_access({_Token, _Line, Value}) -> {index_access, Value}.
+
+property({_Token, _Line, Value}) -> {property, Value}.

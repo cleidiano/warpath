@@ -34,13 +34,6 @@ defmodule Warpath.ParserTest do
                {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}, {:wildcard, :*}]}
     end
 
-    test "array wildcard access" do
-      tokens = Tokenizer.tokenize!("$.persons[*]")
-
-      assert Parser.parse(tokens) ==
-               {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}, {:array_wildcard, :*}]}
-    end
-
     test "access many array index" do
       tokens = Tokenizer.tokenize!("$[0, 1, 2]")
 
@@ -78,7 +71,8 @@ defmodule Warpath.ParserTest do
         {:ok,
          [
            {:root, "$"},
-           {:scan, {{:wildcard, :*}, {:filter, {:>, [{:property, "age"}, 18]}}}}
+           {:scan, {:wildcard, :*}},
+           {:filter, {:>, [{:property, "age"}, 18]}}
          ]}
 
       assert Tokenizer.tokenize!("$..*.[?(@.age > 18)]") |> Parser.parse() == expression
@@ -92,7 +86,8 @@ defmodule Warpath.ParserTest do
         {:ok,
          [
            {:root, "$"},
-           {:scan, {{:wildcard, :*}, {:filter, {:contains, {:property, "age"}}}}}
+           {:scan, {:wildcard, :*}},
+           {:filter, {:contains, {:property, "age"}}}
          ]}
 
       assert Tokenizer.tokenize!("$..*.[?(@.age)]") |> Parser.parse() == expression
@@ -123,30 +118,54 @@ defmodule Warpath.ParserTest do
                 ]}
     end
 
-    test "wildcard followed by array access expression reduce to scan array index" do
-      expected = {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
+    test "wildcard followed by array access expression" do
+      expected =
+        {:ok,
+         [
+           {:root, "$"},
+           {:scan, {:wildcard, :*}},
+           {:array_indexes, [index_access: 1]}
+         ]}
 
       assert Tokenizer.tokenize!("$..*[1]") |> Parser.parse() == expected
       assert Tokenizer.tokenize!("$..[*][1]") |> Parser.parse() == expected
     end
 
-    test "wildcard followed by dot call and array access expression reduce to scan array index" do
-      expected = {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
+    test "wildcard followed by dot call and array access expression" do
+      expected =
+        {:ok,
+         [
+           {:root, "$"},
+           {:scan, {:wildcard, :*}},
+           {:array_indexes, [index_access: 1]}
+         ]}
 
       assert Tokenizer.tokenize!("$..*.[1]") |> Parser.parse() == expected
       assert Tokenizer.tokenize!("$..[*].[1]") |> Parser.parse() == expected
     end
 
-    test "wildcard followed by dot property expression reduce to scan property expression" do
+    test "wildcard followed by dot property expression" do
       tokens = Tokenizer.tokenize!("$..*.name")
 
-      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
+      assert Parser.parse(tokens) ==
+               {:ok,
+                [
+                  {:root, "$"},
+                  {:scan, {:wildcard, :*}},
+                  {:dot, {:property, "name"}}
+                ]}
     end
 
-    test "array wildcard followed by dot property expression reduce to scan property expression" do
+    test "array wildcard followed by dot property expression" do
       tokens = Tokenizer.tokenize!("$..[*].name")
 
-      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
+      assert Parser.parse(tokens) ==
+               {:ok,
+                [
+                  {:root, "$"},
+                  {:scan, {:wildcard, :*}},
+                  {:dot, {:property, "name"}}
+                ]}
     end
   end
 

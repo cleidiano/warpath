@@ -20,6 +20,10 @@ WHITESPACE           = [\s\t\n\r]
 
 Rules.
 
+
+({DOT}?{DOT}?{DOT}?){OPEN_BRACKET}{SINGLE_QUOTED_WORD}{CLOSE_BRACKET} : {skip_token, to_dot_notation(TokenChars)}.
+({DOT}?{DOT}?{DOT}?){OPEN_BRACKET}{WILDCARD}{CLOSE_BRACKET}           : {skip_token, to_dot_notation(TokenChars)}.
+
 (or|\|\|)               : {token, {or_op,           TokenLine}}.
 (and|&&)                : {token, {and_op,          TokenLine}}.
 not                     : {token, {not_op,          TokenLine}}.
@@ -28,9 +32,7 @@ false                   : {token, {false,           TokenLine}}.
 
 {ROOT}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
 {WORD}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
-{OPEN_BRACKET}{SINGLE_QUOTED_WORD}{CLOSE_BRACKET}
-                        : {skip_token, to_dot_access(TokenChars)}.
-{SINGLE_QUOTED_WORD}    : {token, {word,            TokenLine, unquote(TokenChars)}}.
+{SINGLE_QUOTED_WORD}    : {token, {word,            TokenLine, single_quoted_word_to_binary(TokenChars)}}.
 {CURRENT_OBJECT}        : {token, {current_object,  TokenLine, list_to_binary(TokenChars)}}.
 {COMPARATOR}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
 {INT}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
@@ -49,19 +51,25 @@ false                   : {token, {false,           TokenLine}}.
 
 Erlang code.
 
-unquote("''") -> <<>>;
-unquote("'" ++ Tail) ->
-    Caracter = lists:last(Tail),
-    case Caracter of
-        39 -> 
-           list_to_binary(lists:droplast(Tail));
-        Other ->
-            {error, Other} 
+to_dot_notation(".." ++ TokenChars) ->
+    ".." ++ unbracket(TokenChars);
+to_dot_notation("." ++ TokenChars) ->
+    to_dot_notation(TokenChars);
+to_dot_notation(TokenChars) ->
+    Word = unbracket(TokenChars),
+    "." ++ Word.
+
+unbracket("[" ++ TokenChars) ->
+    CloseBracket = lists:last(TokenChars),
+    case CloseBracket of
+      93 -> lists:droplast(TokenChars);
+      Other -> {error, Other}
     end.
 
-to_dot_access("[" ++ Tail) ->
-    BracketAccess = lists:reverse(Tail),
-    to_dot_access(BracketAccess);
-to_dot_access("]" ++ TokenChars) ->
-    Word = lists:reverse(TokenChars),
-    lists:append(".", Word).
+single_quoted_word_to_binary("''") -> <<>>;
+single_quoted_word_to_binary("'" ++ TokenChars) ->
+    Caracter = lists:last(TokenChars),
+    case Caracter of
+      39 -> list_to_binary(lists:droplast(TokenChars));
+      Other -> {error, Other}
+    end.

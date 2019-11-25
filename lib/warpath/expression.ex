@@ -11,7 +11,6 @@ defmodule Warpath.Expression do
   @type index_access :: {:index_access, integer}
   @type array_indexes :: {:array_indexes, [index_access, ...]}
   @type wildcard :: {:wildcard, :*}
-  @type array_wildcard :: {:array_wildcard, :*}
   @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!==
   @type contains :: {:contains, property}
   @type fun ::
@@ -39,7 +38,6 @@ defmodule Warpath.Expression do
           root
           | dot_access
           | array_indexes
-          | array_wildcard
           | filter
           | scan
 

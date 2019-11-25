@@ -12,9 +12,18 @@ defmodule Warpath.TokenizerTest do
       assert Tokenizer.tokenize("any") == {:ok, [{:word, 1, "any"}]}
     end
 
-    test "bracket access should rewrite to dot access" do
-      assert Tokenizer.tokenize("['transformed in dot call']") ==
-               {:ok, [{:., 1}, {:word, 1, "transformed in dot call"}]}
+    test "bracket notation should be rewrite to dot notation" do
+      assert Tokenizer.tokenize("['bracket to dot call']") ==
+               {:ok, [{:., 1}, {:word, 1, "bracket to dot call"}]}
+
+      assert Tokenizer.tokenize(".['bracket to dot call']") ==
+               {:ok, [{:., 1}, {:word, 1, "bracket to dot call"}]}
+
+      assert Tokenizer.tokenize("[*]") ==
+               {:ok, [{:., 1}, {:wildcard, 1, :*}]}
+
+      assert Tokenizer.tokenize(".[*]") ==
+               {:ok, [{:., 1}, {:wildcard, 1, :*}]}
     end
 
     test "single quoted word" do

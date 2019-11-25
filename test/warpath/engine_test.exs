@@ -100,7 +100,12 @@ defmodule Warpath.EngineTest do
     end
 
     test "that use a wildcard folowed by comparator filter", context do
-      values = Engine.query(context[:data], tokens("$..*.[?(@.price > 22)]"), @value_and_path)
+      values =
+        Engine.query(
+          context[:data],
+          tokens("$..*.[?(is_float(@.price) and @.price > 22)]"),
+          @value_and_path
+        )
 
       expected = {
         %{
