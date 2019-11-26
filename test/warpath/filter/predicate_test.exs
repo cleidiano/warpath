@@ -3,95 +3,91 @@ defmodule Warpath.Filter.PredicateTest do
 
   alias Warpath.Filter.Predicate
 
-  describe "eval/2 handle operator" do
+  describe "eval/2 ensure dispatch call for operator" do
     test ">" do
-      assert Predicate.eval({:>, [{:property, "likes"}, 1]}, %{"likes" => 5})
+      assert Predicate.eval({:>, [5, 1]}, %{})
     end
 
     test ">=" do
-      assert Predicate.eval({:>=, [{:property, "likes"}, 10]}, %{"likes" => 10})
+      assert Predicate.eval({:>=, [10, 10]}, %{})
     end
 
     test "<" do
-      assert Predicate.eval({:<, [{:property, "likes"}, 10]}, %{"likes" => 5})
+      assert Predicate.eval({:<, [5, 10]}, %{})
     end
 
     test "<=" do
-      assert Predicate.eval({:<=, [{:property, "likes"}, 10]}, %{"likes" => 10})
+      assert Predicate.eval({:<=, [10, 10]}, %{})
     end
 
     test "== when left and right have the same type" do
-      assert Predicate.eval({:==, [{:property, "likes"}, 10]}, %{"likes" => 10})
+      assert Predicate.eval({:==, [10, 10]}, %{})
     end
 
     test "== when compare float point and integer" do
-      assert Predicate.eval({:==, [{:property, "likes"}, 10.0]}, %{"likes" => 10})
+      assert Predicate.eval({:==, [10, 10.0]}, %{})
     end
 
     test "!=" do
-      assert Predicate.eval({:!=, [{:property, "likes"}, 10]}, %{"likes" => "10"})
+      assert Predicate.eval({:!=, ["10", 10]}, %{})
     end
 
     test "!= when compare float point and integer" do
-      refute Predicate.eval({:!=, [{:property, "likes"}, 10.0]}, %{"likes" => 10})
+      refute Predicate.eval({:!=, [10, 10.0]}, %{})
     end
 
     test "=== when compare float point and integer" do
-      refute Predicate.eval({:===, [{:property, "likes"}, 10.0]}, %{"likes" => 10})
+      refute Predicate.eval({:===, [10, 10.0]}, %{})
     end
 
     test "=== when left and right have the same type" do
-      assert Predicate.eval({:===, [{:property, "likes"}, 10.0]}, %{"likes" => 10.0})
+      assert Predicate.eval({:===, [10.0, 10.0]}, %{})
     end
 
     test "!==" do
-      assert Predicate.eval({:!=, [{:property, "likes"}, 10]}, %{"likes" => "10"})
+      assert Predicate.eval({:!=, ["10", 10]}, %{})
     end
 
     test "!== when compare float point and integer" do
-      assert Predicate.eval({:!==, [{:property, "likes"}, 10.0]}, %{"likes" => 10})
+      assert Predicate.eval({:!==, [10, 10.0]}, %{})
     end
 
-    test "and operation when left and right side is true" do
-      expression = {:and, [>: [{:property, "likes"}, 100], >: [{:property, "follwers"}, 2000]]}
-
-      assert Predicate.eval(expression, %{"likes" => 101, "follwers" => 2001})
+    test "AND operation when left and right side is true" do
+      assert Predicate.eval({:and, [>: [101, 100], >: [2001, 2000]]}, %{})
     end
 
-    test "and operation when left side is false" do
-      expression = {:and, [>: [{:property, "likes"}, 100], <: [{:property, "follwers"}, 50]]}
-
-      refute Predicate.eval(expression, %{"likes" => 99, "follwers" => 100})
+    test "AND operation when left side is false" do
+      refute Predicate.eval({:and, [>: [99, 100], <: [100, 50]]}, %{})
     end
 
-    test "and operation when right side is false" do
-      expression = {:and, [>: [{:property, "likes"}, 100], >: [{:property, "follwers"}, 300]]}
-
-      refute Predicate.eval(expression, %{"likes" => 101, "follwers" => 200})
+    test "AND operation when right side is false" do
+      refute Predicate.eval({:and, [>: [101, 100], >: [200, 300]]}, %{})
     end
 
-    test "or operation when left and right side is true" do
-      expression = {:or, [>: [{:property, "likes"}, 100], >: [{:property, "follwers"}, 500]]}
-
-      assert Predicate.eval(expression, %{"likes" => 101, "follwers" => 1000})
+    test "OR operation when left and right side is true" do
+      assert Predicate.eval({:or, [>: [101, 100], >: [1000, 500]]}, %{})
     end
 
-    test "or operation when left side is true and right is false" do
-      expression = {:or, [>: [{:property, "likes"}, 100], >: [{:property, "follwers"}, 500]]}
-
-      assert Predicate.eval(expression, %{"likes" => 101, "follwers" => 100})
+    test "OR operation when left side is true and right is false" do
+      assert Predicate.eval({:or, [>: [101, 100], >: [100, 500]]}, %{})
     end
 
-    test "or operation when left side is false and right side is true" do
-      expression = {:or, [>: [{:property, "likes"}, 100], >: [{:property, "follwers"}, 500]]}
-
-      assert Predicate.eval(expression, %{"likes" => 99, "follwers" => 1000})
+    test "OR operation when left side is false and right side is true" do
+      assert Predicate.eval({:or, [>: [99, 100], >: [1000, 500]]}, %{})
     end
 
-    test "or operation when left and right side is false" do
-      expression = {:or, [>: [{:property, "likes"}, 100], >: [{:property, "follwers"}, 500]]}
+    test "OR operation when left and right side is false" do
+      refute Predicate.eval({:or, [>: [1, 100], >: [1, 500]]}, %{})
+    end
 
-      refute Predicate.eval(expression, %{"likes" => 1, "follwers" => 1})
+    test "NOT" do
+      refute Predicate.eval({:not, true}, %{})
+      assert Predicate.eval({:not, false}, %{})
+    end
+
+    test "IN" do
+      assert Predicate.eval({:in, [1, [1, 2, 3]]}, %{})
+      refute Predicate.eval({:in, [4, [1, 2, 3]]}, %{})
     end
   end
 
@@ -155,6 +151,31 @@ defmodule Warpath.Filter.PredicateTest do
     test "is_tuple" do
       assert Predicate.eval({:is_tuple, {}}, nil)
       refute Predicate.eval({:is_tuple, "10"}, nil)
+    end
+  end
+
+  describe "eval/2 can discovery" do
+    test "a property value from context on eval operators" do
+      context = %{"likes" => 100}
+
+      assert Predicate.eval({:>, [{:property, "likes"}, 10]}, context)
+      refute Predicate.eval({:>, [{:property, "likes"}, 1000]}, context)
+    end
+
+    test "a property value from context on eval function call" do
+      context = %{"likes" => 100}
+
+      assert Predicate.eval({:is_integer, {:property, "likes"}}, context)
+      refute Predicate.eval({:is_float, {:property, "likes"}}, context)
+    end
+
+    test "a values for each property on list on eval IN operator" do
+      left_is_value = {:in, ["Warpath", [property: "nickName", property: "name"]]}
+      left_is_expression = {:in, [{:property, "name"}, ["Warpath", "Bumblebee"]]}
+
+      assert Predicate.eval(left_is_value, %{"nickName" => "Bla", "name" => "Warpath"})
+      assert Predicate.eval(left_is_expression, %{"nickName" => "Bla", "name" => "Warpath"})
+      refute Predicate.eval(left_is_expression, %{"nickName" => "Bla", "name" => "Blabla"})
     end
   end
 end

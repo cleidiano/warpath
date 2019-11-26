@@ -12,7 +12,7 @@ defmodule Warpath.TokenizerTest do
       assert Tokenizer.tokenize("any") == {:ok, [{:word, 1, "any"}]}
     end
 
-    test "bracket notation should be rewrite to dot notation" do
+    test "bracket notation should be rewrite to dot notation when is not a in operator" do
       assert Tokenizer.tokenize("['bracket to dot call']") ==
                {:ok, [{:., 1}, {:word, 1, "bracket to dot call"}]}
 
@@ -24,6 +24,17 @@ defmodule Warpath.TokenizerTest do
 
       assert Tokenizer.tokenize(".[*]") ==
                {:ok, [{:., 1}, {:wildcard, 1, :*}]}
+    end
+
+    test "single quote list to double quote list when it's a IN expression" do
+      assert Tokenizer.tokenize("in ['any word']") ==
+               {:ok,
+                [
+                  {:in_op, 1},
+                  {:"[", 1},
+                  {:word, 1, "any word"},
+                  {:"]", 1}
+                ]}
     end
 
     test "single quoted word" do

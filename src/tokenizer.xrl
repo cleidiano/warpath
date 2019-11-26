@@ -20,8 +20,10 @@ WHITESPACE           = [\s\t\n\r]
 
 Rules.
 
+in{WHITESPACE}+{OPEN_BRACKET}{SINGLE_QUOTED_WORD}{CLOSE_BRACKET} : {skip_token, "cleidiano"}.
 
 ({DOT}?{DOT}?{DOT}?){OPEN_BRACKET}{SINGLE_QUOTED_WORD}{CLOSE_BRACKET} : {skip_token, to_dot_notation(TokenChars)}.
+
 ({DOT}?{DOT}?{DOT}?){OPEN_BRACKET}{WILDCARD}{CLOSE_BRACKET}           : {skip_token, to_dot_notation(TokenChars)}.
 
 (or|\|\|)               : {token, {or_op,           TokenLine}}.
@@ -29,6 +31,7 @@ Rules.
 not                     : {token, {not_op,          TokenLine}}.
 true                    : {token, {true,            TokenLine}}.
 false                   : {token, {false,           TokenLine}}.
+in                      : {token, {in_op,           TokenLine}}.
 
 {ROOT}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
 {WORD}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.

@@ -1,10 +1,10 @@
 Nonterminals expression filter_exp indexes array_indexes
-number boolean boolean_exp predicate item
+number boolean boolean_exp predicate item list elements
 .
 
 Terminals  
 root word current_object comparator int float wildcard scan
-or_op and_op not_op
+or_op and_op not_op in_op
 true false
 '.' '[' ']' '?' '(' ')' '-' ','
 .
@@ -49,12 +49,17 @@ boolean_exp     -> '(' boolean_exp ')'                          :   '$2'.
         
 predicate       -> item comparator item                         :   {extract_value('$2'), ['$1', '$3']}.                    
 predicate       -> word '(' item ')'                            :   function_call('$1', '$3').
+predicate       -> item in_op list                              :   {in, ['$1', '$3']}.
 
 item            -> number                                       :   '$1'.
 item            -> boolean                                      :   '$1'.
 item            -> current_object '.' word                      :   property('$3').
 item            -> current_object                               :   current_object.
 item            -> word                                         :   extract_value('$1').
+
+list            -> '[' elements ']'                             : '$2'.
+elements        -> item                                         : ['$1'].
+elements        -> elements ',' item                            : '$1' ++ ['$3']. 
 
 boolean         -> true                                         :   true.
 boolean         -> false                                        :   false.

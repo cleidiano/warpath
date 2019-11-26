@@ -170,7 +170,7 @@ defmodule Warpath.ParserTest do
   end
 
   describe "parse/1 parse filter expression" do
-    test "that have a and operator" do
+    test "that have a AND operator" do
       tokens = Tokenizer.tokenize!("$[?(true and true)]")
 
       assert Parser.parse(tokens) ==
@@ -180,7 +180,7 @@ defmodule Warpath.ParserTest do
                ])
     end
 
-    test "that have or operator" do
+    test "that have OR operator" do
       tokens = Tokenizer.tokenize!("$[?(true or true)]")
 
       assert Parser.parse(tokens) ==
@@ -190,7 +190,7 @@ defmodule Warpath.ParserTest do
                ])
     end
 
-    test "that is a or precedence" do
+    test "that is a OR precedence" do
       tokens = Tokenizer.tokenize!("$[?(true and true or false)]")
 
       assert Parser.parse(tokens) ==
@@ -210,7 +210,7 @@ defmodule Warpath.ParserTest do
                ])
     end
 
-    test "that is a negation operator" do
+    test "that is a NOT operator" do
       tokens = Tokenizer.tokenize!("$[?(not true)]")
 
       assert Parser.parse(tokens) ==
@@ -261,6 +261,17 @@ defmodule Warpath.ParserTest do
         |> Enum.map(&Parser.parse/1)
 
       assert expression_tokens == expected
+    end
+
+    test "that is a IN operator wiht one element on list" do
+      tokens = Tokenizer.tokenize!("$[?(@.name in ['Warpath'])]")
+
+      assert Parser.parse(tokens) ==
+               {:ok,
+                [
+                  {:root, "$"},
+                  {:filter, {:in, [{:property, "name"}, ["Warpath"]]}}
+                ]}
     end
 
     test "that is allowed function call of " do

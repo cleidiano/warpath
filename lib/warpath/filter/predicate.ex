@@ -11,7 +11,8 @@ defmodule Warpath.Filter.Predicate do
     :===,
     :!==,
     :and,
-    :or
+    :or,
+    :in
   ]
 
   @functions [
@@ -24,7 +25,8 @@ defmodule Warpath.Filter.Predicate do
     :is_map,
     :is_nil,
     :is_number,
-    :is_tuple
+    :is_tuple,
+    :not
   ]
 
   def eval({action, _} = expression, context)
@@ -54,6 +56,10 @@ defmodule Warpath.Filter.Predicate do
 
   defp resolve(:current_object, context),
     do: context
+
+  defp resolve(term, context) when is_list(term) do
+    Enum.map(term, &resolve(&1, context))
+  end
 
   defp resolve(term, _context),
     do: term
