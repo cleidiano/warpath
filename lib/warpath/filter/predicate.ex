@@ -54,7 +54,7 @@ defmodule Warpath.Filter.Predicate do
   defp resolve({:property, name}, context) when is_map(context),
     do: context[name]
 
-  defp resolve(:current_object, context),
+  defp resolve(:current_node, context),
     do: context
 
   defp resolve(term, context) when is_list(term) do

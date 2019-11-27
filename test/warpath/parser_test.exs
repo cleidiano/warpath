@@ -9,35 +9,26 @@ defmodule Warpath.ParserTest do
 
   describe "parse/1 parse basic" do
     test "root token expression" do
-      tokens = Tokenizer.tokenize!("$")
-
-      assert Parser.parse(tokens) == {:ok, [{:root, "$"}]}
+      assert tokens("$") |> Parser.parse() == {:ok, [{:root, "$"}]}
     end
 
     test "dot property access" do
-      tokens = Tokenizer.tokenize!("$.name")
-
-      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
+      assert tokens("$.name") |> Parser.parse() ==
+               {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
     end
 
     test "index based access" do
-      tokens = Tokenizer.tokenize!("$[0]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$[0]") |> Parser.parse() ==
                {:ok, [{:root, "$"}, {:array_indexes, [{:index_access, 0}]}]}
     end
 
     test "wildcard property access" do
-      tokens = Tokenizer.tokenize!("$.persons.*")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$.persons.*") |> Parser.parse() ==
                {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}, {:wildcard, :*}]}
     end
 
     test "access many array index" do
-      tokens = Tokenizer.tokenize!("$[0, 1, 2]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$[0, 1, 2]") |> Parser.parse() ==
                {:ok,
                 [
                   {:root, "$"},
@@ -48,22 +39,17 @@ defmodule Warpath.ParserTest do
 
   describe "parse/1 parse a scan" do
     test "property expression" do
-      tokens = Tokenizer.tokenize!("$..name")
-
-      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
+      assert tokens("$..name") |> Parser.parse() ==
+               {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
     end
 
     test "array indexes access expression" do
-      tokens = Tokenizer.tokenize!("$..[1]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$..[1]") |> Parser.parse() ==
                {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
     end
 
     test "wildcard expression" do
-      tokens = Tokenizer.tokenize!("$..*")
-
-      assert Parser.parse(tokens) == {:ok, [{:root, "$"}, {:scan, {:wildcard, :*}}]}
+      assert tokens("$..*") |> Parser.parse() == {:ok, [{:root, "$"}, {:scan, {:wildcard, :*}}]}
     end
 
     test "wildcard with comparator filter expression" do
@@ -75,10 +61,10 @@ defmodule Warpath.ParserTest do
            {:filter, {:>, [{:property, "age"}, 18]}}
          ]}
 
-      assert Tokenizer.tokenize!("$..*.[?(@.age > 18)]") |> Parser.parse() == expression
-      assert Tokenizer.tokenize!("$..*[?(@.age > 18)]") |> Parser.parse() == expression
-      assert Tokenizer.tokenize!("$..[*].[?(@.age > 18)]") |> Parser.parse() == expression
-      assert Tokenizer.tokenize!("$..[*][?(@.age > 18)]") |> Parser.parse() == expression
+      assert tokens("$..*.[?(@.age > 18)]") |> Parser.parse() == expression
+      assert tokens("$..*[?(@.age > 18)]") |> Parser.parse() == expression
+      assert tokens("$..[*].[?(@.age > 18)]") |> Parser.parse() == expression
+      assert tokens("$..[*][?(@.age > 18)]") |> Parser.parse() == expression
     end
 
     test "wildcard with contains filter expression" do
@@ -90,16 +76,14 @@ defmodule Warpath.ParserTest do
            {:filter, {:contains, {:property, "age"}}}
          ]}
 
-      assert Tokenizer.tokenize!("$..*.[?(@.age)]") |> Parser.parse() == expression
-      assert Tokenizer.tokenize!("$..*[?(@.age)]") |> Parser.parse() == expression
-      assert Tokenizer.tokenize!("$..[*].[?(@.age)]") |> Parser.parse() == expression
-      assert Tokenizer.tokenize!("$..[*][?(@.age)]") |> Parser.parse() == expression
+      assert tokens("$..*.[?(@.age)]") |> Parser.parse() == expression
+      assert tokens("$..*[?(@.age)]") |> Parser.parse() == expression
+      assert tokens("$..[*].[?(@.age)]") |> Parser.parse() == expression
+      assert tokens("$..[*][?(@.age)]") |> Parser.parse() == expression
     end
 
     test "with filter expression" do
-      tokens = Tokenizer.tokenize!("$..[?(@.age > 18)]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$..[?(@.age > 18)]") |> Parser.parse() ==
                {:ok,
                 [
                   {:root, "$"},
@@ -108,9 +92,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "with contains filter expression" do
-      tokens = Tokenizer.tokenize!("$..[?(@.age)]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$..[?(@.age)]") |> Parser.parse() ==
                {:ok,
                 [
                   {:root, "$"},
@@ -127,8 +109,8 @@ defmodule Warpath.ParserTest do
            {:array_indexes, [index_access: 1]}
          ]}
 
-      assert Tokenizer.tokenize!("$..*[1]") |> Parser.parse() == expected
-      assert Tokenizer.tokenize!("$..[*][1]") |> Parser.parse() == expected
+      assert tokens("$..*[1]") |> Parser.parse() == expected
+      assert tokens("$..[*][1]") |> Parser.parse() == expected
     end
 
     test "wildcard followed by dot call and array access expression" do
@@ -140,14 +122,12 @@ defmodule Warpath.ParserTest do
            {:array_indexes, [index_access: 1]}
          ]}
 
-      assert Tokenizer.tokenize!("$..*.[1]") |> Parser.parse() == expected
-      assert Tokenizer.tokenize!("$..[*].[1]") |> Parser.parse() == expected
+      assert tokens("$..*.[1]") |> Parser.parse() == expected
+      assert tokens("$..[*].[1]") |> Parser.parse() == expected
     end
 
     test "wildcard followed by dot property expression" do
-      tokens = Tokenizer.tokenize!("$..*.name")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$..*.name") |> Parser.parse() ==
                {:ok,
                 [
                   {:root, "$"},
@@ -157,9 +137,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "array wildcard followed by dot property expression" do
-      tokens = Tokenizer.tokenize!("$..[*].name")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$..[*].name") |> Parser.parse() ==
                {:ok,
                 [
                   {:root, "$"},
@@ -171,9 +149,7 @@ defmodule Warpath.ParserTest do
 
   describe "parse/1 parse filter expression" do
     test "that have a AND operator" do
-      tokens = Tokenizer.tokenize!("$[?(true and true)]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$[?(true and true)]") |> Parser.parse() ==
                ok([
                  {:root, "$"},
                  {:filter, {:and, [true, true]}}
@@ -181,9 +157,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that have OR operator" do
-      tokens = Tokenizer.tokenize!("$[?(true or true)]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$[?(true or true)]") |> Parser.parse() ==
                ok([
                  {:root, "$"},
                  {:filter, {:or, [true, true]}}
@@ -191,9 +165,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that is a OR precedence" do
-      tokens = Tokenizer.tokenize!("$[?(true and true or false)]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$[?(true and true or false)]") |> Parser.parse() ==
                ok([
                  {:root, "$"},
                  {:filter, {:or, [{:and, [true, true]}, false]}}
@@ -201,9 +173,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that is a parenthesis precedence" do
-      tokens = Tokenizer.tokenize!("$[?(true and (true or false))]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$[?(true and (true or false))]") |> Parser.parse() ==
                ok([
                  {:root, "$"},
                  {:filter, {:and, [true, {:or, [true, false]}]}}
@@ -211,9 +181,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that is a NOT operator" do
-      tokens = Tokenizer.tokenize!("$[?(not true)]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$[?(not true)]") |> Parser.parse() ==
                ok([
                  {:root, "$"},
                  {:filter, {:not, true}}
@@ -221,9 +189,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that have a property on it" do
-      tokens = Tokenizer.tokenize!("$[?(@.age > 10)]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$[?(@.age > 10)]") |> Parser.parse() ==
                {:ok,
                 [
                   {:root, "$"},
@@ -232,9 +198,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that is a contains operator" do
-      tokens = Tokenizer.tokenize!("$.persons[?(@.age)]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$.persons[?(@.age)]") |> Parser.parse() ==
                {:ok,
                 [
                   {:root, "$"},
@@ -257,14 +221,14 @@ defmodule Warpath.ParserTest do
 
       expression_tokens =
         operators
-        |> Enum.map(&Tokenizer.tokenize!("$[?(@.age #{&1} 1)]"))
+        |> Enum.map(&tokens("$[?(@.age #{&1} 1)]"))
         |> Enum.map(&Parser.parse/1)
 
       assert expression_tokens == expected
     end
 
-    test "that is a IN operator wiht one element on list" do
-      assert Parser.parse(tokens("$[?(@.name in ['Warpath'])]")) ==
+    test "that is a IN operator with one element on list" do
+      assert tokens("$[?(@.name in ['Warpath'])]") |> Parser.parse() ==
                {:ok,
                 [
                   {:root, "$"},
@@ -297,28 +261,24 @@ defmodule Warpath.ParserTest do
 
       expression_tokens =
         functions
-        |> Enum.map(&Tokenizer.tokenize!("$[?(#{Atom.to_string(&1)}(@.any))]"))
+        |> Enum.map(&tokens("$[?(#{Atom.to_string(&1)}(@.any))]"))
         |> Enum.map(&Parser.parse/1)
 
       assert expression_tokens == expected
     end
 
     test "that is a invalid function call" do
-      tokens = Tokenizer.tokenize!("$[?(function_name(@.any))]")
-
       assert {:error,
               %ParserError{
                 message: "Parser error: Invalid token on line 1, 'function_name'"
-              }} = Parser.parse(tokens)
+              }} = Parser.parse(tokens("$[?(function_name(@.any))]"))
     end
 
     test "that use current object as a target" do
-      tokens = Tokenizer.tokenize!("$[?(@ == 10)]")
-
-      assert Parser.parse(tokens) ==
+      assert tokens("$[?(@ == 10)]") |> Parser.parse() ==
                ok([
                  {:root, "$"},
-                 {:filter, {:==, [:current_object, 10]}}
+                 {:filter, {:==, [:current_node, 10]}}
                ])
     end
   end

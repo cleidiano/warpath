@@ -30,7 +30,7 @@ in                      : {token, {in_op,           TokenLine}}.
 {ROOT}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
 {WORD}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
 {SINGLE_QUOTED_WORD}    : {token, {quoted_word,     TokenLine, single_quoted_word_to_binary(TokenChars)}}.
-{CURRENT_OBJECT}        : {token, {current_object,  TokenLine, list_to_binary(TokenChars)}}.
+{CURRENT_OBJECT}        : {token, {current_node,    TokenLine, list_to_binary(TokenChars)}}.
 {COMPARATOR}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
 {INT}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
 {INT}{DOT}{INT}         : {token, {float,           TokenLine, list_to_float(TokenChars)}}.

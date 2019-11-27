@@ -12,7 +12,7 @@ defmodule Warpath.TokenizerTest do
       assert Tokenizer.tokenize("any") == {:ok, [{:word, 1, "any"}]}
     end
 
-    test "single quote list to double quote list when it's a IN expression" do
+    test "list of single quote word to double quote word when it's a IN expression" do
       assert Tokenizer.tokenize("in ['word one', other]") ==
                {:ok,
                 [
@@ -31,7 +31,7 @@ defmodule Warpath.TokenizerTest do
     end
 
     test "current object" do
-      assert Tokenizer.tokenize("@") == {:ok, [{:current_object, 1, "@"}]}
+      assert Tokenizer.tokenize("@") == {:ok, [{:current_node, 1, "@"}]}
     end
 
     test "operators" do

@@ -1,11 +1,10 @@
-Nonterminals expression filter_exp indexes array_indexes
-number boolean boolean_exp predicate item element elements
+Nonterminals expression filter_exp boolean_exp predicate
+number boolean item element elements indexes array_indexes
 .
 
 Terminals  
-root word quoted_word current_object comparator int float wildcard scan
-or_op and_op not_op in_op
-true false
+root word quoted_word current_node int float wildcard scan
+true false or_op and_op not_op in_op comparator
 '.' '[' ']' '?' '(' ')' '-' ','
 .
 
@@ -18,14 +17,13 @@ Nonassoc    250 not_op.
 Left        300 '.'.
 Left        350 scan.
 
-
 expression      -> root                                         :   [extract('$1')].
 expression      -> expression '.' word                          :   '$1' ++ [{dot, property('$3')}].
 expression      -> expression '.' wildcard                      :   '$1' ++ [extract('$3')].
-expression      -> expression '.' '[' quoted_word ']'           :   '$1' ++ [{dot, property('$4')}].
-expression      -> expression '.' '[' wildcard ']'              :   '$1' ++ [extract('$4')].
 expression      -> expression '.' array_indexes                 :   '$1' ++ ['$3'].
 expression      -> expression '.' filter_exp                    :   '$1' ++ ['$3'].
+expression      -> expression '.' '[' quoted_word ']'           :   '$1' ++ [{dot, property('$4')}].
+expression      -> expression '.' '[' wildcard ']'              :   '$1' ++ [extract('$4')].
 
 expression      -> expression '[' quoted_word ']'               :   '$1' ++ [{dot, property('$3')}].
 expression      -> expression '[' wildcard ']'                  :   '$1' ++ [extract('$3')].
@@ -50,7 +48,7 @@ filter_exp      -> '[' '?' '(' boolean_exp ')' ']'              :   {filter, '$4
 
 boolean_exp     -> boolean                                      :   '$1'.
 boolean_exp     -> predicate                                    :   '$1'.     
-boolean_exp     -> current_object '.' word                      :   {contains, property('$3')}.
+boolean_exp     -> current_node '.' word                        :   {contains, property('$3')}.
 boolean_exp     -> boolean_exp or_op boolean_exp                :   {'or',  ['$1', '$3']}.     
 boolean_exp     -> boolean_exp and_op boolean_exp               :   {'and', ['$1', '$3']}.     
 boolean_exp     -> not_op boolean_exp                           :   {'not', '$2'}.
@@ -62,8 +60,8 @@ predicate       -> item in_op elements                          :   {in, ['$1', 
 
 item            -> number                                       :   '$1'.
 item            -> boolean                                      :   '$1'.
-item            -> current_object '.' word                      :   property('$3').
-item            -> current_object                               :   current_object.
+item            -> current_node '.' word                        :   property('$3').
+item            -> current_node                                 :   current_node.
 item            -> word                                         :   extract_value('$1').
 item            -> quoted_word                                  :   extract_value('$1').
 
@@ -82,9 +80,9 @@ Erlang code.
 
 build_scan(Exp) -> {scan, Exp}.
 
-extract({Token, _Line, Value}) -> {Token, Value}.
+extract({Token, _, Value}) -> {Token, Value}.
 
-extract_value({_Token, _Line, Value}) -> Value.
+extract_value({_, _, Value}) -> Value.
 
 function_call({_, Line, FunctionName}, Arguments) ->
     Function = case FunctionName of
@@ -103,6 +101,6 @@ function_call({_, Line, FunctionName}, Arguments) ->
 	       end,
     {Function, Arguments}.
 
-index_access({_Token, _Line, Value}) -> {index_access, Value}.
+index_access({_, _, Value}) -> {index_access, Value}.
 
-property({_Token, _Line, Value}) -> {property, Value}.
+property({_, _, Value}) -> {property, Value}.

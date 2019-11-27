@@ -169,13 +169,17 @@ defmodule Warpath.Filter.PredicateTest do
       refute Predicate.eval({:is_float, {:property, "likes"}}, context)
     end
 
-    test "a values for each property on list on eval IN operator" do
+    test "a value from context for each property on list on eval IN operator" do
       left_is_value = {:in, ["Warpath", [property: "nickName", property: "name"]]}
       left_is_expression = {:in, [{:property, "name"}, ["Warpath", "Bumblebee"]]}
 
       assert Predicate.eval(left_is_value, %{"nickName" => "Bla", "name" => "Warpath"})
       assert Predicate.eval(left_is_expression, %{"nickName" => "Bla", "name" => "Warpath"})
       refute Predicate.eval(left_is_expression, %{"nickName" => "Bla", "name" => "Blabla"})
+    end
+
+    test "a value for the current node that is context it self" do
+      assert Predicate.eval({:is_map, :current_node}, %{})
     end
   end
 end
