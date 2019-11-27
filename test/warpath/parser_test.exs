@@ -264,9 +264,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that is a IN operator wiht one element on list" do
-      tokens = Tokenizer.tokenize!("$[?(@.name in ['Warpath'])]")
-
-      assert Parser.parse(tokens) ==
+      assert Parser.parse(tokens("$[?(@.name in ['Warpath'])]")) ==
                {:ok,
                 [
                   {:root, "$"},
@@ -332,4 +330,6 @@ defmodule Warpath.ParserTest do
       end
     end
   end
+
+  defp tokens(string), do: Tokenizer.tokenize!(string)
 end

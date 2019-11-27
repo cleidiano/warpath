@@ -18,7 +18,7 @@ defmodule Warpath.TokenizerTest do
                 [
                   {:in_op, 1},
                   {:"[", 1},
-                  {:word, 1, "word one"},
+                  {:quoted_word, 1, "word one"},
                   {:",", 1},
                   {:word, 1, "other"},
                   {:"]", 1}
@@ -27,7 +27,7 @@ defmodule Warpath.TokenizerTest do
 
     test "single quoted word" do
       assert Tokenizer.tokenize("'single quoted word'") ==
-               {:ok, [{:word, 1, "single quoted word"}]}
+               {:ok, [{:quoted_word, 1, "single quoted word"}]}
     end
 
     test "current object" do

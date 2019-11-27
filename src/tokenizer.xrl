@@ -29,7 +29,7 @@ in                      : {token, {in_op,           TokenLine}}.
 
 {ROOT}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
 {WORD}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
-{SINGLE_QUOTED_WORD}    : {token, {word,            TokenLine, single_quoted_word_to_binary(TokenChars)}}.
+{SINGLE_QUOTED_WORD}    : {token, {quoted_word,     TokenLine, single_quoted_word_to_binary(TokenChars)}}.
 {CURRENT_OBJECT}        : {token, {current_object,  TokenLine, list_to_binary(TokenChars)}}.
 {COMPARATOR}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
 {INT}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
@@ -47,21 +47,6 @@ in                      : {token, {in_op,           TokenLine}}.
 {WHITESPACE}+           : skip_token.
 
 Erlang code.
-
-to_dot_notation(".." ++ TokenChars) ->
-    ".." ++ unbracket(TokenChars);
-to_dot_notation("." ++ TokenChars) ->
-    to_dot_notation(TokenChars);
-to_dot_notation(TokenChars) ->
-    Word = unbracket(TokenChars),
-    "." ++ Word.
-
-unbracket("[" ++ TokenChars) ->
-    CloseBracket = lists:last(TokenChars),
-    case CloseBracket of
-      93 -> lists:droplast(TokenChars);
-      Other -> {error, Other}
-    end.
 
 single_quoted_word_to_binary("''") -> <<>>;
 single_quoted_word_to_binary("'" ++ TokenChars) ->

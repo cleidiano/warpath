@@ -1,9 +1,9 @@
 Nonterminals expression filter_exp indexes array_indexes
-number boolean boolean_exp predicate item list elements
+number boolean boolean_exp predicate item element elements
 .
 
 Terminals  
-root word current_object comparator int float wildcard scan
+root word quoted_word current_object comparator int float wildcard scan
 or_op and_op not_op in_op
 true false
 '.' '[' ']' '?' '(' ')' '-' ','
@@ -18,25 +18,26 @@ Nonassoc    250 not_op.
 Left        300 '.'.
 Left        350 scan.
 
+
 expression      -> root                                         :   [extract('$1')].
 expression      -> expression '.' word                          :   '$1' ++ [{dot, property('$3')}].
-expression      -> expression '.' '[' word  ']'                 :   '$1' ++ [{dot, property('$4')}].
-expression      -> expression '[' word ']'                      :   '$1' ++ [{dot, property('$3')}].
-
 expression      -> expression '.' wildcard                      :   '$1' ++ [extract('$3')].
+expression      -> expression '.' '[' quoted_word ']'           :   '$1' ++ [{dot, property('$4')}].
 expression      -> expression '.' '[' wildcard ']'              :   '$1' ++ [extract('$4')].
-expression      -> expression '[' wildcard ']'                  :   '$1' ++ [extract('$3')].
-
 expression      -> expression '.' array_indexes                 :   '$1' ++ ['$3'].
 expression      -> expression '.' filter_exp                    :   '$1' ++ ['$3'].
 
+expression      -> expression '[' quoted_word ']'               :   '$1' ++ [{dot, property('$3')}].
+expression      -> expression '[' wildcard ']'                  :   '$1' ++ [extract('$3')].
+expression      -> expression filter_exp                        :   '$1' ++ ['$2'].
+expression      -> expression array_indexes                     :   '$1' ++ ['$2'].
+
 expression      -> expression scan word                         :   '$1' ++ [build_scan(property('$3'))].
+expression      -> expression scan '[' quoted_word ']'          :   '$1' ++ [build_scan(property('$4'))].
 expression      -> expression scan array_indexes                :   '$1' ++ [build_scan('$3')].
 expression      -> expression scan filter_exp                   :   '$1' ++ [build_scan('$3')].
 expression      -> expression scan wildcard                     :   '$1' ++ [build_scan(extract('$3'))].
 expression      -> expression scan '[' wildcard ']'             :   '$1' ++ [build_scan(extract('$4'))].
-expression      -> expression filter_exp                        :   '$1' ++ ['$2'].
-expression      -> expression array_indexes                     :   '$1' ++ ['$2'].
 
 
 %%Array
@@ -57,17 +58,18 @@ boolean_exp     -> '(' boolean_exp ')'                          :   '$2'.
         
 predicate       -> item comparator item                         :   {extract_value('$2'), ['$1', '$3']}.                    
 predicate       -> word '(' item ')'                            :   function_call('$1', '$3').
-predicate       -> item in_op list                              :   {in, ['$1', '$3']}.
+predicate       -> item in_op elements                          :   {in, ['$1', '$3']}.
 
 item            -> number                                       :   '$1'.
 item            -> boolean                                      :   '$1'.
 item            -> current_object '.' word                      :   property('$3').
 item            -> current_object                               :   current_object.
 item            -> word                                         :   extract_value('$1').
+item            -> quoted_word                                  :   extract_value('$1').
 
-list            -> '[' elements ']'                             : '$2'.
-elements        -> item                                         : ['$1'].
-elements        -> elements ',' item                            : '$1' ++ ['$3']. 
+elements        -> '[' element ']'                              : '$2'.
+element         -> item                                         : ['$1'].
+element         -> element ',' item                             : '$1' ++ ['$3']. 
 
 boolean         -> true                                         :   true.
 boolean         -> false                                        :   false.
