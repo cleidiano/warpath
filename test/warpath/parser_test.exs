@@ -67,13 +67,13 @@ defmodule Warpath.ParserTest do
       assert tokens("$..[*][?(@.age > 18)]") |> Parser.parse() == expression
     end
 
-    test "wildcard with contains filter expression" do
+    test "wildcard with has_property? filter expression" do
       expression =
         {:ok,
          [
            {:root, "$"},
            {:scan, {:wildcard, :*}},
-           {:filter, {:contains, {:property, "age"}}}
+           {:filter, {:has_property?, {:property, "age"}}}
          ]}
 
       assert tokens("$..*.[?(@.age)]") |> Parser.parse() == expression
@@ -91,12 +91,12 @@ defmodule Warpath.ParserTest do
                 ]}
     end
 
-    test "with contains filter expression" do
+    test "with has_property? filter expression" do
       assert tokens("$..[?(@.age)]") |> Parser.parse() ==
                {:ok,
                 [
                   {:root, "$"},
-                  {:scan, {:filter, {:contains, {:property, "age"}}}}
+                  {:scan, {:filter, {:has_property?, {:property, "age"}}}}
                 ]}
     end
 
@@ -197,13 +197,13 @@ defmodule Warpath.ParserTest do
                 ]}
     end
 
-    test "that is a contains operator" do
+    test "that is a has_property? operator" do
       assert tokens("$.persons[?(@.age)]") |> Parser.parse() ==
                {:ok,
                 [
                   {:root, "$"},
                   {:dot, {:property, "persons"}},
-                  {:filter, {:contains, {:property, "age"}}}
+                  {:filter, {:has_property?, {:property, "age"}}}
                 ]}
     end
 

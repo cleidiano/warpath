@@ -12,7 +12,7 @@ defmodule Warpath.Expression do
   @type array_indexes :: {:array_indexes, [index_access, ...]}
   @type wildcard :: {:wildcard, :*}
   @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!==
-  @type contains :: {:contains, property}
+  @type has_property :: {:has_property, property}
   @type fun ::
           :is_atom
           | :is_binary
@@ -25,7 +25,7 @@ defmodule Warpath.Expression do
           | :is_number
           | :is_tuple
 
-  @type filter :: {:filter, contains | {operator | fun, term}}
+  @type filter :: {:filter, has_property | {operator | fun, term}}
 
   @type scan ::
           {:scan, property}

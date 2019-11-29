@@ -30,7 +30,7 @@ defmodule Warpath.Filter.Predicate do
   ]
 
   def eval({action, _} = expression, context)
-      when action == :contains
+      when action == :has_property?
       when action in @operators
       when action in @functions do
     resolve(expression, context)
@@ -48,7 +48,7 @@ defmodule Warpath.Filter.Predicate do
     end
   end
 
-  defp resolve({:contains, {:property, name}}, context),
+  defp resolve({:has_property?, {:property, name}}, context),
     do: is_map(context) and Map.has_key?(context, name)
 
   defp resolve({:property, name}, context) when is_map(context),

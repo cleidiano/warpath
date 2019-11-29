@@ -47,7 +47,7 @@ defmodule Warpath.FilterTest do
       books = context[:data]["store"]["book"]
 
       assert [{List.last(books), path}] ==
-               Filter.filter({books, []}, {:contains, {:property, "isbn"}})
+               Filter.filter({books, []}, {:has_property?, {:property, "isbn"}})
     end
 
     test "when the target member is a list of [{member, path}]", context do
@@ -68,7 +68,7 @@ defmodule Warpath.FilterTest do
     invalid_types = [10, "Test", {:some, 10}]
 
     for type <- invalid_types do
-      assert [] == Filter.filter({type, []}, {:contains, {:property, "any"}})
+      assert [] == Filter.filter({type, []}, {:has_property?, {:property, "any"}})
     end
   end
 end

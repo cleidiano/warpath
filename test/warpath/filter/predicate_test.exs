@@ -91,13 +91,13 @@ defmodule Warpath.Filter.PredicateTest do
     end
   end
 
-  describe "eval/2 handle a contains operation" do
+  describe "eval/2 handle a has_property? operation" do
     test "that return true" do
-      assert Predicate.eval({:contains, {:property, "likes"}}, %{"likes" => 1})
+      assert Predicate.eval({:has_property?, {:property, "likes"}}, %{"likes" => 1})
     end
 
     test "that return false" do
-      refute Predicate.eval({:contains, {:property, "likes"}}, %{"followers" => 10})
+      refute Predicate.eval({:has_property?, {:property, "likes"}}, %{"followers" => 10})
     end
   end
 
