@@ -7,12 +7,12 @@ defmodule Warpath.Expression do
 
   @type root :: {:root, String.t()}
   @type property :: {:property, String.t()}
+  @type has_property :: {:has_property?, property}
   @type dot_access :: {:dot, property}
   @type index_access :: {:index_access, integer}
   @type array_indexes :: {:array_indexes, [index_access, ...]}
   @type wildcard :: {:wildcard, :*}
-  @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!==
-  @type has_property :: {:has_property, property}
+  @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!== | :and | :or | :in
   @type fun ::
           :is_atom
           | :is_binary
@@ -26,20 +26,8 @@ defmodule Warpath.Expression do
           | :is_tuple
 
   @type filter :: {:filter, has_property | {operator | fun, term}}
-
-  @type scan ::
-          {:scan, property}
-          | {:scan, wildcard}
-          | {:scan, filter}
-          | {:scan, array_indexes}
-          | {:scan, {wildcard, filter}}
-
-  @type token ::
-          root
-          | dot_access
-          | array_indexes
-          | filter
-          | scan
+  @type scan :: {:scan, property} | wildcard | filter | array_indexes | {wildcard, filter}
+  @type token :: root | dot_access | array_indexes | filter | scan
 
   @spec compile(String.t()) :: {:ok, [token, ...]} | {:error, ExpressionError.t()}
   def compile(expression) when is_binary(expression) do

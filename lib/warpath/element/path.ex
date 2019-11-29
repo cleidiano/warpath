@@ -8,7 +8,7 @@ defmodule Warpath.Element.Path do
 
   @type t :: [token, ...]
 
-  @spec accumulate(token, list) :: list
+  @spec accumulate(token, t) :: t
   def accumulate(token, acc) when is_list(acc), do: [token | acc]
 
   @spec bracketify(t) :: binary
