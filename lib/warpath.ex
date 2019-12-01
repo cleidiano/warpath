@@ -29,12 +29,11 @@ defmodule Warpath do
     terms = Enum.reduce(tokens, {document, []}, &transform(&2, &1))
     {:ok, terms}
   rescue
-    e in RuntimeError -> {:error, e}
+    e in UnsupportedOperationError -> {:error, e}
   end
 
-  defp transform({member, path}, {:root, _} = token) do
-    {member, Path.accumulate(token, path)}
-  end
+  defp transform({member, path}, {:root, _} = token),
+    do: {member, Path.accumulate(token, path)}
 
   defp transform({members, path}, {:dot, {:property, property} = token})
        when is_list(members) do
@@ -44,7 +43,7 @@ defmodule Warpath do
         "that it's not allowed for list type. " <>
         "You can use something like '#{Path.dotify(path)}[*].#{property}' instead."
 
-    raise RuntimeError, message
+    raise UnsupportedOperationError, message
   end
 
   defp transform({member, path}, {:dot, {:property, property} = token}) do
@@ -57,6 +56,9 @@ defmodule Warpath do
     end
   end
 
+  defp transform({_, _} = element, {:array_indexes, indexes}),
+    do: Enum.map(indexes, &transform(element, &1))
+
   defp transform({members, path}, {:index_access, index} = token)
        when is_list(members) do
     member = get_in(members, [Access.at(index)])
@@ -64,29 +66,21 @@ defmodule Warpath do
     {member, Path.accumulate(token, path)}
   end
 
-  defp transform({_, _} = element, {:array_indexes, indexes}) do
-    Enum.map(indexes, &transform(element, &1))
-  end
-
-  defp transform({members, _} = element, {:wildcard, :*})
-       when is_list(members)
-       when is_map(members) do
+  defp transform({members, _} = element, {:wildcard, :*}) when is_container(members) do
     element
     |> PathMarker.stream()
     |> Enum.to_list()
   end
 
-  defp transform(element, {:filter, filter_expression}) do
-    Filter.filter(element, filter_expression)
-  end
+  defp transform(element, {:filter, filter_expression}),
+    do: Filter.filter(element, filter_expression)
 
-  defp transform(element, {:scan, {tag, _} = target}) when tag in [:property, :wildcard] do
-    Scanner.scan(element, target, &Path.accumulate/2)
-  end
+  defp transform(element, {:scan, {tag, _} = target})
+       when tag in [:property, :wildcard],
+       do: Scanner.scan(element, target, &Path.accumulate/2)
 
-  defp transform(element, {:scan, {:filter, _} = filter}) do
-    do_scan_filter([element], filter)
-  end
+  defp transform(element, {:scan, {:filter, _} = filter}),
+    do: do_scan_filter([element], filter)
 
   defp transform(element, {:scan, {:array_indexes, _} = indexes}) do
     reducer = container_reducer()
@@ -99,9 +93,8 @@ defmodule Warpath do
 
   defp transform([element | []], token), do: transform(element, token)
 
-  defp transform(members, token) when is_list(members) do
-    Enum.map(members, fn member -> transform(member, token) end)
-  end
+  defp transform(members, token) when is_list(members),
+    do: Enum.map(members, &transform(&1, token))
 
   defp transform({_member, path}, token) do
     raise UnsupportedOperationError,
