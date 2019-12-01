@@ -30,7 +30,7 @@ defmodule Warpath.TokenizerTest do
                {:ok, [{:quoted_word, 1, "single quoted word"}]}
     end
 
-    test "current object" do
+    test "current node" do
       assert Tokenizer.tokenize("@") == {:ok, [{:current_node, 1, "@"}]}
     end
 

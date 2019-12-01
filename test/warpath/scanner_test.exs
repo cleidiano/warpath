@@ -2,7 +2,7 @@ defmodule Warpath.Engine.ScannerTest do
   use ExUnit.Case, async: true
 
   alias Warpath.Element.Path
-  alias Warpath.Engine.Scanner
+  alias Warpath.Scanner
 
   setup_all do
     [store: Oracle.json_store()]

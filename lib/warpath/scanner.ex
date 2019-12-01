@@ -1,8 +1,8 @@
-defmodule Warpath.Engine.Scanner do
+defmodule Warpath.Scanner do
   @moduledoc false
 
   alias Warpath.Element.Path
-  alias Warpath.Engine.EnumWalker
+  alias Warpath.EnumWalker
 
   def scan(element, criteria, path_fun \\ &Path.accumulate/2)
 

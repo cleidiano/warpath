@@ -1,34 +1,33 @@
-defmodule Warpath.ParserTest do
+defmodule Warpath.ExpressionTest do
   use ExUnit.Case, async: true
 
   import Match
 
-  alias Warpath.Parser
-  alias Warpath.ParserError
-  alias Warpath.Tokenizer
+  alias Warpath.Expression
+  alias Warpath.ExpressionError
 
-  describe "parse/1 parse basic" do
-    test "root token expression" do
-      assert tokens("$") |> Parser.parse() == {:ok, [{:root, "$"}]}
+  describe "compile/1 compile" do
+    test "root expression" do
+      assert Expression.compile("$") == {:ok, [{:root, "$"}]}
     end
 
     test "dot property access" do
-      assert tokens("$.name") |> Parser.parse() ==
+      assert Expression.compile("$.name") ==
                {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
     end
 
     test "index based access" do
-      assert tokens("$[0]") |> Parser.parse() ==
+      assert Expression.compile("$[0]") ==
                {:ok, [{:root, "$"}, {:array_indexes, [{:index_access, 0}]}]}
     end
 
     test "wildcard property access" do
-      assert tokens("$.persons.*") |> Parser.parse() ==
+      assert Expression.compile("$.persons.*") ==
                {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}, {:wildcard, :*}]}
     end
 
     test "access many array index" do
-      assert tokens("$[0, 1, 2]") |> Parser.parse() ==
+      assert Expression.compile("$[0, 1, 2]") ==
                {:ok,
                 [
                   {:root, "$"},
@@ -37,19 +36,19 @@ defmodule Warpath.ParserTest do
     end
   end
 
-  describe "parse/1 parse a scan" do
+  describe "compile/1 compile scan" do
     test "property expression" do
-      assert tokens("$..name") |> Parser.parse() ==
+      assert Expression.compile("$..name") ==
                {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
     end
 
     test "array indexes access expression" do
-      assert tokens("$..[1]") |> Parser.parse() ==
+      assert Expression.compile("$..[1]") ==
                {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
     end
 
     test "wildcard expression" do
-      assert tokens("$..*") |> Parser.parse() == {:ok, [{:root, "$"}, {:scan, {:wildcard, :*}}]}
+      assert Expression.compile("$..*") == {:ok, [{:root, "$"}, {:scan, {:wildcard, :*}}]}
     end
 
     test "wildcard with comparator filter expression" do
@@ -61,10 +60,10 @@ defmodule Warpath.ParserTest do
            {:filter, {:>, [{:property, "age"}, 18]}}
          ]}
 
-      assert tokens("$..*.[?(@.age > 18)]") |> Parser.parse() == expression
-      assert tokens("$..*[?(@.age > 18)]") |> Parser.parse() == expression
-      assert tokens("$..[*].[?(@.age > 18)]") |> Parser.parse() == expression
-      assert tokens("$..[*][?(@.age > 18)]") |> Parser.parse() == expression
+      assert Expression.compile("$..*.[?(@.age > 18)]") == expression
+      assert Expression.compile("$..*[?(@.age > 18)]") == expression
+      assert Expression.compile("$..[*].[?(@.age > 18)]") == expression
+      assert Expression.compile("$..[*][?(@.age > 18)]") == expression
     end
 
     test "wildcard with has_property? filter expression" do
@@ -76,14 +75,14 @@ defmodule Warpath.ParserTest do
            {:filter, {:has_property?, {:property, "age"}}}
          ]}
 
-      assert tokens("$..*.[?(@.age)]") |> Parser.parse() == expression
-      assert tokens("$..*[?(@.age)]") |> Parser.parse() == expression
-      assert tokens("$..[*].[?(@.age)]") |> Parser.parse() == expression
-      assert tokens("$..[*][?(@.age)]") |> Parser.parse() == expression
+      assert Expression.compile("$..*.[?(@.age)]") == expression
+      assert Expression.compile("$..*[?(@.age)]") == expression
+      assert Expression.compile("$..[*].[?(@.age)]") == expression
+      assert Expression.compile("$..[*][?(@.age)]") == expression
     end
 
     test "with filter expression" do
-      assert tokens("$..[?(@.age > 18)]") |> Parser.parse() ==
+      assert Expression.compile("$..[?(@.age > 18)]") ==
                {:ok,
                 [
                   {:root, "$"},
@@ -92,7 +91,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "with has_property? filter expression" do
-      assert tokens("$..[?(@.age)]") |> Parser.parse() ==
+      assert Expression.compile("$..[?(@.age)]") ==
                {:ok,
                 [
                   {:root, "$"},
@@ -109,8 +108,8 @@ defmodule Warpath.ParserTest do
            {:array_indexes, [index_access: 1]}
          ]}
 
-      assert tokens("$..*[1]") |> Parser.parse() == expected
-      assert tokens("$..[*][1]") |> Parser.parse() == expected
+      assert Expression.compile("$..*[1]") == expected
+      assert Expression.compile("$..[*][1]") == expected
     end
 
     test "wildcard followed by dot call and array access expression" do
@@ -122,12 +121,12 @@ defmodule Warpath.ParserTest do
            {:array_indexes, [index_access: 1]}
          ]}
 
-      assert tokens("$..*.[1]") |> Parser.parse() == expected
-      assert tokens("$..[*].[1]") |> Parser.parse() == expected
+      assert Expression.compile("$..*.[1]") == expected
+      assert Expression.compile("$..[*].[1]") == expected
     end
 
     test "wildcard followed by dot property expression" do
-      assert tokens("$..*.name") |> Parser.parse() ==
+      assert Expression.compile("$..*.name") ==
                {:ok,
                 [
                   {:root, "$"},
@@ -137,7 +136,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "array wildcard followed by dot property expression" do
-      assert tokens("$..[*].name") |> Parser.parse() ==
+      assert Expression.compile("$..[*].name") ==
                {:ok,
                 [
                   {:root, "$"},
@@ -147,9 +146,9 @@ defmodule Warpath.ParserTest do
     end
   end
 
-  describe "parse/1 parse filter expression" do
+  describe "compile/1 compile filter expression" do
     test "that have a AND operator" do
-      assert tokens("$[?(true and true)]") |> Parser.parse() ==
+      assert Expression.compile("$[?(true and true)]") ==
                ok([
                  {:root, "$"},
                  {:filter, {:and, [true, true]}}
@@ -157,7 +156,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that have OR operator" do
-      assert tokens("$[?(true or true)]") |> Parser.parse() ==
+      assert Expression.compile("$[?(true or true)]") ==
                ok([
                  {:root, "$"},
                  {:filter, {:or, [true, true]}}
@@ -165,7 +164,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that is a OR precedence" do
-      assert tokens("$[?(true and true or false)]") |> Parser.parse() ==
+      assert Expression.compile("$[?(true and true or false)]") ==
                ok([
                  {:root, "$"},
                  {:filter, {:or, [{:and, [true, true]}, false]}}
@@ -173,7 +172,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that is a parenthesis precedence" do
-      assert tokens("$[?(true and (true or false))]") |> Parser.parse() ==
+      assert Expression.compile("$[?(true and (true or false))]") ==
                ok([
                  {:root, "$"},
                  {:filter, {:and, [true, {:or, [true, false]}]}}
@@ -181,7 +180,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that is a NOT operator" do
-      assert tokens("$[?(not true)]") |> Parser.parse() ==
+      assert Expression.compile("$[?(not true)]") ==
                ok([
                  {:root, "$"},
                  {:filter, {:not, true}}
@@ -189,7 +188,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that have a property on it" do
-      assert tokens("$[?(@.age > 10)]") |> Parser.parse() ==
+      assert Expression.compile("$[?(@.age > 10)]") ==
                {:ok,
                 [
                   {:root, "$"},
@@ -198,7 +197,7 @@ defmodule Warpath.ParserTest do
     end
 
     test "that is a has_property? operator" do
-      assert tokens("$.persons[?(@.age)]") |> Parser.parse() ==
+      assert Expression.compile("$.persons[?(@.age)]") ==
                {:ok,
                 [
                   {:root, "$"},
@@ -219,16 +218,12 @@ defmodule Warpath.ParserTest do
            ]}
         end)
 
-      expression_tokens =
-        operators
-        |> Enum.map(&tokens("$[?(@.age #{&1} 1)]"))
-        |> Enum.map(&Parser.parse/1)
-
+      expression_tokens = Enum.map(operators, &Expression.compile("$[?(@.age #{&1} 1)]"))
       assert expression_tokens == expected
     end
 
     test "that is a IN operator with one element on list" do
-      assert tokens("$[?(@.name in ['Warpath'])]") |> Parser.parse() ==
+      assert Expression.compile("$[?(@.name in ['Warpath'])]") ==
                {:ok,
                 [
                   {:root, "$"},
@@ -236,7 +231,7 @@ defmodule Warpath.ParserTest do
                 ]}
     end
 
-    test "that is allowed function call of " do
+    test "that is a allowed function call of " do
       functions = [
         :is_atom,
         :is_binary,
@@ -260,36 +255,24 @@ defmodule Warpath.ParserTest do
         end)
 
       expression_tokens =
-        functions
-        |> Enum.map(&tokens("$[?(#{Atom.to_string(&1)}(@.any))]"))
-        |> Enum.map(&Parser.parse/1)
+        Enum.map(functions, &Expression.compile("$[?(#{Atom.to_string(&1)}(@.any))]"))
 
       assert expression_tokens == expected
     end
 
     test "that is a invalid function call" do
       assert {:error,
-              %ParserError{
+              %ExpressionError{
                 message: "Parser error: Invalid token on line 1, 'function_name'"
-              }} = Parser.parse(tokens("$[?(function_name(@.any))]"))
+              }} = Expression.compile("$[?(function_name(@.any))]")
     end
 
-    test "that use current object as a target" do
-      assert tokens("$[?(@ == 10)]") |> Parser.parse() ==
+    test "that use a current node as a target" do
+      assert Expression.compile("$[?(@ == 10)]") ==
                ok([
                  {:root, "$"},
                  {:filter, {:==, [:current_node, 10]}}
                ])
     end
   end
-
-  describe "parse!/1 rise" do
-    test "ParserError for invalid tokens" do
-      assert_raise Warpath.ParserError, fn ->
-        Parser.parse!([{:invalid, "token"}])
-      end
-    end
-  end
-
-  defp tokens(string), do: Tokenizer.tokenize!(string)
 end

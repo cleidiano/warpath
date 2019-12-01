@@ -1,9 +1,9 @@
-defmodule Warpath.Engine.EnumWalker do
+defmodule Warpath.EnumWalker do
   @moduledoc false
 
   alias Warpath.Element.Path
   alias Warpath.Element.PathMarker
-  alias Warpath.Engine.EnumRecursiveDescent
+  alias Warpath.EnumRecursiveDescent
 
   @type member :: any
   @type element :: {member, Path.t()}
@@ -72,7 +72,7 @@ defmodule Warpath.Engine.EnumWalker do
   end
 end
 
-defmodule Warpath.Engine.EnumRecursiveDescent do
+defmodule Warpath.EnumRecursiveDescent do
   @moduledoc false
 
   alias Warpath.Element.Path

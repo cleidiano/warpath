@@ -6,10 +6,10 @@ defmodule Warpath do
   alias Warpath.Element.Path
   alias Warpath.Element.Path
   alias Warpath.Element.PathMarker
-  alias Warpath.Engine.EnumWalker
-  alias Warpath.Engine.Scanner
+  alias Warpath.EnumWalker
   alias Warpath.Expression
   alias Warpath.Filter
+  alias Warpath.Scanner
   alias Warpath.UnsupportedOperationError
 
   defguardp is_container(term) when is_list(term) or is_map(term)

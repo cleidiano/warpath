@@ -1,6 +1,6 @@
-defmodule Warpath.Engine.EnumWalkerTest do
+defmodule Warpath.EnumWalkerTest do
   use ExUnit.Case, async: true
-  alias Warpath.Engine.EnumWalker
+  alias Warpath.EnumWalker
 
   describe "reduce_while/4" do
     test "stop reduce a list of elements when encounter a {:halt, acc}" do
