@@ -35,26 +35,24 @@ defmodule Warpath do
   defp transform({member, path}, {:root, _} = token),
     do: {member, Path.accumulate(token, path)}
 
-  defp transform({members, path}, {:dot, {:property, property} = token})
+  defp transform({members, path} = element, {:dot, {:property, name} = property} = token)
        when is_list(members) do
-    message =
-      "You are trying to traverse a list using dot " <>
-        "notation '#{Path.accumulate(token, path) |> Path.dotify()}', " <>
-        "that it's not allowed for list type. " <>
-        "You can use something like '#{Path.dotify(path)}[*].#{property}' instead."
+    if Keyword.keyword?(members) do
+      access(element, token)
+    else
+      tips =
+        "You are trying to traverse a list using dot " <>
+          "notation '#{Path.accumulate(property, path) |> Path.dotify()}', " <>
+          "that it's not allowed for list type. " <>
+          "You can use something like '#{Path.dotify(path)}[*].#{name}' instead."
 
-    raise UnsupportedOperationError, message
-  end
-
-  defp transform({member, path}, {:dot, {:property, property} = token}) do
-    case member do
-      term when is_container(term) ->
-        {member[property], Path.accumulate(token, path)}
-
-      _ ->
-        []
+      raise UnsupportedOperationError, tips
     end
   end
+
+  defp transform({member, _} = element, {:dot, _} = dot_token)
+       when is_map(member),
+       do: access(element, dot_token)
 
   defp transform({_, _} = element, {:array_indexes, indexes}),
     do: Enum.map(indexes, &transform(element, &1))
@@ -101,6 +99,10 @@ defmodule Warpath do
           "token=#{inspect(token)}, path=#{inspect(path)}"
   end
 
+  defp access({member, path}, {:dot, {:property, key} = token}) do
+    {member[key], Path.accumulate(token, path)}
+  end
+
   defp do_scan_filter(enumerable, filter) do
     enumerable
     |> EnumWalker.reduce_while([], container_reducer(), &Path.accumulate/2)
@@ -124,12 +126,7 @@ defmodule Warpath do
     end
   end
 
-  defp collect(elements, opt) when is_list(elements) do
-    elements
-    |> Stream.reject(&(&1 == []))
-    |> Enum.map(&collect(&1, opt))
-  end
-
+  defp collect(elements, opt) when is_list(elements), do: Enum.map(elements, &collect(&1, opt))
   defp collect({member, path}, :value_path), do: {member, Path.bracketify(path)}
   defp collect({_, path}, :path), do: Path.bracketify(path)
   defp collect({member, _}, _), do: member

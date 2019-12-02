@@ -34,6 +34,11 @@ defmodule Warpath.ExpressionTest do
                   {:array_indexes, [{:index_access, 0}, {:index_access, 1}, {:index_access, 2}]}
                 ]}
     end
+
+    test "atom based access" do
+      assert Expression.compile(~S{$.:atom_key}) ==
+               {:ok, [{:root, "$"}, {:dot, {:property, :atom_key}}]}
+    end
   end
 
   describe "compile/1 compile scan" do

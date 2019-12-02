@@ -108,6 +108,14 @@ defmodule Warpath.TokenizerTest do
       assert Tokenizer.tokenize("and") == {:ok, [{:and_op, 1}]}
       assert Tokenizer.tokenize("&&") == {:ok, [{:and_op, 1}]}
     end
+
+    test "atom" do
+      assert Tokenizer.tokenize(":any") == {:ok, [{:word, 1, :any}]}
+    end
+
+    test "quoted atom" do
+      assert Tokenizer.tokenize(~S{:"quoted atom"}) == {:ok, [{:word, 1, :"quoted atom"}]}
+    end
   end
 
   test "tokenize/1 should return {:error, reason} for invalid syntax" do

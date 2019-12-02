@@ -20,6 +20,15 @@ defmodule WarpathTest do
                {:ok, {value, path}}
     end
 
+    test "evaluate atom expression" do
+      value = %{"color" => "red", "price" => 19.95}
+      path = "$['bicycle']"
+      document = %{bicycle: value}
+
+      assert Warpath.query(document, "$.:bicycle", @value_path) == {:ok, {value, path}}
+      assert Warpath.query([bicycle: value], "$.:bicycle", @value_path) == {:ok, {value, path}}
+    end
+
     test "result nil for property expression that not exists", %{data: document} do
       assert Warpath.query(document, "$.dont_exist", @value_path) ==
                {:ok, {nil, "$['dont_exist']"}}

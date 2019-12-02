@@ -1,7 +1,7 @@
 Definitions.
 
 ROOT                 = \$
-CURRENT_OBJECT       = @
+CURRENT_NODE         = @
 WORD                 = ([A-Za-z_]+[A-Za-z0-9]*)
 SINGLE_QUOTED_WORD   = '([^\']*)'
 COMPARATOR           = (<|>|<=|>=|==|!=|===|!==)
@@ -16,6 +16,7 @@ DOT                  = \.
 QUESTION_MARK        = \?
 WILDCARD             = \*
 COMMA                = ,
+COLON                = :
 WHITESPACE           = [\s\t\n\r]
 
 Rules.
@@ -27,10 +28,12 @@ true                    : {token, {true,            TokenLine}}.
 false                   : {token, {false,           TokenLine}}.
 in                      : {token, {in_op,           TokenLine}}.
 
+{COLON}{WORD}           : {token, {word,            TokenLine, to_atom(TokenChars)}}.
+{COLON}".+"             : {token, {word,            TokenLine, to_atom(TokenChars)}}.
 {ROOT}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
 {WORD}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
 {SINGLE_QUOTED_WORD}    : {token, {quoted_word,     TokenLine, single_quoted_word_to_binary(TokenChars)}}.
-{CURRENT_OBJECT}        : {token, {current_node,    TokenLine, list_to_binary(TokenChars)}}.
+{CURRENT_NODE}          : {token, {current_node,    TokenLine, list_to_binary(TokenChars)}}.
 {COMPARATOR}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
 {INT}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
 {INT}{DOT}{INT}         : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
@@ -48,10 +51,19 @@ in                      : {token, {in_op,           TokenLine}}.
 
 Erlang code.
 
-single_quoted_word_to_binary("''") -> <<>>;
-single_quoted_word_to_binary("'" ++ TokenChars) ->
-    Caracter = lists:last(TokenChars),
-    case Caracter of
-      39 -> list_to_binary(lists:droplast(TokenChars));
+single_quoted_word_to_binary([$', $']) -> <<>>;
+single_quoted_word_to_binary([$' | Chars]) ->
+    Char = lists:last(Chars),
+    case Char of
+      $' -> list_to_binary(lists:droplast(Chars));
       Other -> {error, Other}
     end.
+
+to_atom([$: | Chars]) -> to_atom(Chars);
+to_atom([$" | Chars]) ->
+  Char = lists:last(Chars),
+  case Char of
+    $" -> to_atom(lists:droplast(Chars));
+    Other -> {error, Other}
+  end;
+to_atom(Chars) -> list_to_atom(Chars).
