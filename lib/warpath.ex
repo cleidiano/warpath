@@ -4,7 +4,6 @@ defmodule Warpath do
   """
 
   alias Warpath.Element.Path
-  alias Warpath.Element.Path
   alias Warpath.Element.PathMarker
   alias Warpath.EnumWalker
   alias Warpath.Expression
@@ -50,18 +49,14 @@ defmodule Warpath do
     end
   end
 
-  defp transform({member, _} = element, {:dot, _} = dot_token)
-       when is_map(member),
-       do: access(element, dot_token)
+  defp transform({member, _} = element, {:dot, _} = dot_token) when is_map(member),
+    do: access(element, dot_token)
 
   defp transform({_, _} = element, {:array_indexes, indexes}),
     do: Enum.map(indexes, &transform(element, &1))
 
-  defp transform({members, path}, {:index_access, index} = token)
-       when is_list(members) do
-    member = get_in(members, [Access.at(index)])
-
-    {member, Path.accumulate(token, path)}
+  defp transform({members, path}, {:index_access, index} = token) when is_list(members) do
+    {Enum.at(members, index), Path.accumulate(token, path)}
   end
 
   defp transform({members, _} = element, {:wildcard, :*}) when is_container(members) do
@@ -73,21 +68,14 @@ defmodule Warpath do
   defp transform(element, {:filter, filter_expression}),
     do: Filter.filter(element, filter_expression)
 
-  defp transform(element, {:scan, {tag, _} = target})
-       when tag in [:property, :wildcard],
-       do: Scanner.scan(element, target, &Path.accumulate/2)
+  defp transform(element, {:scan, {tag, _} = target}) when tag in [:property, :wildcard],
+    do: Scanner.scan(element, target, &Path.accumulate/2)
 
   defp transform(element, {:scan, {:filter, _} = filter}),
     do: do_scan_filter([element], filter)
 
-  defp transform(element, {:scan, {:array_indexes, _} = indexes}) do
-    reducer = container_reducer()
-
-    [element]
-    |> EnumWalker.reduce_while([], reducer, &Path.accumulate/2)
-    |> Stream.filter(fn {members, _} -> is_list(members) end)
-    |> Enum.flat_map(&transform(&1, indexes))
-  end
+  defp transform(element, {:scan, {:array_indexes, _} = indexes}),
+    do: do_scan_filter(element, indexes)
 
   defp transform([element | []], token), do: transform(element, token)
 

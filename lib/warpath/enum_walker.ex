@@ -26,15 +26,15 @@ defmodule Warpath.EnumWalker do
       Enum.reduce(elements, acc, &handle_accumulation(&1, &2, walk_reducer, path_fun))
     end
 
-    capture_throw(fun)
+    catch_throw(fun)
   end
 
   def reduce_while({member, _} = element, acc, walk_reducer, path_fun)
       when is_container(member) do
-    capture_throw(fn -> traverse(element, acc, walk_reducer, path_fun) end)
+    catch_throw(fn -> traverse(element, acc, walk_reducer, path_fun) end)
   end
 
-  defp capture_throw(fun) when is_function(fun, 0) do
+  defp catch_throw(fun) when is_function(fun, 0) do
     fun.()
   rescue
     e in ArgumentError -> {:error, e}

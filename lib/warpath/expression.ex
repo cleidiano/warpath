@@ -1,6 +1,5 @@
 defmodule Warpath.Expression do
   @moduledoc false
-  # TODO Document this module
   alias Warpath.ExpressionError
   alias Warpath.Parser
   alias Warpath.Tokenizer
