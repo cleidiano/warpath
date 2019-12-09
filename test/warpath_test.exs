@@ -1,6 +1,8 @@
 defmodule WarpathTest do
   use ExUnit.Case, async: true
 
+  doctest Warpath
+
   @value_path [result_type: :value_path]
 
   setup_all do
@@ -202,7 +204,7 @@ defmodule WarpathTest do
       assert Warpath.query(document, "$.store.book[?(@.isbn)]", @value_path) == {:ok, books}
     end
 
-    test "that use a guard function" do
+    test "that use a function" do
       data = %{"list" => [1.0, 2, 3, "string"], "integer" => 1}
 
       assert Warpath.query(data, "$.list[?(is_integer(@))]") == {:ok, [2, 3]}
