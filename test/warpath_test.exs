@@ -273,6 +273,44 @@ defmodule WarpathTest do
     end
   end
 
+  describe "query/3 handle slice" do
+    test "with only start index supplied" do
+      list = [0, 1, 2, 3, 4, 5]
+
+      assert Warpath.query(list, "$[1:]", @value_path) ==
+               {:ok, [{1, "$[1]"}, {2, "$[2]"}, {3, "$[3]"}, {4, "$[4]"}, {5, "$[5]"}]}
+    end
+
+    test "with only negative start index supplied" do
+      list = [0, 1, 2, 3, 4, 5]
+      assert Warpath.query(list, "$[-2:]", @value_path) == {:ok, [{4, "$[4]"}, {5, "$[5]"}]}
+    end
+
+    test "with only end index supplied" do
+      list = [0, 1, 2, 3, 4, 5]
+      assert Warpath.query(list, "$[:2]", @value_path) == {:ok, [{0, "$[0]"}, {1, "$[1]"}]}
+    end
+
+    test "with only negative end index supplied" do
+      list = [0, 1, 2, 3, 4, 5]
+
+      assert Warpath.query(list, "$[:-2]", @value_path) ==
+               {:ok, [{0, "$[0]"}, {1, "$[1]"}, {2, "$[2]"}, {3, "$[3]"}]}
+    end
+
+    test "with negative start index and negative end index supplied" do
+      list = [0, 1, 2, 3, 4, 5]
+      assert Warpath.query(list, "$[-3:-1]", @value_path) == {:ok, [{3, "$[3]"}, {4, "$[4]"}]}
+    end
+
+    test "with step, start and end index supplied" do
+      list = [0, 1, 2, 3, 4, 5, 6, 7]
+
+      assert Warpath.query(list, "$[0:6:2]", @value_path) ==
+               {:ok, [{0, "$[0]"}, {2, "$[2]"}, {4, "$[4]"}]}
+    end
+  end
+
   describe "query/3 handle options" do
     test "result_type: :path", %{data: document} do
       trace = "$['store']['book'][0]"

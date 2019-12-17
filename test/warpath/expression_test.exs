@@ -151,6 +151,59 @@ defmodule Warpath.ExpressionTest do
     end
   end
 
+  describe "compile/1 compile array slice expression" do
+    test "with all parameters supplied" do
+      assert Expression.compile("$[0:1:1]") ==
+               {:ok, [{:root, "$"}, {:array_slice, [start_index: 0, end_index: 1, step: 1]}]}
+    end
+
+    test "with only start index supplied" do
+      assert Expression.compile("$[0:]") ==
+               {:ok, [{:root, "$"}, {:array_slice, [start_index: 0]}]}
+    end
+
+    test "with only end index supplied" do
+      assert Expression.compile("$[:1]") ==
+               {:ok, [{:root, "$"}, {:array_slice, [end_index: 1]}]}
+    end
+
+    test "with negative start index" do
+      assert Expression.compile("$[-1:]") ==
+               {:ok, [{:root, "$"}, {:array_slice, [start_index: -1]}]}
+    end
+
+    test "with negative end index" do
+      assert Expression.compile("$[:-1]") ==
+               {:ok, [{:root, "$"}, {:array_slice, [end_index: -1]}]}
+    end
+
+    test "with invalid step argument" do
+      message = "Parser error: Invalid token on line 1, slice step can't be negative"
+
+      assert Expression.compile("$[1:1:-1]") ==
+               {:error, %ExpressionError{message: message}}
+    end
+
+    test "with empty index" do
+      message =
+        "Parser error: Invalid token on line 1," <>
+          " missing slice params, start or end index must be supplied"
+
+      assert Expression.compile("$[::]") ==
+               {:error, %ExpressionError{message: message}}
+    end
+
+    test "with to many arguments supplied" do
+      message =
+        "Parser error: Invalid token on line 1, " <>
+          "to many params found for slice operation, " <>
+          "the valid syntax is [start_index:end_index:step]"
+
+      assert Expression.compile("$[1:3:2:1]") ==
+               {:error, %ExpressionError{message: message}}
+    end
+  end
+
   describe "compile/1 compile filter expression" do
     test "that have a AND operator" do
       assert Expression.compile("$[?(true and true)]") ==

@@ -14,30 +14,30 @@ defmodule Warpath do
     | `.name`                   | Dot-notated child, it support string or atom as keys.              |
     | `['name']`                | Bracket-notated child, it support string or atom as keys.          |
     | `[int (,int>)]`           | Array index or indexes                                             |
-    | `[start:end]`             | Array slice operator. **Will be supported soon**                   |
+    | `[start:end:step]`        | Array slice operator. Start index **inclusive**, end index **exclusive**. |
     | `[?(expression)]`         | Filter expression. Expression must evaluate to a boolean value.    |
 
-  ## Filters operators
+  ## Filter operators
     Filter are expression that must be evaluated to a boolean value, Warpath will use then to retain data when filter a list,
     a filter expression have the syntax like this `[?( @.category == 'fiction' )]`.
 
     All filter operator supported by Warpath have the same behavior of Elixir lang,
-    it means that it's possible to compare diferente data types.
+    it means that it's possible to compare different data types.
 
     The down side of this approach is that filter a list with
-    diferente data types could result e undesired output for exenple:
+    different data types could result in undesired output, for example:
     ```
     iex> data = [:atom, "string", 11]
     ...> Warpath.query(data, "$[?(@ > 10)]")
     {:ok, [:atom, "string", 11]}
     ```
 
-    The expression were evaluate and return the enterily input list has the output, this happen
-    because the way elixir implement comparision, check the [Elixir getting started](https://elixir-lang.org/getting-started/basic-operators.html)
+    The expression were evaluate and return the entirely input list as the output, this happen
+    because the way elixir implement comparison, check the [Elixir getting started](https://elixir-lang.org/getting-started/basic-operators.html)
     page for more information.
 
-    To cover this eddge case, Warpath support some functions to check the underline item data type that
-    the filter is operate on, it could be combined with `and` operator to gain the strictness among comparision.
+    To cover this case Warpath support some functions to check the underline data type that
+    the filter is operate on, it could be combined with `and` operator to gain the strictness among comparison.
 
     The above expression could be rewrite to retain only integer values that is greater than 10 like this.
       iex> data = [:atom, "string", 11]
@@ -60,7 +60,7 @@ defmodule Warpath do
     | not                      | logical not operator `[?(not @.category == 'fiction')]`             |
 
 
-    | Function            | Descrition                   |
+    | Function            | Description                   |
     | :------------------ | :--------------------------- |
     | is_atom/1           | check if the given expression argument is evaluate to atom       |
     | is_binary/1         | check if the given expression argument is evaluate to binary     |
@@ -75,11 +75,11 @@ defmodule Warpath do
 
   ## Examples
 
-      #key access
+      #Dot-notated access
       iex>Warpath.query(%{"category" => "fiction", "price" => 12.99}, "$.category")
       {:ok, "fiction"}
 
-      #quoted key
+      #Bracket-notated access
       iex>Warpath.query(%{"key with whitespace" => "some value"}, "$.['key with whitespace']")
       {:ok, "some value"}
 
@@ -92,17 +92,17 @@ defmodule Warpath do
       {:ok, "some value"}
 
       #wildcard access
-      iex>document = %{"store" => %{"car" => %{"price" => 100_000}, "bicyle" => %{"price" => 500}}}
+      iex>document = %{"store" => %{"car" => %{"price" => 100_000}, "bicycle" => %{"price" => 500}}}
       ...>Warpath.query(document, "$.store.*.price")
       {:ok, [500, 100_000]}
 
       #scan operator
-      iex>document = %{"store" => %{"car" => %{"price" => 100_000}, "bicyle" => %{"price" => 500}}}
+      iex>document = %{"store" => %{"car" => %{"price" => 100_000}, "bicycle" => %{"price" => 500}}}
       ...>Warpath.query(document, "$..price")
       {:ok, [500, 100_000]}
 
       #filter operator
-      iex>document = %{"store" => %{"car" => %{"price" => 100_000}, "bicyle" => %{"price" => 500}}}
+      iex>document = %{"store" => %{"car" => %{"price" => 100_000}, "bicycle" => %{"price" => 500}}}
       ...> Warpath.query(document, "$..*[?( @.price > 500 and is_integer(@.price) )]")
       {:ok, [%{"price" => 100000}]}
 
@@ -121,14 +121,29 @@ defmodule Warpath do
       ...> Warpath.query(document, "$.integers[*]")
       {:ok, [100, 200, 300]}
 
+      #slice operator
+      iex> document = [0, 1, 2, 3, 4]
+      ...> Warpath.query(document, "$[0:2:1]")
+      {:ok, [0, 1]}
+
+      #optional start and step
+      iex> document = [0, 1, 2, 3, 4]
+      ...> Warpath.query(document, "$[:2]")
+      {:ok, [0, 1]}
+
+      #Negative index
+      iex> document = [0, 1, 2, 3, 4]
+      ...> Warpath.query(document, "$[-2:]")
+      {:ok, [3, 4]}
+
       #options
       iex>document = %{"integers" => [100, 200, 300]}
       ...> Warpath.query(document, "$.integers[0, 1]", result_type: :path)
-      {:ok, [ "$['integers'][0]", "$['integers'][1]" ]}
+      {:ok, ["$['integers'][0]", "$['integers'][1]"]}
 
       iex>document = %{"integers" => [100, 200, 300]}
       ...> Warpath.query(document, "$.integers[0, 1]", result_type: :value_path)
-      {:ok, [ {100, "$['integers'][0]"}, {200, "$['integers'][1]"} ]}
+      {:ok, [{100, "$['integers'][0]"}, {200, "$['integers'][1]"}]}
   """
 
   alias Warpath.Element.Path
@@ -148,7 +163,7 @@ defmodule Warpath do
     result_type:
     * `:path` - return the path of evaluated expression instead of it's value
     * `:value` -  return the value of evaluated expression - `default`
-    * `:value_path` - return both path and values.
+    * `:value_path` - return both path and value.
   """
   @spec query(any, String.t(), result_type: :value | :path | :value_path) :: any
   def query(data, string, opts \\ []) when is_binary(string) and is_list(opts) do
@@ -214,6 +229,21 @@ defmodule Warpath do
   defp transform(element, {:scan, {:array_indexes, _} = indexes}),
     do: do_scan_filter(element, indexes)
 
+  defp transform({members, _} = element, {:array_slice, slice}) do
+    start_index = slice_start_index(slice)
+    end_index = slice_exclusive_end_index(members, slice)
+    step = slice_step(slice)
+
+    index_range = start_index..end_index
+
+    element
+    |> PathMarker.stream()
+    |> Stream.with_index()
+    |> Enum.slice(index_range)
+    |> Stream.reject(fn {_, index} -> rem(index, step) != 0 end)
+    |> Enum.map(fn {member_path, _} -> member_path end)
+  end
+
   defp transform(members, token) when is_list(members) do
     members
     |> List.flatten()
@@ -235,6 +265,12 @@ defmodule Warpath do
     |> Stream.filter(fn {member, _} -> is_list(member) end)
     |> Enum.flat_map(fn element -> transform(element, filter) end)
   end
+
+  defp slice_step(slice), do: Keyword.get(slice, :step, 1)
+  defp slice_start_index(slice), do: Keyword.get(slice, :start_index, 0)
+
+  defp slice_exclusive_end_index(element, slice),
+    do: Keyword.get_lazy(slice, :end_index, fn -> length(element) end) - 1
 
   defguardp has_itens(container)
             when (is_list(container) and container != []) or

@@ -86,8 +86,8 @@ defmodule Warpath.TokenizerTest do
       assert Tokenizer.tokenize(",") == {:ok, [{:",", 1}]}
     end
 
-    test "minus" do
-      assert Tokenizer.tokenize("-") == {:ok, [{:-, 1}]}
+    test "colon" do
+      assert Tokenizer.tokenize(":") == {:ok, [{:":", 1}]}
     end
 
     test "boolean" do
@@ -115,6 +115,10 @@ defmodule Warpath.TokenizerTest do
 
     test "quoted atom" do
       assert Tokenizer.tokenize(~S{:"quoted atom"}) == {:ok, [{:word, 1, :"quoted atom"}]}
+    end
+
+    test "single quoted atom" do
+      assert Tokenizer.tokenize(~S{:'quoted atom'}) == {:ok, [{:word, 1, :"quoted atom"}]}
     end
   end
 

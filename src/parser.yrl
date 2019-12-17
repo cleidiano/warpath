@@ -1,11 +1,12 @@
 Nonterminals expression filter_exp boolean_exp predicate
-number boolean item element elements indexes array_indexes
+number negative_float negative_int boolean item element elements 
+indexes array_indexes array_slice slice_parts slice_arg
 .
 
 Terminals  
 root word quoted_word current_node int float wildcard scan
 true false or_op and_op not_op in_op comparator
-'.' '[' ']' '?' '(' ')' '-' ','
+'.' '[' ']' '?' '(' ')' '-' ',' ':'
 .
 
 Rootsymbol expression.
@@ -29,6 +30,7 @@ expression      -> expression '[' quoted_word ']'               :   '$1' ++ [{do
 expression      -> expression '[' wildcard ']'                  :   '$1' ++ [extract('$3')].
 expression      -> expression filter_exp                        :   '$1' ++ ['$2'].
 expression      -> expression array_indexes                     :   '$1' ++ ['$2'].
+expression      -> expression array_slice                       :   '$1' ++ ['$2'].
 
 expression      -> expression scan word                         :   '$1' ++ [build_scan(property('$3'))].
 expression      -> expression scan '[' quoted_word ']'          :   '$1' ++ [build_scan(property('$4'))].
@@ -42,6 +44,15 @@ expression      -> expression scan '[' wildcard ']'             :   '$1' ++ [bui
 array_indexes	-> '[' indexes ']'                              :   {array_indexes, '$2'}.
 indexes         -> int                                          :   [index_access('$1')].
 indexes	        -> indexes ',' int                              :   '$1' ++ [index_access('$3')].
+
+array_slice     -> '[' slice_parts ']'                          :   {array_slice, slice_op(line('$1'), '$2')}.
+slice_parts     -> ':'                                          :   [colon].
+slice_parts     -> slice_arg ':'                                :   ['$1', colon].
+slice_parts     -> slice_parts ':'                              :   '$1' ++ [colon].
+slice_parts     -> slice_parts slice_arg                        :   '$1' ++ ['$2'].
+
+slice_arg       -> int                                          :   extract_value('$1').
+slice_arg       -> negative_int                                 :   '$1'.
 
 %%Filter
 filter_exp      -> '[' '?' '(' boolean_exp ')' ']'              :   {filter, '$4'}.
@@ -65,16 +76,20 @@ item            -> current_node                                 :   current_node
 item            -> word                                         :   extract_value('$1').
 item            -> quoted_word                                  :   extract_value('$1').
 
-elements        -> '[' element ']'                              : '$2'.
-element         -> item                                         : ['$1'].
-element         -> element ',' item                             : '$1' ++ ['$3']. 
+elements        -> '[' element ']'                              :   '$2'.
+element         -> item                                         :   ['$1'].
+element         -> element ',' item                             :   '$1' ++ ['$3'].
 
 boolean         -> true                                         :   true.
 boolean         -> false                                        :   false.
 
+negative_int    -> '-' int                                      :   -extract_value('$2').
+negative_float  -> '-' float                                    :   -extract_value('$2').
+
 number          -> int                                          :   extract_value('$1').
 number          -> float                                        :   extract_value('$1').
-number          -> '-' number                                   :   -extract_value('$2').
+number          -> negative_float                               :   '$1'.
+number          -> negative_int                                 :   '$1'.
 
 Erlang code.
 
@@ -83,6 +98,8 @@ build_scan(Exp) -> {scan, Exp}.
 extract({Token, _, Value}) -> {Token, Value}.
 
 extract_value({_, _, Value}) -> Value.
+
+line({_, Line}) -> Line.
 
 function_call({_, Line, FunctionName}, Arguments) ->
     Function = case FunctionName of
@@ -104,3 +121,48 @@ function_call({_, Line, FunctionName}, Arguments) ->
 index_access({_, _, Value}) -> {index_access, Value}.
 
 property({_, _, Value}) -> {property, Value}.
+
+slice_op(Line, Tokens) -> 
+	Params = slice_params(0, [], Tokens),
+	check_slice_params(Line, Params).
+
+slice_params(Position, SliceTokens, [colon | Rest]) ->
+    slice_params(Position + 1, SliceTokens, Rest);
+
+slice_params(Position, SliceTokens, [Index | []]) ->
+    SliceTokens ++ [{label_of(Position), Index}];
+
+slice_params(Position, SliceTokens, [Index | Rest])
+    when length(Rest) > 0 ->
+    [colon | R] = Rest,
+    Tokens = SliceTokens ++ [{label_of(Position), Index}],
+    slice_params(Position + 1, Tokens, R);
+
+slice_params(_, Tokens, _) -> Tokens.
+
+label_of(Position) ->
+    case Position of
+      0 -> start_index;
+      1 -> end_index;
+      2 -> step;
+      _ -> unknow
+    end.
+
+check_slice_params(Line, []) -> 
+	return_error(Line, "missing slice params, start or end index must be supplied");
+
+check_slice_params(Line, Tokens) when length(Tokens) > 3 -> 
+  ErrorMessage =
+	"to many params found for slice operation, "
+	"the valid syntax is [start_index:end_index:step]",
+	return_error(Line, ErrorMessage);
+
+check_slice_params(Line, Tokens) when length(Tokens) == 3 ->
+	case lists:last(Tokens) of
+	 {step, Step} when Step < 0 ->
+		return_error(Line, "slice step can't be negative");
+	_ -> Tokens
+	end;
+
+check_slice_params(_StartLine, Tokens) -> Tokens.
+

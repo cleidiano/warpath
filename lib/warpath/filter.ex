@@ -6,10 +6,10 @@ defmodule Warpath.Filter do
   alias Warpath.Expression
   alias Warpath.Filter.Predicate
 
-  @type contains :: Expression.contains()
+  @type has_property :: Expression.has_property()
   @type operator :: Expression.operator()
   @type member :: any
-  @type filter_exp :: contains() | {operator(), maybe_improper_list(any, any)}
+  @type filter_exp :: has_property() | {operator(), maybe_improper_list(any, any)}
 
   @spec filter({member, Element.Path.t()}, filter_exp) :: [{member, Element.Path.t()}, ...]
   def filter(member, filter_exp)

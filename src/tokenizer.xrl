@@ -5,7 +5,6 @@ CURRENT_NODE         = @
 WORD                 = ([A-Za-z_]+[A-Za-z0-9]*)
 SINGLE_QUOTED_WORD   = '([^\']*)'
 COMPARATOR           = (<|>|<=|>=|==|!=|===|!==)
-PLUS                 = \+
 MINUS                = \-
 INT                  = [0-9]+
 OPEN_BRACKET         = \[
@@ -30,6 +29,7 @@ in                      : {token, {in_op,           TokenLine}}.
 
 {COLON}{WORD}           : {token, {word,            TokenLine, to_atom(TokenChars)}}.
 {COLON}".+"             : {token, {word,            TokenLine, to_atom(TokenChars)}}.
+{COLON}'.+'             : {token, {word,            TokenLine, to_atom(TokenChars)}}.
 {ROOT}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
 {WORD}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
 {SINGLE_QUOTED_WORD}    : {token, {quoted_word,     TokenLine, single_quoted_word_to_binary(TokenChars)}}.
@@ -40,6 +40,7 @@ in                      : {token, {in_op,           TokenLine}}.
 {DOT}{DOT}              : {token, {scan,            TokenLine, list_to_atom(TokenChars)}}.
 {DOT}                   : {token, {'.',             TokenLine}}.
 {MINUS}                 : {token, {'-',             TokenLine}}.
+{COLON}                 : {token, {':',             TokenLine}}.
 {COMMA}                 : {token, {',',             TokenLine}}.  
 {OPEN_BRACKET}          : {token, {'[',             TokenLine}}.
 {CLOSE_BRACKET}         : {token, {']',             TokenLine}}.
@@ -64,6 +65,12 @@ to_atom([$" | Chars]) ->
   Char = lists:last(Chars),
   case Char of
     $" -> to_atom(lists:droplast(Chars));
+    Other -> {error, Other}
+  end;
+to_atom([$' | Chars]) ->
+  Char = lists:last(Chars),
+  case Char of
+    $' -> to_atom(lists:droplast(Chars));
     Other -> {error, Other}
   end;
 to_atom(Chars) -> list_to_atom(Chars).
