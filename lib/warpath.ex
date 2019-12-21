@@ -159,20 +159,49 @@ defmodule Warpath do
   @doc """
   Query data for the given expression.
 
+  ```
+    #data structure
+    iex> term = %{"name" => "Warpath"}
+    ...> Warpath.query(term, "$.name")
+    {:ok, "Warpath"}
+
+  ```
+  ```
+    #raw json
+    iex> term = ~s/{"name": "Warpath"}/
+    ...> Warpath.query(term, "$.name")
+    {:ok, "Warpath"}
+
+  ```
   ## Options:
     result_type:
     * `:path` - return the path of evaluated expression instead of it's value
     * `:value` -  return the value of evaluated expression - `default`
     * `:value_path` - return both path and value.
   """
-  @spec query(any, String.t(), result_type: :value | :path | :value_path) :: any
-  def query(data, string, opts \\ []) when is_binary(string) and is_list(opts) do
-    with {:ok, expression} <- Expression.compile(string),
-         {:ok, elements} <- do_query(data, expression) do
+  @spec query(term, String.t(), result_type: :value | :path | :value_path) :: any
+  def query(term, expression, opts \\ [])
+
+  def query(term, expression, opts) when is_binary(term) do
+    term
+    |> Jason.decode!()
+    |> query(expression, opts)
+  end
+
+  def query(term, expression, opts) when is_binary(expression) and is_list(opts) do
+    with {:ok, tokens} <- Expression.compile(expression),
+         {:ok, elements} <- do_query(term, tokens) do
       {:ok, collect(elements, opts[:result_type])}
     else
       error ->
         error
+    end
+  end
+
+  def query!(term, expression, opts) do
+    case query(term, expression, opts) do
+      {:ok, result} -> result
+      {:error, exception} -> raise exception
     end
   end
 
