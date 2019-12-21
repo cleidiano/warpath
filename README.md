@@ -12,5 +12,5 @@ def deps do
   ]
 end
 ```
-See documentation at [https://hexdocs.pm/warpath](https://hexdocs.pm/warpath) with some examples.
+See documentation at [https://hexdocs.pm](https://hexdocs.pm/warpath/Warpath.html) with some examples.
 
