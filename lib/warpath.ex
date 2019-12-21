@@ -1,6 +1,6 @@
 defmodule Warpath do
   @moduledoc """
-    A Elixir implementation of Jsonpath expression proposal by [Stefan Goessner](https://goessner.net/articles/JsonPath/)
+    A implementation of Jsonpath expression proposal by [Stefan Goessner](https://goessner.net/articles/JsonPath/) for Elixir.
 
     Warpath support dot–notation expression `$.store.book[0].author` or the bracket–notation `$['store']['book'][0]['author']`.
 

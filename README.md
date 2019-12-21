@@ -1,5 +1,5 @@
 # Warpath
-A Elixir implementation of Jsonpath expression proposal by [Stefan Goessner](https://goessner.net/articles/JsonPath/)
+A implementation of Jsonpath expression proposal by [Stefan Goessner](https://goessner.net/articles/JsonPath/) for Elixir.
 
 Installation
 

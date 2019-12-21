@@ -1,13 +1,19 @@
 defmodule Warpath.MixProject do
   use Mix.Project
+  @description "A implementation of Jsonpath expression for Elixir."
+  @version "0.0.1"
 
   def project do
     [
       app: :warpath,
-      version: "0.0.1",
-      elixir: "~> 1.9",
+      name: "Warpath",
+      description: @description,
+      version: @version,
+      elixir: "~> 1.6",
+      package: package(),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      source_url: "https://github.com/cleidiano/warpath"
     ]
   end
 
@@ -25,5 +31,15 @@ defmodule Warpath.MixProject do
       {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false}
     ]
+  end
+
+  defp package do
+    %{
+      maintainers: ["Cleidiano Oliviera"],
+      licenses: ["MIT"],
+      links: %{
+        "GitHub" => "https://github.com/cleidiano/warpath"
+      }
+    }
   end
 end
