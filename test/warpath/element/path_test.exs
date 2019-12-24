@@ -55,8 +55,7 @@ defmodule Warpath.Element.PathTest do
     test "array index expression " do
       tokens = accumulate_tokens([{:root, "$"}, {:property, "persons"}, {:index_access, 0}])
 
-      assert Path.dotify(tokens) ==
-               "$.persons[0]"
+      assert Path.dotify(tokens) == "$.persons[0]"
     end
 
     test "multiple array index expression" do

@@ -18,8 +18,7 @@ defmodule WarpathTest do
       path = "$['store']['bicycle']"
       value = %{"color" => "red", "price" => 19.95}
 
-      assert Warpath.query(document, "$.store.bicycle", @value_path) ==
-               {:ok, {value, path}}
+      assert Warpath.query(document, "$.store.bicycle", @value_path) == {:ok, {value, path}}
     end
 
     test "evaluate atom expression" do
@@ -40,8 +39,7 @@ defmodule WarpathTest do
       values = document |> Map.values()
       paths = ["$['expensive']", "$['store']"]
 
-      assert Warpath.query(document, "$.*", @value_path) ==
-               {:ok, Enum.zip(values, paths)}
+      assert Warpath.query(document, "$.*", @value_path) == {:ok, Enum.zip(values, paths)}
     end
 
     test "resolve a wildcard property" do
@@ -268,8 +266,7 @@ defmodule WarpathTest do
         {"J. R. R. Tolkien", "$['store']['book'][3]['author']"}
       ]
 
-      assert Warpath.query(document, "$.store.book[*].author", @value_path) ==
-               {:ok, query_result}
+      assert Warpath.query(document, "$.store.book[*].author", @value_path) == {:ok, query_result}
     end
   end
 
