@@ -12,8 +12,7 @@ defmodule Warpath.ExpressionTest do
     end
 
     test "dot property access" do
-      assert Expression.compile("$.name") ==
-               {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
+      assert Expression.compile("$.name") == {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
     end
 
     test "index based access" do
@@ -43,8 +42,7 @@ defmodule Warpath.ExpressionTest do
 
   describe "compile/1 compile scan" do
     test "property expression" do
-      assert Expression.compile("$..name") ==
-               {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
+      assert Expression.compile("$..name") == {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
     end
 
     test "array indexes access expression" do
@@ -163,8 +161,7 @@ defmodule Warpath.ExpressionTest do
     end
 
     test "with only end index supplied" do
-      assert Expression.compile("$[:1]") ==
-               {:ok, [{:root, "$"}, {:array_slice, [end_index: 1]}]}
+      assert Expression.compile("$[:1]") == {:ok, [{:root, "$"}, {:array_slice, [end_index: 1]}]}
     end
 
     test "with negative start index" do
@@ -180,8 +177,7 @@ defmodule Warpath.ExpressionTest do
     test "with invalid step argument" do
       message = "Parser error: Invalid token on line 1, slice step can't be negative"
 
-      assert Expression.compile("$[1:1:-1]") ==
-               {:error, %ExpressionError{message: message}}
+      assert Expression.compile("$[1:1:-1]") == {:error, %ExpressionError{message: message}}
     end
 
     test "with empty index" do
@@ -189,8 +185,7 @@ defmodule Warpath.ExpressionTest do
         "Parser error: Invalid token on line 1," <>
           " missing slice params, start or end index must be supplied"
 
-      assert Expression.compile("$[::]") ==
-               {:error, %ExpressionError{message: message}}
+      assert Expression.compile("$[::]") == {:error, %ExpressionError{message: message}}
     end
 
     test "with to many arguments supplied" do
@@ -199,8 +194,7 @@ defmodule Warpath.ExpressionTest do
           "to many params found for slice operation, " <>
           "the valid syntax is [start_index:end_index:step]"
 
-      assert Expression.compile("$[1:3:2:1]") ==
-               {:error, %ExpressionError{message: message}}
+      assert Expression.compile("$[1:3:2:1]") == {:error, %ExpressionError{message: message}}
     end
   end
 

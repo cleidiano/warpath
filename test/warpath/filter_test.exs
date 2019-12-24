@@ -38,8 +38,7 @@ defmodule Warpath.FilterTest do
       bicycle = context[:data]["store"]["bicycle"]
       path = [{:property, "bicycle"}, {:store, "store"}]
 
-      assert [{bicycle, path}] ==
-               Filter.filter({bicycle, path}, {:>, [{:property, "price"}, 10]})
+      assert [{bicycle, path}] == Filter.filter({bicycle, path}, {:>, [{:property, "price"}, 10]})
     end
 
     test "when the target member is tuple of {list, path}", context do
