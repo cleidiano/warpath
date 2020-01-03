@@ -198,7 +198,10 @@ defmodule Warpath do
     end
   end
 
-  def query!(term, expression, opts) do
+  @doc """
+    The same as query/3, but rise exception if it fail.
+  """
+  def query!(term, expression, opts \\ []) do
     case query(term, expression, opts) do
       {:ok, result} -> result
       {:error, exception} -> raise exception
