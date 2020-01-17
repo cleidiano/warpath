@@ -1,7 +1,7 @@
 defmodule Warpath.MixProject do
   use Mix.Project
   @description "A implementation of Jsonpath expression for Elixir."
-  @version "0.1.0"
+  @version "0.1.1"
 
   def project do
     [
@@ -13,7 +13,8 @@ defmodule Warpath.MixProject do
       package: package(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      source_url: "https://github.com/cleidiano/warpath"
+      source_url: "https://github.com/cleidiano/warpath",
+      docs: [main: "Warpath"]
     ]
   end
 
