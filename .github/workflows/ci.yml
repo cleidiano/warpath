@@ -14,7 +14,7 @@ jobs:
     
     strategy:
       matrix: 
-        elixir: [1.9, 1.8, 1.7, 1.6]
+        elixir: [1.10.0, 1.9, 1.8, 1.7, 1.6]
 
     steps:
     - uses: actions/checkout@v1
@@ -25,7 +25,6 @@ jobs:
         mix deps.get
     
     - name: Check format
-      if: matrix.elixir >= 1.6
       run: mix format --check-formatted
         
     - name: Run Tests
