@@ -209,10 +209,28 @@ defmodule Warpath do
   end
 
   defp do_query(document, tokens) when is_list(tokens) do
-    terms = Enum.reduce(tokens, {document, []}, fn item, acc -> transform(acc, item) end)
+    terms =
+      tokens
+      |> Stream.with_index()
+      |> Enum.reduce(
+        _acc = {document, []},
+        _transformer = fn {item, index}, acc ->
+          result = transform(acc, item)
+          if was_previous_slice_operation(tokens, index), do: List.flatten(result), else: result
+        end
+      )
+
     {:ok, terms}
   rescue
     e in UnsupportedOperationError -> {:error, e}
+  end
+
+  defp was_previous_slice_operation(tokens, index) do
+    if index <= 0 do
+      false
+    else
+      match?({:array_slice, _}, Enum.at(tokens, index - 1))
+    end
   end
 
   defp transform({member, path}, {:root, _} = token),
@@ -236,11 +254,11 @@ defmodule Warpath do
   defp transform({member, _} = element, {:dot, _} = dot_token) when is_map(member),
     do: access(element, dot_token)
 
-  defp transform({_, _} = element, {:array_indexes, indexes}),
-    do: Enum.map(indexes, &transform(element, &1))
-
-  defp transform({members, path}, {:index_access, index} = token) when is_list(members) do
-    {Enum.at(members, index), Path.accumulate(token, path)}
+  defp transform({members, path}, {:array_indexes, indexes}) do
+    indexes
+    |> Enum.map(fn {:index_access, index} = token ->
+      {Enum.at(members, index), Path.accumulate(token, path)}
+    end)
   end
 
   defp transform({members, _} = element, {:wildcard, :*}) when is_container(members) do
@@ -262,18 +280,24 @@ defmodule Warpath do
     do: do_scan_filter(element, indexes)
 
   defp transform({members, _} = element, {:array_slice, slice}) do
-    start_index = slice_start_index(slice)
-    end_index = slice_exclusive_end_index(members, slice)
-    step = slice_step(slice)
+    case members do
+      data when is_list(data) ->
+        {start_index, end_index, step, range} = create_slice_range(members, slice)
 
-    index_range = start_index..end_index
+        if start_index === end_index do
+          []
+        else
+          element
+          |> PathMarker.stream()
+          |> Stream.with_index()
+          |> Enum.slice(range)
+          |> Stream.reject(fn {_, index} -> rem(index, step) != 0 end)
+          |> Enum.map(fn {member_path, _} -> member_path end)
+        end
 
-    element
-    |> PathMarker.stream()
-    |> Stream.with_index()
-    |> Enum.slice(index_range)
-    |> Stream.reject(fn {_, index} -> rem(index, step) != 0 end)
-    |> Enum.map(fn {member_path, _} -> member_path end)
+      _ ->
+        []
+    end
   end
 
   defp transform(members, token) when is_list(members) do
@@ -298,11 +322,27 @@ defmodule Warpath do
     |> Enum.flat_map(fn element -> transform(element, filter) end)
   end
 
-  defp slice_step(slice), do: Keyword.get(slice, :step, 1)
-  defp slice_start_index(slice), do: Keyword.get(slice, :start_index, 0)
+  defp create_slice_range(elements, slice_ops) do
+    start_index = slice_start_index(elements, slice_ops)
+    end_index = slice_end_index(elements, slice_ops)
+    end_index = if start_index < 0, do: min(0, end_index), else: end_index
 
-  defp slice_exclusive_end_index(element, slice),
-    do: Keyword.get_lazy(slice, :end_index, fn -> length(element) end) - 1
+    step = slice_step(slice_ops)
+
+    {start_index, end_index, step, Range.new(start_index, end_index - 1)}
+  end
+
+  defp slice_step(slice), do: Keyword.get(slice, :step, 1)
+
+  defp slice_start_index(elements, slice) do
+    start = Keyword.get(slice, :start_index, 0)
+
+    if start < 0, do: max(-length(elements), start), else: start
+  end
+
+  defp slice_end_index(element, slice) do
+    Keyword.get_lazy(slice, :end_index, fn -> length(element) end)
+  end
 
   defguardp has_itens(container)
             when (is_list(container) and container != []) or

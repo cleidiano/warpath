@@ -148,9 +148,6 @@ label_of(Position) ->
       _ -> unknow
     end.
 
-check_slice_params(Line, []) -> 
-	return_error(Line, "missing slice params, start or end index must be supplied");
-
 check_slice_params(Line, Tokens) when length(Tokens) > 3 -> 
   ErrorMessage =
 	"to many params found for slice operation, "
