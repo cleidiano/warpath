@@ -174,18 +174,18 @@ defmodule Warpath.ExpressionTest do
                {:ok, [{:root, "$"}, {:array_slice, [end_index: -1]}]}
     end
 
-    test "with invalid step argument" do
+    test "with negative step argument" do
       message = "Parser error: Invalid token on line 1, slice step can't be negative"
 
       assert Expression.compile("$[1:1:-1]") == {:error, %ExpressionError{message: message}}
     end
 
-    test "with empty index" do
-      message =
-        "Parser error: Invalid token on line 1," <>
-          " missing slice params, start or end index must be supplied"
+    test "with one colon separator" do
+      assert Expression.compile("$[:]") == {:ok, [{:root, "$"}, {:array_slice, []}]}
+    end
 
-      assert Expression.compile("$[::]") == {:error, %ExpressionError{message: message}}
+    test "with two colon separator" do
+      assert Expression.compile("$[::]") == {:ok, [{:root, "$"}, {:array_slice, []}]}
     end
 
     test "with to many arguments supplied" do
