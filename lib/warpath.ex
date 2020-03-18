@@ -233,6 +233,12 @@ defmodule Warpath do
     end
   end
 
+  @typep member :: any()
+  @typep members :: [member, ...]
+  @typep element :: {member | members, Expression.token()}
+  @typep token :: Expression.token()
+
+  @spec transform(element, token) :: element | [element, ...]
   defp transform({member, path}, {:root, _} = token),
     do: {member, Path.accumulate(token, path)}
 
