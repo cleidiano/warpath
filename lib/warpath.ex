@@ -284,15 +284,15 @@ defmodule Warpath do
       data when is_list(data) ->
         {start_index, end_index, step, range} = create_slice_range(members, slice)
 
-        if start_index === end_index do
-          []
-        else
+        if start_index != end_index do
           element
           |> PathMarker.stream()
           |> Stream.with_index()
           |> Enum.slice(range)
           |> Stream.reject(fn {_, index} -> rem(index, step) != 0 end)
           |> Enum.map(fn {member_path, _} -> member_path end)
+        else
+          []
         end
 
       _ ->
@@ -325,8 +325,6 @@ defmodule Warpath do
   defp create_slice_range(elements, slice_ops) do
     start_index = slice_start_index(elements, slice_ops)
     end_index = slice_end_index(elements, slice_ops)
-    end_index = if start_index < 0, do: min(0, end_index), else: end_index
-
     step = slice_step(slice_ops)
 
     {start_index, end_index, step, Range.new(start_index, end_index - 1)}
