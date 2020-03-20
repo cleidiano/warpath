@@ -104,7 +104,7 @@ defmodule Warpath.EnumRecursiveDescent do
     |> Enum.reverse()
   end
 
-  defp get_members({_, _} = element, _), do: element
+  defp get_members({_, _} = _element, _), do: []
 
   defp traverse({member, _} = element, acc, path_fun) when is_container(member) do
     element

@@ -273,17 +273,22 @@ defmodule Warpath do
     |> Enum.to_list()
   end
 
-  defp transform(element, {:filter, filter_expression}),
-    do: Filter.filter(element, filter_expression)
+  defp transform(element, {:filter, filter_expression}) do
+    Filter.filter(element, filter_expression)
+  end
 
-  defp transform(element, {:scan, {tag, _} = target}) when tag in [:property, :wildcard],
-    do: Scanner.scan(element, target, &Path.accumulate/2)
+  defp transform(element, {:scan, {tag, _} = target}) when tag in [:property, :wildcard] do
+    Scanner.scan(element, target, &Path.accumulate/2)
+  end
 
-  defp transform(element, {:scan, {:filter, _} = filter}),
-    do: do_scan_filter([element], filter)
+  defp transform(element, {:scan, {tag, _} = filter}) when tag in [:filter, :array_indexes] do
+    self_included = [element]
 
-  defp transform(element, {:scan, {:array_indexes, _} = indexes}),
-    do: do_scan_filter(element, indexes)
+    self_included
+    |> EnumWalker.reduce_while([], container_reducer())
+    |> Stream.filter(fn {member, _} -> is_list(member) end)
+    |> Enum.flat_map(fn element -> transform(element, filter) end)
+  end
 
   defp transform({members, _} = element, {:array_slice, slice}) do
     case members do
@@ -321,13 +326,6 @@ defmodule Warpath do
     {member[key], Path.accumulate(token, path)}
   end
 
-  defp do_scan_filter(enumerable, filter) do
-    enumerable
-    |> EnumWalker.reduce_while([], container_reducer(), &Path.accumulate/2)
-    |> Stream.filter(fn {member, _} -> is_list(member) end)
-    |> Enum.flat_map(fn element -> transform(element, filter) end)
-  end
-
   defp create_slice_range(elements, slice_ops) do
     start_index = slice_start_index(elements, slice_ops)
     end_index = slice_end_index(elements, slice_ops)
@@ -359,7 +357,7 @@ defmodule Warpath do
           {:walk, [element | acc]}
 
         _ ->
-          {:skip, acc}
+          {:skip, [element | acc]}
       end
     end
   end

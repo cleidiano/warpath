@@ -4,9 +4,11 @@ defmodule Warpath.Scanner do
   alias Warpath.Element.Path
   alias Warpath.EnumWalker
 
-  def scan(element, criteria, path_fun \\ &Path.accumulate/2)
+  def scan(element, criteria, tracker \\ &Path.accumulate/2) when is_function(tracker, 2) do
+    do_scan(element, criteria, tracker)
+  end
 
-  def scan(element, {:property, _} = criteria, path_fun) when is_function(path_fun, 2) do
+  defp do_scan(element, {:property, _} = criteria, _tracker) do
     walk_reducer = fn {_, path} = element, acc ->
       case path do
         [^criteria | _] ->
@@ -22,7 +24,7 @@ defmodule Warpath.Scanner do
     |> Enum.reverse()
   end
 
-  def scan(element, {:wildcard, :*}, path_fun) when is_function(path_fun, 2) do
-    EnumWalker.recursive_descent(element, path_fun)
+  defp do_scan(element, {:wildcard, :*}, tracker) do
+    EnumWalker.recursive_descent(element, tracker)
   end
 end

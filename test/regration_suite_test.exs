@@ -1,6 +1,6 @@
 defmodule RegrationSuiteTest do
   use ExUnit.Case, async: true
-  @include_rules_pattern ["array_slice"]
+  @include_rules_pattern ["array_slice", "recursive_descent"]
 
   %{"queries" => queries} =
     __DIR__
@@ -20,16 +20,25 @@ defmodule RegrationSuiteTest do
 
     @rule rule
     @tag tag
-    test String.replace(id, "_", " ") do
-      @rule
-      |> Map.get_lazy("scalar-consensus", fn -> Map.get(@rule, "consensus") end)
-      |> case do
-        nil ->
-          assert {:ok, _} = Warpath.query(unquote(Macro.escape(document)), unquote(selector))
+    test String.replace(id, "_", " ") <> " selector = " <> selector do
+      document = unquote(Macro.escape(document))
+      selector = unquote(selector)
 
-        consensus_value ->
-          assert {:ok, quote(do: unquote(consensus_value))} ==
-                   Warpath.query(unquote(Macro.escape(document)), unquote(selector))
+      consensus_value =
+        Map.get_lazy(@rule, "scalar-consensus", fn -> Map.get(@rule, "consensus") end)
+
+      ordered = Map.get(@rule, "ordered")
+
+      case {consensus_value, ordered} do
+        {nil, _} ->
+          assert {:ok, _} = Warpath.query(document, selector)
+
+        {consensus, false} when is_list(consensus) ->
+          assert Enum.sort(consensus) ==
+                   Warpath.query!(unquote(Macro.escape(document)), selector) |> Enum.sort()
+
+        {consensus, _} ->
+          assert consensus == Warpath.query!(document, selector)
       end
     end
   end
