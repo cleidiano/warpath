@@ -235,7 +235,7 @@ defmodule Warpath do
 
   @typep member :: any()
   @typep members :: [member, ...]
-  @typep element :: {member | members, Expression.token()}
+  @typep element :: {member | members, Path.token()}
   @typep token :: Expression.token()
 
   @spec transform(element, token) :: element | [element, ...]
