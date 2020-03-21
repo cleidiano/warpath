@@ -223,6 +223,7 @@ defmodule Warpath do
     {:ok, terms}
   rescue
     e in UnsupportedOperationError -> {:error, e}
+    e in Enum.OutOfBoundsError -> {:error, e}
   end
 
   defp was_previous_slice_operation(tokens, index) do
@@ -260,11 +261,23 @@ defmodule Warpath do
   defp transform({member, _} = element, {:dot, _} = dot_token) when is_map(member),
     do: access(element, dot_token)
 
-  defp transform({members, path}, {:array_indexes, indexes}) do
-    indexes
-    |> Enum.map(fn {:index_access, index} = token ->
-      {Enum.at(members, index), Path.accumulate(token, path)}
-    end)
+  defp transform({members, _} = element, {:array_indexes, target} = indexes) do
+    case target do
+      [{_, index} | []] = _should_unwrap? ->
+        if index > Enum.count(members) - 1 do
+          message =
+            "The query should be resolved to scalar value " <>
+              "but the index #{index} is out of bounds for emum #{inspect(members)}."
+
+          raise Enum.OutOfBoundsError, message
+        else
+          [head | []] = value_for_indexes(element, indexes)
+          head
+        end
+
+      _ ->
+        value_for_indexes(element, indexes)
+    end
   end
 
   defp transform({members, _} = element, {:wildcard, :*}) when is_container(members) do
@@ -281,13 +294,20 @@ defmodule Warpath do
     Scanner.scan(element, target, &Path.accumulate/2)
   end
 
-  defp transform(element, {:scan, {tag, _} = filter}) when tag in [:filter, :array_indexes] do
+  defp transform(element, {:scan, {:filter, _} = filter}) do
     self_included = [element]
 
     self_included
-    |> EnumWalker.reduce_while([], container_reducer())
-    |> Stream.filter(fn {member, _} -> is_list(member) end)
-    |> Enum.flat_map(fn element -> transform(element, filter) end)
+    |> search_for_lists()
+    |> Enum.flat_map(&transform(&1, filter))
+  end
+
+  defp transform(element, {:scan, {:array_indexes, _} = indexes}) do
+    self_included = [element]
+
+    self_included
+    |> search_for_lists()
+    |> Enum.flat_map(&value_for_indexes(&1, indexes))
   end
 
   defp transform({members, _} = element, {:array_slice, slice}) do
@@ -320,6 +340,22 @@ defmodule Warpath do
   defp transform({_member, path}, token) do
     raise UnsupportedOperationError,
           "token=#{inspect(token)}, path=#{inspect(path)}"
+  end
+
+  defp value_for_indexes({members, path}, {:array_indexes, indexes}) do
+    max_index = Enum.count(members) - 1
+
+    indexes
+    |> Enum.reject(fn {:index_access, index} -> index > max_index end)
+    |> Enum.map(fn {:index_access, index} = token ->
+      {Enum.at(members, index), Path.accumulate(token, path)}
+    end)
+  end
+
+  defp search_for_lists(enumerable) do
+    enumerable
+    |> EnumWalker.reduce_while([], container_reducer())
+    |> Stream.filter(fn {member, _} -> is_list(member) end)
   end
 
   defp access({member, path}, {:dot, {:property, key} = token}) do

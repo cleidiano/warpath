@@ -211,7 +211,7 @@ defmodule WarpathTest do
 
   describe "query/3 handle array" do
     test "index access expression", %{data: document} do
-      trace = "$['store']['book'][0]"
+      path = "$['store']['book'][0]"
 
       book = %{
         "category" => "reference",
@@ -220,7 +220,7 @@ defmodule WarpathTest do
         "price" => 8.95
       }
 
-      assert Warpath.query(document, "$.store.book[0]", @value_path) == {:ok, [{book, trace}]}
+      assert Warpath.query(document, "$.store.book[0]", @value_path) == {:ok, {book, path}}
     end
 
     test "index access with many indexes", %{data: document} do
@@ -310,9 +310,9 @@ defmodule WarpathTest do
 
   describe "query/3 handle options" do
     test "result_type: :path", %{data: document} do
-      trace = "$['store']['book'][0]"
+      path = "$['store']['book'][0]"
 
-      assert Warpath.query(document, "$.store.book[0]", result_type: :path) == {:ok, [trace]}
+      assert Warpath.query(document, "$.store.book[0]", result_type: :path) == {:ok, path}
     end
 
     test "default result_type is value", %{data: document} do
@@ -323,7 +323,7 @@ defmodule WarpathTest do
         "title" => "Sayings of the Century"
       }
 
-      assert Warpath.query(document, "$.store.book[0]") == {:ok, [book]}
+      assert Warpath.query(document, "$.store.book[0]") == {:ok, book}
     end
   end
 
