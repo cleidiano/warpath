@@ -209,6 +209,8 @@ defmodule Warpath do
   end
 
   defp do_query(document, tokens) when is_list(tokens) do
+    last_token = length(tokens) - 1
+
     terms =
       tokens
       |> Stream.with_index()
@@ -216,7 +218,14 @@ defmodule Warpath do
         _acc = {document, []},
         _transformer = fn {item, index}, acc ->
           result = transform(acc, item)
-          if was_previous_slice_operation(tokens, index), do: List.flatten(result), else: result
+
+          case {index, item} do
+            {^last_token, {:wildcard, _}} ->
+              List.flatten(result)
+
+            _ ->
+              result
+          end
         end
       )
 
@@ -224,14 +233,6 @@ defmodule Warpath do
   rescue
     e in UnsupportedOperationError -> {:error, e}
     e in Enum.OutOfBoundsError -> {:error, e}
-  end
-
-  defp was_previous_slice_operation(tokens, index) do
-    if index <= 0 do
-      false
-    else
-      match?({:array_slice, _}, Enum.at(tokens, index - 1))
-    end
   end
 
   @typep member :: any()
