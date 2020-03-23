@@ -347,7 +347,7 @@ queries:
     document: [{"a": 1}]
     consensus: [1]
   - id: dot_notation_after_bracket_notation_with_wildcard_on_some_matching
-    warpath: skip
+    warpath: run
     selector: $[*].a
     document: [{"a": 1}, {"b": 1}]
     consensus: [1]

@@ -335,7 +335,13 @@ defmodule Warpath do
   defp transform(members, token) when is_list(members) do
     members
     |> List.flatten()
-    |> Enum.map(&transform(&1, token))
+    |> Enum.reduce([], fn element, acc ->
+      case transform(element, token) do
+        {nil, _path} -> acc
+        result -> [result | acc]
+      end
+    end)
+    |> Enum.reverse()
   end
 
   defp transform({_member, path}, token) do
