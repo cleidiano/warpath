@@ -1,32 +1,25 @@
 defmodule RegrationSuiteTest do
   use ExUnit.Case, async: true
-  @include_rules_pattern ["array_slice", "recursive_descent"]
 
   %{"queries" => queries} =
     __DIR__
     |> Path.join("/fixtures/json_comparision_regration_suite.yaml")
     |> YamlElixir.read_from_file!()
 
-  queries = Enum.filter(queries, fn rule -> Map.has_key?(rule, "consensus") end)
-
-  for %{"id" => id, "document" => document, "selector" => selector} = rule <- queries do
+  for %{"id" => rule_id, "document" => document, "selector" => selector} = rule <- queries do
     tag =
-      @include_rules_pattern
-      |> Enum.filter(fn pattern -> String.contains?(id, pattern) end)
-      |> case do
-        [] -> :skip
-        [tag | _] -> String.to_atom(tag)
-      end
+      rule
+      |> Map.get("warpath")
+      |> String.to_atom()
 
     @rule rule
     @tag tag
-    test String.replace(id, "_", " ") <> " selector = " <> selector do
-      document = unquote(Macro.escape(document))
-      selector = unquote(selector)
-
+    test rule_id <> " " <> selector do
       consensus_value =
         Map.get_lazy(@rule, "scalar-consensus", fn -> Map.get(@rule, "consensus") end)
 
+      document = unquote(Macro.escape(document))
+      selector = unquote(selector)
       ordered = Map.get(@rule, "ordered")
 
       case {consensus_value, ordered} do
@@ -38,7 +31,7 @@ defmodule RegrationSuiteTest do
                    Warpath.query!(unquote(Macro.escape(document)), selector) |> Enum.sort()
 
         {consensus, _} ->
-          assert consensus == Warpath.query!(document, selector)
+          assert consensus == Warpath.query!(unquote(Macro.escape(document)), selector)
       end
     end
   end
