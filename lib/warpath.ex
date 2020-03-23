@@ -262,6 +262,10 @@ defmodule Warpath do
   defp transform({member, _} = element, {:dot, _} = dot_token) when is_map(member),
     do: access(element, dot_token)
 
+  defp transform({member, _} = element, {:union, tokens}) when is_map(member) do
+    Enum.map(tokens, fn token -> transform(element, token) end)
+  end
+
   defp transform({members, _} = element, {:array_indexes, target} = indexes) do
     case target do
       [{_, index} | []] = _should_unwrap? ->

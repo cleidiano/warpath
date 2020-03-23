@@ -374,7 +374,7 @@ queries:
     document: [{"key": "ey"}, {"key": "bee"}, {"key": "see"}]
     consensus: ["ey", "see"]
   - id: dot_notation_after_union_with_keys
-    warpath: skip
+    warpath: run
     selector: $['one','three'].key
     document: {"one": {"key": "value"}, "two": {"k": "v"}, "three": {"some": "more", "key": "other value"}}
     consensus: ["value", "other value"]
@@ -707,7 +707,7 @@ queries:
     selector: $[:]['c','d']
     document: [{"c": "cc1", "d": "dd1", "e": "ee1"}, {"c": "cc2", "d": "dd2", "e": "ee2"}]
   - id: union_with_keys_after_bracket_notation
-    warpath: skip
+    warpath: run
     selector: $[0]['c','d']
     document: [{"c": "cc1", "d": "dd1", "e": "ee1"}, {"c": "cc2", "d": "dd2", "e": "ee2"}]
     consensus: ["cc1", "dd1"]

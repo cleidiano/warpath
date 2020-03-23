@@ -1,6 +1,6 @@
 Nonterminals expression filter_exp boolean_exp predicate
 number negative_float negative_int boolean item element elements 
-indexes array_indexes array_slice slice_parts slice_arg
+indexes array_indexes array_slice slice_parts slice_arg union properties
 .
 
 Terminals  
@@ -23,10 +23,10 @@ expression      -> expression '.' word                          :   '$1' ++ [{do
 expression      -> expression '.' wildcard                      :   '$1' ++ [extract('$3')].
 expression      -> expression '.' array_indexes                 :   '$1' ++ ['$3'].
 expression      -> expression '.' filter_exp                    :   '$1' ++ ['$3'].
-expression      -> expression '.' '[' quoted_word ']'           :   '$1' ++ [{dot, property('$4')}].
+expression      -> expression '.' union                         :   '$1' ++ resolv_operation_for('$3').
 expression      -> expression '.' '[' wildcard ']'              :   '$1' ++ [extract('$4')].
 
-expression      -> expression '[' quoted_word ']'               :   '$1' ++ [{dot, property('$3')}].
+expression      -> expression union                             :   '$1' ++ resolv_operation_for('$2').
 expression      -> expression '[' wildcard ']'                  :   '$1' ++ [extract('$3')].
 expression      -> expression filter_exp                        :   '$1' ++ ['$2'].
 expression      -> expression array_indexes                     :   '$1' ++ ['$2'].
@@ -39,6 +39,10 @@ expression      -> expression scan filter_exp                   :   '$1' ++ [bui
 expression      -> expression scan wildcard                     :   '$1' ++ [build_scan(extract('$3'))].
 expression      -> expression scan '[' wildcard ']'             :   '$1' ++ [build_scan(extract('$4'))].
 
+%%Key collector
+union  ->       '[' properties ']'                              :   '$2'.
+properties      -> quoted_word                                  :   [{dot, property('$1')}].
+properties      -> properties ',' quoted_word                   :   '$1' ++ [{dot, property('$3')}].
 
 %%Array
 array_indexes	-> '[' indexes ']'                              :   {array_indexes, '$2'}.
@@ -121,6 +125,13 @@ function_call({_, Line, FunctionName}, Arguments) ->
 index_access({_, _, Value}) -> {index_access, Value}.
 
 property({_, _, Value}) -> {property, Value}.
+
+% Unwrap whent it's only one key access.
+% Ex:
+% ['some_key'] should be unwrapped to {:dot, {:property, "some_key"}
+% ['one', 'two'] should be translated to {:union, [{:dot, {:property, "one"}, {:dot, {:property, "two"}]}
+resolv_operation_for([{dot, {property, _}}] = Property) -> Property;
+resolv_operation_for(Properties) -> [{union, Properties}].
 
 slice_op(Line, Tokens) -> 
 	Params = slice_params(0, [], Tokens),

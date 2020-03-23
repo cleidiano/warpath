@@ -34,6 +34,12 @@ defmodule Warpath.ExpressionTest do
                 ]}
     end
 
+    test "union properties" do
+      assert Expression.compile("$['one', 'two']") ==
+               {:ok,
+                [{:root, "$"}, {:union, [{:dot, {:property, "one"}}, {:dot, {:property, "two"}}]}]}
+    end
+
     test "atom based access" do
       assert Expression.compile(~S{$.:atom_key}) ==
                {:ok, [{:root, "$"}, {:dot, {:property, :atom_key}}]}
