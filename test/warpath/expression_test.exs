@@ -6,13 +6,19 @@ defmodule Warpath.ExpressionTest do
   alias Warpath.Expression
   alias Warpath.ExpressionError
 
+  describe "compile/1 compile dot notation" do
+    test "string property" do
+      assert Expression.compile("$.name") == {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
+    end
+
+    test "int property" do
+      assert Expression.compile("$.1") == {:ok, [{:root, "$"}, {:dot, {:property, "1"}}]}
+    end
+  end
+
   describe "compile/1 compile" do
     test "root expression" do
       assert Expression.compile("$") == {:ok, [{:root, "$"}]}
-    end
-
-    test "dot property access" do
-      assert Expression.compile("$.name") == {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
     end
 
     test "index based access" do
@@ -34,6 +40,12 @@ defmodule Warpath.ExpressionTest do
                 ]}
     end
 
+    test "union properties" do
+      assert Expression.compile("$['one', 'two']") ==
+               {:ok,
+                [{:root, "$"}, {:union, [{:dot, {:property, "one"}}, {:dot, {:property, "two"}}]}]}
+    end
+
     test "atom based access" do
       assert Expression.compile(~S{$.:atom_key}) ==
                {:ok, [{:root, "$"}, {:dot, {:property, :atom_key}}]}
@@ -43,6 +55,7 @@ defmodule Warpath.ExpressionTest do
   describe "compile/1 compile scan" do
     test "property expression" do
       assert Expression.compile("$..name") == {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
+      assert Expression.compile("$..1") == {:ok, [{:root, "$"}, {:scan, {:property, "1"}}]}
     end
 
     test "array indexes access expression" do

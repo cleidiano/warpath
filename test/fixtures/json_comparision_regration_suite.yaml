@@ -374,7 +374,7 @@ queries:
     document: [{"key": "ey"}, {"key": "bee"}, {"key": "see"}]
     consensus: ["ey", "see"]
   - id: dot_notation_after_union_with_keys
-    warpath: skip
+    warpath: run
     selector: $['one','three'].key
     document: {"one": {"key": "value"}, "two": {"k": "v"}, "three": {"some": "more", "key": "other value"}}
     consensus: ["value", "other value"]
@@ -434,7 +434,7 @@ queries:
     selector: $.2
     document: ["first", "second", "third", "forth", "fifth"]
   - id: dot_notation_with_number_on_object
-    warpath: skip
+    warpath: run
     selector: $.2
     document: {"a": "first", "2": "second", "b": "third"}
     consensus: ["second"]
@@ -707,18 +707,19 @@ queries:
     selector: $[:]['c','d']
     document: [{"c": "cc1", "d": "dd1", "e": "ee1"}, {"c": "cc2", "d": "dd2", "e": "ee2"}]
   - id: union_with_keys_after_bracket_notation
-    warpath: skip
+    warpath: run
     selector: $[0]['c','d']
     document: [{"c": "cc1", "d": "dd1", "e": "ee1"}, {"c": "cc2", "d": "dd2", "e": "ee2"}]
     consensus: ["cc1", "dd1"]
   - id: union_with_keys_after_dot_notation_with_wildcard
-    warpath: skip
+    warpath: run
     selector: $.*['c','d']
     document: [{"c": "cc1", "d": "dd1", "e": "ee1"}, {"c": "cc2", "d": "dd2", "e": "ee2"}]
   - id: union_with_keys_on_object_without_key
-    warpath: skip
+    warpath: run
     selector: $['missing','key']
     document: {"key": "value", "another": "entry"}
+    warpath_output: ["value"]
   - id: union_with_numbers_in_decreasing_order
     warpath: run
     selector: $[4,1]

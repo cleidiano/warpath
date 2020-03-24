@@ -1,6 +1,6 @@
 Nonterminals expression filter_exp boolean_exp predicate
 number negative_float negative_int boolean item element elements 
-indexes array_indexes array_slice slice_parts slice_arg
+indexes array_indexes array_slice slice_parts slice_arg union union_prop property
 .
 
 Terminals  
@@ -19,26 +19,35 @@ Left        300 '.'.
 Left        350 scan.
 
 expression      -> root                                         :   [extract('$1')].
-expression      -> expression '.' word                          :   '$1' ++ [{dot, property('$3')}].
+expression      -> expression '.' property                      :   '$1' ++ [{dot, property('$3')}].
 expression      -> expression '.' wildcard                      :   '$1' ++ [extract('$3')].
 expression      -> expression '.' array_indexes                 :   '$1' ++ ['$3'].
 expression      -> expression '.' filter_exp                    :   '$1' ++ ['$3'].
-expression      -> expression '.' '[' quoted_word ']'           :   '$1' ++ [{dot, property('$4')}].
+expression      -> expression '.' union                         :   '$1' ++ resolv_operation_for('$3').
 expression      -> expression '.' '[' wildcard ']'              :   '$1' ++ [extract('$4')].
 
-expression      -> expression '[' quoted_word ']'               :   '$1' ++ [{dot, property('$3')}].
+expression      -> expression union                             :   '$1' ++ resolv_operation_for('$2').
 expression      -> expression '[' wildcard ']'                  :   '$1' ++ [extract('$3')].
 expression      -> expression filter_exp                        :   '$1' ++ ['$2'].
 expression      -> expression array_indexes                     :   '$1' ++ ['$2'].
 expression      -> expression array_slice                       :   '$1' ++ ['$2'].
 
-expression      -> expression scan word                         :   '$1' ++ [build_scan(property('$3'))].
+expression      -> expression scan property                     :   '$1' ++ [build_scan(property('$3'))].
 expression      -> expression scan '[' quoted_word ']'          :   '$1' ++ [build_scan(property('$4'))].
 expression      -> expression scan array_indexes                :   '$1' ++ [build_scan('$3')].
 expression      -> expression scan filter_exp                   :   '$1' ++ [build_scan('$3')].
 expression      -> expression scan wildcard                     :   '$1' ++ [build_scan(extract('$3'))].
 expression      -> expression scan '[' wildcard ']'             :   '$1' ++ [build_scan(extract('$4'))].
 
+%%Key collector
+union           -> '[' union_prop ']'                           :   '$2'.
+union_prop      -> quoted_word                                  :   [{dot, property('$1')}].
+union_prop      -> union_prop ',' quoted_word                   :   '$1' ++ [{dot, property('$3')}].
+
+%%Property
+property        -> word                                         :   '$1'.
+property        -> quoted_word                                  :   '$1'.
+property        -> int                                          :   '$1'.
 
 %%Array
 array_indexes	-> '[' indexes ']'                              :   {array_indexes, '$2'}.
@@ -59,7 +68,7 @@ filter_exp      -> '[' '?' '(' boolean_exp ')' ']'              :   {filter, '$4
 
 boolean_exp     -> boolean                                      :   '$1'.
 boolean_exp     -> predicate                                    :   '$1'.     
-boolean_exp     -> current_node '.' word                        :   {'has_property?', property('$3')}.
+boolean_exp     -> current_node '.' property                    :   {'has_property?', property('$3')}.
 boolean_exp     -> boolean_exp or_op boolean_exp                :   {'or',  ['$1', '$3']}.     
 boolean_exp     -> boolean_exp and_op boolean_exp               :   {'and', ['$1', '$3']}.     
 boolean_exp     -> not_op boolean_exp                           :   {'not', '$2'}.
@@ -71,7 +80,7 @@ predicate       -> item in_op elements                          :   {in, ['$1', 
 
 item            -> number                                       :   '$1'.
 item            -> boolean                                      :   '$1'.
-item            -> current_node '.' word                        :   property('$3').
+item            -> current_node '.' property                    :   property('$3').
 item            -> current_node                                 :   current_node.
 item            -> word                                         :   extract_value('$1').
 item            -> quoted_word                                  :   extract_value('$1').
@@ -120,7 +129,15 @@ function_call({_, Line, FunctionName}, Arguments) ->
 
 index_access({_, _, Value}) -> {index_access, Value}.
 
+property({_, _, Value}) when is_integer(Value) -> {property, integer_to_binary(Value)};
 property({_, _, Value}) -> {property, Value}.
+
+% Unwrap whent it's only one key access.
+% Ex:
+% ['some_key'] should be unwrapped to {:dot, {:property, "some_key"}
+% ['one', 'two'] should be translated to {:union, [{:dot, {:property, "one"}, {:dot, {:property, "two"}]}
+resolv_operation_for([{dot, {property, _}}] = Property) -> Property;
+resolv_operation_for(Union) -> [{union, Union}].
 
 slice_op(Line, Tokens) -> 
 	Params = slice_params(0, [], Tokens),
