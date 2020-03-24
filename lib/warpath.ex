@@ -263,7 +263,14 @@ defmodule Warpath do
     do: access(element, dot_token)
 
   defp transform({member, _} = element, {:union, tokens}) when is_map(member) do
-    Enum.map(tokens, fn token -> transform(element, token) end)
+    tokens
+    |> Enum.reduce([], fn dot_property_token, acc ->
+      case access(element, dot_property_token, :not_found) do
+        {:not_found, _} -> acc
+        result -> [result | acc]
+      end
+    end)
+    |> Enum.reverse()
   end
 
   defp transform({members, _} = element, {:array_indexes, target} = indexes) do
@@ -369,8 +376,8 @@ defmodule Warpath do
     |> Stream.filter(fn {member, _} -> is_list(member) end)
   end
 
-  defp access({member, path}, {:dot, {:property, key} = token}) do
-    {member[key], Path.accumulate(token, path)}
+  defp access({member, path}, {:dot, {:property, key} = token}, default \\ nil) do
+    {Access.get(member, key, default), Path.accumulate(token, path)}
   end
 
   defp create_slice_range(elements, slice_ops) do
