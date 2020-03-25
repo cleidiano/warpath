@@ -11,6 +11,16 @@ defmodule Warpath.ExpressionTest do
       assert Expression.compile("$.name") == {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
     end
 
+    test "string that contains a dash" do
+      assert Expression.compile("$.property-name") ==
+               {:ok, [{:root, "$"}, {:dot, {:property, "property-name"}}]}
+    end
+
+    test "string that contains a underline" do
+      assert Expression.compile("$.property_name") ==
+               {:ok, [{:root, "$"}, {:dot, {:property, "property_name"}}]}
+    end
+
     test "int property" do
       assert Expression.compile("$.1") == {:ok, [{:root, "$"}, {:dot, {:property, "1"}}]}
     end
