@@ -2,7 +2,7 @@ Definitions.
 
 ROOT                 = \$
 CURRENT_NODE         = @
-WORD                 = ([A-Za-z_]+[A-Za-z0-9]*)
+WORD                 = ([A-Za-z_]+-*[A-Za-z0-9]*-*)
 SINGLE_QUOTED_WORD   = '([^\']*)'
 COMPARATOR           = (<|>|<=|>=|==|!=|===|!==)
 MINUS                = \-
@@ -37,6 +37,8 @@ in                      : {token, {in_op,           TokenLine}}.
 {COMPARATOR}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
 {INT}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
 {INT}{DOT}{INT}         : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
+-{INT}                  : {token, {negative_int,    TokenLine, list_to_integer(TokenChars)}}.
+-{INT}{DOT}{INT}        : {token, {negative_flot,   TokenLine, list_to_float(TokenChars)}}.
 {DOT}{DOT}              : {token, {scan,            TokenLine, list_to_atom(TokenChars)}}.
 {DOT}                   : {token, {'.',             TokenLine}}.
 {MINUS}                 : {token, {'-',             TokenLine}}.

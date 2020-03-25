@@ -1,12 +1,12 @@
 Nonterminals expression filter_exp boolean_exp predicate
-number negative_float negative_int boolean item element elements 
-indexes array_indexes array_slice slice_parts slice_arg union union_prop property
+number  boolean item element elements indexes array_indexes array_slice slice_parts
+integer_arg union union_prop property
 .
 
 Terminals  
-root word quoted_word current_node int float wildcard scan
+root word quoted_word current_node int float negative_float negative_int wildcard scan
 true false or_op and_op not_op in_op comparator
-'.' '[' ']' '?' '(' ')' '-' ',' ':'
+'.' '[' ']' '?' '(' ')' ',' ':'
 .
 
 Rootsymbol expression.
@@ -51,17 +51,17 @@ property        -> int                                          :   '$1'.
 
 %%Array
 array_indexes	-> '[' indexes ']'                              :   {array_indexes, '$2'}.
-indexes         -> int                                          :   [index_access('$1')].
-indexes	        -> indexes ',' int                              :   '$1' ++ [index_access('$3')].
+indexes         -> integer_arg                                  :   [index_access('$1')].
+indexes         -> indexes ',' integer_arg                      :   '$1' ++ [index_access('$3')].
 
 array_slice     -> '[' slice_parts ']'                          :   {array_slice, slice_op(line('$1'), '$2')}.
 slice_parts     -> ':'                                          :   [colon].
-slice_parts     -> slice_arg ':'                                :   ['$1', colon].
+slice_parts     -> integer_arg ':'                              :   ['$1', colon].
 slice_parts     -> slice_parts ':'                              :   '$1' ++ [colon].
-slice_parts     -> slice_parts slice_arg                        :   '$1' ++ ['$2'].
+slice_parts     -> slice_parts integer_arg                      :   '$1' ++ ['$2'].
 
-slice_arg       -> int                                          :   extract_value('$1').
-slice_arg       -> negative_int                                 :   '$1'.
+integer_arg     -> int                                          :   extract_value('$1').
+integer_arg     -> negative_int                                 :   extract_value('$1').
 
 %%Filter
 filter_exp      -> '[' '?' '(' boolean_exp ')' ']'              :   {filter, '$4'}.
@@ -92,13 +92,10 @@ element         -> element ',' item                             :   '$1' ++ ['$3
 boolean         -> true                                         :   true.
 boolean         -> false                                        :   false.
 
-negative_int    -> '-' int                                      :   -extract_value('$2').
-negative_float  -> '-' float                                    :   -extract_value('$2').
-
 number          -> int                                          :   extract_value('$1').
 number          -> float                                        :   extract_value('$1').
-number          -> negative_float                               :   '$1'.
-number          -> negative_int                                 :   '$1'.
+number          -> negative_float                               :   extract_value('$1').
+number          -> negative_int                                 :   extract_value('$1').
 
 Erlang code.
 
@@ -127,7 +124,7 @@ function_call({_, Line, FunctionName}, Arguments) ->
 	       end,
     {Function, Arguments}.
 
-index_access({_, _, Value}) -> {index_access, Value}.
+index_access(Value) -> {index_access, Value}.
 
 property({_, _, Value}) when is_integer(Value) -> {property, integer_to_binary(Value)};
 property({_, _, Value}) -> {property, Value}.
