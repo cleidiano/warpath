@@ -1,22 +1,22 @@
 Definitions.
 
-ROOT                 = \$
-CURRENT_NODE         = @
-WORD                 = ([A-Za-z_]+-*[A-Za-z0-9]*-*)
-SINGLE_QUOTED_WORD   = '([^\']*)'
-COMPARATOR           = (<|>|<=|>=|==|!=|===|!==)
-MINUS                = \-
-INT                  = [0-9]+
-OPEN_BRACKET         = \[
-CLOSE_BRACKET        = \]
-OPEN_PARENTHESE      = \(
-CLOSE_PARENTHESE     = \)
-DOT                  = \.
-QUESTION_MARK        = \?
-WILDCARD             = \*
-COMMA                = ,
-COLON                = :
-WHITESPACE           = [\s\t\n\r]
+Root                 = \$
+CurrentNode          = @
+Word                 = ([A-Za-z_]+-*[A-Za-z0-9]*-*)
+SingleQuotedWord   = '([^\']*)'
+Comparator           = (<|>|<=|>=|==|!=|===|!==)
+Minus                = \-
+Int                  = [0-9]+
+OpenBracket          = \[
+CloseBracket         = \]
+OpenParenthese      = \(
+CloseParenthese     = \)
+Dot                  = \.
+QuestionMark        = \?
+Qildcard             = \*
+Comma                = ,
+Colon                = :
+Whitespace           = [\s\t\n\r]
 
 Rules.
 
@@ -27,30 +27,30 @@ true                    : {token, {true,            TokenLine}}.
 false                   : {token, {false,           TokenLine}}.
 in                      : {token, {in_op,           TokenLine}}.
 
-{COLON}{WORD}           : {token, {word,            TokenLine, to_atom(TokenChars)}}.
-{COLON}".+"             : {token, {word,            TokenLine, to_atom(TokenChars)}}.
-{COLON}'.+'             : {token, {word,            TokenLine, to_atom(TokenChars)}}.
-{ROOT}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
-{WORD}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
-{SINGLE_QUOTED_WORD}    : {token, {quoted_word,     TokenLine, single_quoted_word_to_binary(TokenChars)}}.
-{CURRENT_NODE}          : {token, {current_node,    TokenLine, list_to_binary(TokenChars)}}.
-{COMPARATOR}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
-{INT}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
-{INT}{DOT}{INT}         : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
--{INT}                  : {token, {negative_int,    TokenLine, list_to_integer(TokenChars)}}.
--{INT}{DOT}{INT}        : {token, {negative_flot,   TokenLine, list_to_float(TokenChars)}}.
-{DOT}{DOT}              : {token, {scan,            TokenLine, list_to_atom(TokenChars)}}.
-{DOT}                   : {token, {'.',             TokenLine}}.
-{MINUS}                 : {token, {'-',             TokenLine}}.
-{COLON}                 : {token, {':',             TokenLine}}.
-{COMMA}                 : {token, {',',             TokenLine}}.  
-{OPEN_BRACKET}          : {token, {'[',             TokenLine}}.
-{CLOSE_BRACKET}         : {token, {']',             TokenLine}}.
-{QUESTION_MARK}         : {token, {'?',             TokenLine}}.
-{OPEN_PARENTHESE}       : {token, {'(',             TokenLine}}.
-{CLOSE_PARENTHESE}      : {token, {')',             TokenLine}}.
-{WILDCARD}              : {token, {wildcard,        TokenLine, list_to_atom(TokenChars)}}.
-{WHITESPACE}+           : skip_token.
+{Colon}{Word}           : {token, {word,            TokenLine, to_atom(TokenChars)}}.
+{Colon}".+"             : {token, {word,            TokenLine, to_atom(TokenChars)}}.
+{Colon}'.+'             : {token, {word,            TokenLine, to_atom(TokenChars)}}.
+{Root}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
+{Word}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
+{SingleQuotedWord}      : {token, {quoted_word,     TokenLine, single_quoted_word_to_binary(TokenChars)}}.
+{CurrentNode}           : {token, {current_node,    TokenLine, list_to_binary(TokenChars)}}.
+{Comparator}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
+{Int}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
+{Int}{Dot}{Int}         : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
+-{Int}                  : {token, {negative_int,    TokenLine, list_to_integer(TokenChars)}}.
+-{Int}{Dot}{Int}        : {token, {negative_flot,   TokenLine, list_to_float(TokenChars)}}.
+{Dot}{Dot}              : {token, {scan,            TokenLine, list_to_atom(TokenChars)}}.
+{Dot}                   : {token, {'.',             TokenLine}}.
+{Minus}                 : {token, {'-',             TokenLine}}.
+{Colon}                 : {token, {':',             TokenLine}}.
+{Comma}                 : {token, {',',             TokenLine}}.  
+{OpenBracket}           : {token, {'[',             TokenLine}}.
+{CloseBracket}         : {token, {']',             TokenLine}}.
+{QuestionMark}         : {token, {'?',             TokenLine}}.
+{OpenParenthese}       : {token, {'(',             TokenLine}}.
+{CloseParenthese}      : {token, {')',             TokenLine}}.
+{Qildcard}              : {token, {wildcard,        TokenLine, list_to_atom(TokenChars)}}.
+{Whitespace}+           : skip_token.
 
 Erlang code.
 
