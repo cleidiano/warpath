@@ -1,11 +1,31 @@
+% JsonPath Lexer
+%
+% Acknowledgments
+% Some piece of this lexer were extract from https://github.com/graphql-elixir/graphql/blob/master/src/graphql_lexer.xrl
+
 Definitions.
 
-CurrentNode          = @
-Word                 = ([A-Za-z_]+-*[A-Za-z0-9]*-*)
-SingleQuotedWord     = '([^\']*)'
-Comparator           = (<|>|<=|>=|==|!=|===|!==)
-Boolean              = true|false
+% Ignored tokens
+WhiteSpace          = \s
+_LineTerminator     = \x{000A}\x{000D}\x{2028}\x{2029}
+LineTerminator      = [{_LineTerminator}]
+Ignored             = {WhiteSpace}|{LineTerminator}
 
+%Especial Symbols
+At                  = \@
+Dollar              = \$
+OpenBracket         = \[
+CloseBracket        = \]
+OpenParens          = \(
+CloseParens         = \)
+Dot                 = \.
+QuestionMark        = \?
+Start               = \*
+Colon               = \:
+Comma               = \,
+RecursiveDescent    = {Dot}{Dot}
+Comparator          = (<|>|<=|>=|==|!=|===|!==)
+Boolean             = true|false
 
 % Int Value
 Digit               = [0-9]
@@ -20,31 +40,62 @@ ExponentIndicator   = [eE]
 ExponentPart        = {ExponentIndicator}{Sign}?{Digit}+
 FloatValue          = ({IntegerPart}{FractionalPart}|{IntegerPart}{ExponentPart}|{IntegerPart}{FractionalPart}{ExponentPart})
 
-Whitespace           = [\s\t\n\r]
 
-% Lexical tokens
-Punctuator          = [\$,\[,\],\(,\),\.,\?,\*,\:,\,]|\.\.
+% Punctuator
+_Punctuator         = {At}{Dollar}{OpenBracket}{CloseBracket}{OpenParens}{CloseParens}{Dot}{QuestionMark}{Start}{Colon}{Comma}
+Punctuator          = [{_Punctuator}]|{RecursiveDescent}
+
+
+% Identifier Value
+HexDigit            = [0-9A-Fa-f]
+EscapedUnicode      = u{HexDigit}{HexDigit}{HexDigit}{HexDigit}
+OperatorsSymbol     = ><=!
+EscapedCharacter    = ['"\\\/bfnrt]
+AllowedIdentifier   = [^"'{_LineTerminator}{_Punctuator}{WhiteSpace}{OperatorsSymbol}]
+EscapedSequence     = \\{EscapedUnicode}|\\{EscapedCharacter}|\\{_Punctuator}
+
+IdentifierCharacter = ({AllowedIdentifier}|{EscapedSequence})
+ToQuoteIdentifier   = ([^''{_LineTerminator}]|{EscapedSequence})
+Identifier          = {IdentifierCharacter}+
+QuotedIdentifier    = '({Identifier}|{ToQuoteIdentifier})*'
+
+
+%%%Atom
+AllowedUnicode      = [^'"'{_LineTerminator}]
+ToQuoteAtom         = ({AllowedUnicode}|{EscapedSequence})
+UnquotedAtom        = ([a-zA-Z_][0-9a-zA-Z_?!]*)
+DoubleQuotedAtom    = "({UnquotedAtom}|{ToQuoteAtom})*"
+SingleQuotedAtom    = '({UnquotedAtom}|{ToQuoteAtom})*'
+Atom                = :({UnquotedAtom}|{DoubleQuotedAtom}|{SingleQuotedAtom})
+
+
+%%Operators
+OrOp                = or|\|\|
+AndOp               = and|&&
+NotOp               = not
+InOp                = in
+
+
 
 Rules.
 
-(or|\|\|)               : {token, {or_op,           TokenLine}}.
-(and|&&)                : {token, {and_op,          TokenLine}}.
-not                     : {token, {not_op,          TokenLine}}.
-in                      : {token, {in_op,           TokenLine}}.
+{OrOp}                  : {token, {or_op,           TokenLine}}.
+{AndOp}                 : {token, {and_op,          TokenLine}}.
+{NotOp}                 : {token, {not_op,          TokenLine}}.
+{InOp}                  : {token, {in_op,           TokenLine}}.
 
+{Punctuator}            : {token, {list_to_atom(TokenChars), TokenLine}}.
 {Boolean}               : {token, {boolean,         TokenLine, list_to_atom(TokenChars)}}.
-:{Word}                 : {token, {word,            TokenLine, to_atom(TokenChars)}}.
-:".+"                   : {token, {word,            TokenLine, to_atom(TokenChars)}}.
-:'.+'                   : {token, {word,            TokenLine, to_atom(TokenChars)}}.
-{Root}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
-{Word}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
-{SingleQuotedWord}      : {token, {quoted_word,     TokenLine, single_quoted_word_to_binary(TokenChars)}}.
-{CurrentNode}           : {token, {current_node,    TokenLine, list_to_binary(TokenChars)}}.
+{Atom}                  : {token, {word,            TokenLine, to_atom(TokenChars)}}.
+
 {Comparator}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
 {FloatValue}            : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
 {IntValue}              : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
-{Punctuator}            : {token, {list_to_atom(TokenChars), TokenLine}}.
-{Whitespace}+           : skip_token.
+{Identifier}            : {token, {word,            TokenLine, unicode:characters_to_binary(TokenChars)}}.
+{QuotedIdentifier}      : {token, {quoted_word,     TokenLine, single_quoted_word_to_binary(TokenChars)}}.
+{Ignored}               : skip_token.
+
+
 
 Erlang code.
 
@@ -52,7 +103,7 @@ single_quoted_word_to_binary([$', $']) -> <<>>;
 single_quoted_word_to_binary([$' | Chars]) ->
     Char = lists:last(Chars),
     case Char of
-      $' -> list_to_binary(lists:droplast(Chars));
+      $' -> unicode:characters_to_binary(lists:droplast(Chars));
       Other -> {error, Other}
     end.
 

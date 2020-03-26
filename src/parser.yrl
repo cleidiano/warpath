@@ -4,9 +4,9 @@ integer_arg union union_prop property wildcard
 .
 
 Terminals  
-'$' word quoted_word current_node int float negative_float negative_int '..'
+'$' word quoted_word int float negative_float negative_int '..'
 boolean or_op and_op not_op in_op comparator
-'.' '[' ']' '?' '(' ')' ',' ':' '*'
+'.' '[' ']' '?' '(' ')' ',' ':' '*' '@'
 .
 
 Rootsymbol expression.
@@ -71,7 +71,7 @@ filter_exp      -> '[' '?' '(' boolean_exp ')' ']'              :   {filter, '$4
 
 boolean_exp     -> boolean                                      :   extract_value('$1').
 boolean_exp     -> predicate                                    :   '$1'.     
-boolean_exp     -> current_node '.' property                    :   {'has_property?', property('$3')}.
+boolean_exp     -> '@' '.' property                             :   {'has_property?', property('$3')}.
 boolean_exp     -> boolean_exp or_op boolean_exp                :   {'or',  ['$1', '$3']}.     
 boolean_exp     -> boolean_exp and_op boolean_exp               :   {'and', ['$1', '$3']}.     
 boolean_exp     -> not_op boolean_exp                           :   {'not', '$2'}.
@@ -83,8 +83,8 @@ predicate       -> item in_op elements                          :   {in, ['$1', 
 
 item            -> number                                       :   '$1'.
 item            -> boolean                                      :   extract_value('$1').
-item            -> current_node '.' property                    :   property('$3').
-item            -> current_node                                 :   current_node.
+item            -> '@' '.' property                             :   property('$3').
+item            -> '@'                                          :   current_node.
 item            -> word                                         :   extract_value('$1').
 item            -> quoted_word                                  :   extract_value('$1').
 
