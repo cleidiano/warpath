@@ -5,8 +5,7 @@ CurrentNode          = @
 Word                 = ([A-Za-z_]+-*[A-Za-z0-9]*-*)
 SingleQuotedWord     = '([^\']*)'
 Comparator           = (<|>|<=|>=|==|!=|===|!==)
-Minus                = \-
-Int                  = [0-9]+
+Boolean              = true|false
 
 
 % Int Value
@@ -38,10 +37,9 @@ Rules.
 (or|\|\|)               : {token, {or_op,           TokenLine}}.
 (and|&&)                : {token, {and_op,          TokenLine}}.
 not                     : {token, {not_op,          TokenLine}}.
-true                    : {token, {true,            TokenLine}}.
-false                   : {token, {false,           TokenLine}}.
 in                      : {token, {in_op,           TokenLine}}.
 
+{Boolean}               : {token, {boolean,         TokenLine, to_atom(TokenChars)}}.
 {Colon}{Word}           : {token, {word,            TokenLine, to_atom(TokenChars)}}.
 {Colon}".+"             : {token, {word,            TokenLine, to_atom(TokenChars)}}.
 {Colon}'.+'             : {token, {word,            TokenLine, to_atom(TokenChars)}}.

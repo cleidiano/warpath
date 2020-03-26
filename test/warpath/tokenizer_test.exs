@@ -91,8 +91,8 @@ defmodule Warpath.TokenizerTest do
     end
 
     test "boolean" do
-      assert Tokenizer.tokenize("true") == {:ok, [{true, 1}]}
-      assert Tokenizer.tokenize("false") == {:ok, [{false, 1}]}
+      assert Tokenizer.tokenize("true") == {:ok, [{:boolean, 1, true}]}
+      assert Tokenizer.tokenize("false") == {:ok, [{:boolean, 1, false}]}
     end
 
     test "not" do

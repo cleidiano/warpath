@@ -1,11 +1,11 @@
 Nonterminals expression filter_exp boolean_exp predicate
-number  boolean item element elements indexes array_indexes array_slice slice_parts
+number item element elements indexes array_indexes array_slice slice_parts
 integer_arg union union_prop property
 .
 
 Terminals  
 root word quoted_word current_node int float negative_float negative_int wildcard scan
-true false or_op and_op not_op in_op comparator
+boolean or_op and_op not_op in_op comparator
 '.' '[' ']' '?' '(' ')' ',' ':'
 .
 
@@ -66,7 +66,7 @@ integer_arg     -> negative_int                                 :   extract_valu
 %%Filter
 filter_exp      -> '[' '?' '(' boolean_exp ')' ']'              :   {filter, '$4'}.
 
-boolean_exp     -> boolean                                      :   '$1'.
+boolean_exp     -> boolean                                      :   extract_value('$1').
 boolean_exp     -> predicate                                    :   '$1'.     
 boolean_exp     -> current_node '.' property                    :   {'has_property?', property('$3')}.
 boolean_exp     -> boolean_exp or_op boolean_exp                :   {'or',  ['$1', '$3']}.     
@@ -79,7 +79,7 @@ predicate       -> word '(' item ')'                            :   function_cal
 predicate       -> item in_op elements                          :   {in, ['$1', '$3']}.
 
 item            -> number                                       :   '$1'.
-item            -> boolean                                      :   '$1'.
+item            -> boolean                                      :   extract_value('$1').
 item            -> current_node '.' property                    :   property('$3').
 item            -> current_node                                 :   current_node.
 item            -> word                                         :   extract_value('$1').
@@ -88,9 +88,6 @@ item            -> quoted_word                                  :   extract_valu
 elements        -> '[' element ']'                              :   '$2'.
 element         -> item                                         :   ['$1'].
 element         -> element ',' item                             :   '$1' ++ ['$3'].
-
-boolean         -> true                                         :   true.
-boolean         -> false                                        :   false.
 
 number          -> int                                          :   extract_value('$1').
 number          -> float                                        :   extract_value('$1').
