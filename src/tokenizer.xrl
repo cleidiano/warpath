@@ -1,6 +1,5 @@
 Definitions.
 
-Root                 = \$
 CurrentNode          = @
 Word                 = ([A-Za-z_]+-*[A-Za-z0-9]*-*)
 SingleQuotedWord     = '([^\']*)'
@@ -21,16 +20,10 @@ ExponentIndicator   = [eE]
 ExponentPart        = {ExponentIndicator}{Sign}?{Digit}+
 FloatValue          = ({IntegerPart}{FractionalPart}|{IntegerPart}{ExponentPart}|{IntegerPart}{FractionalPart}{ExponentPart})
 
-OpenBracket          = \[
-CloseBracket         = \]
-OpenParenthese      = \(
-CloseParenthese     = \)
-Dot                  = \.
-QuestionMark        = \?
-Qildcard             = \*
-Comma                = ,
-Colon                = :
 Whitespace           = [\s\t\n\r]
+
+% Lexical tokens
+Punctuator          = [\$,\[,\],\(,\),\.,\?,\*,\:,\,]|\.\.
 
 Rules.
 
@@ -39,10 +32,10 @@ Rules.
 not                     : {token, {not_op,          TokenLine}}.
 in                      : {token, {in_op,           TokenLine}}.
 
-{Boolean}               : {token, {boolean,         TokenLine, to_atom(TokenChars)}}.
-{Colon}{Word}           : {token, {word,            TokenLine, to_atom(TokenChars)}}.
-{Colon}".+"             : {token, {word,            TokenLine, to_atom(TokenChars)}}.
-{Colon}'.+'             : {token, {word,            TokenLine, to_atom(TokenChars)}}.
+{Boolean}               : {token, {boolean,         TokenLine, list_to_atom(TokenChars)}}.
+:{Word}                 : {token, {word,            TokenLine, to_atom(TokenChars)}}.
+:".+"                   : {token, {word,            TokenLine, to_atom(TokenChars)}}.
+:'.+'                   : {token, {word,            TokenLine, to_atom(TokenChars)}}.
 {Root}                  : {token, {root,            TokenLine, list_to_binary(TokenChars)}}.
 {Word}                  : {token, {word,            TokenLine, list_to_binary(TokenChars)}}.
 {SingleQuotedWord}      : {token, {quoted_word,     TokenLine, single_quoted_word_to_binary(TokenChars)}}.
@@ -50,17 +43,7 @@ in                      : {token, {in_op,           TokenLine}}.
 {Comparator}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
 {FloatValue}            : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
 {IntValue}              : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
-{Dot}{Dot}              : {token, {scan,            TokenLine, list_to_atom(TokenChars)}}.
-{Dot}                   : {token, {'.',             TokenLine}}.
-{Minus}                 : {token, {'-',             TokenLine}}.
-{Colon}                 : {token, {':',             TokenLine}}.
-{Comma}                 : {token, {',',             TokenLine}}.  
-{OpenBracket}           : {token, {'[',             TokenLine}}.
-{CloseBracket}         : {token, {']',             TokenLine}}.
-{QuestionMark}         : {token, {'?',             TokenLine}}.
-{OpenParenthese}       : {token, {'(',             TokenLine}}.
-{CloseParenthese}      : {token, {')',             TokenLine}}.
-{Qildcard}              : {token, {wildcard,        TokenLine, list_to_atom(TokenChars)}}.
+{Punctuator}            : {token, {list_to_atom(TokenChars), TokenLine}}.
 {Whitespace}+           : skip_token.
 
 Erlang code.

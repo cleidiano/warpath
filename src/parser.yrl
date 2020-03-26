@@ -1,12 +1,12 @@
 Nonterminals expression filter_exp boolean_exp predicate
 number item element elements indexes array_indexes array_slice slice_parts
-integer_arg union union_prop property
+integer_arg union union_prop property wildcard
 .
 
 Terminals  
-root word quoted_word current_node int float negative_float negative_int wildcard scan
+'$' word quoted_word current_node int float negative_float negative_int '..'
 boolean or_op and_op not_op in_op comparator
-'.' '[' ']' '?' '(' ')' ',' ':'
+'.' '[' ']' '?' '(' ')' ',' ':' '*'
 .
 
 Rootsymbol expression.
@@ -16,28 +16,28 @@ Left        150 and_op.
 Left        200 comparator.     
 Nonassoc    250 not_op.
 Left        300 '.'.
-Left        350 scan.
+Left        350 '..'.
 
-expression      -> root                                         :   [extract('$1')].
+expression      -> '$'                                          :   [{root, <<"$">>}].
 expression      -> expression '.' property                      :   '$1' ++ [{dot, property('$3')}].
-expression      -> expression '.' wildcard                      :   '$1' ++ [extract('$3')].
+expression      -> expression '.' wildcard                      :   '$1' ++ ['$3'].
 expression      -> expression '.' array_indexes                 :   '$1' ++ ['$3'].
 expression      -> expression '.' filter_exp                    :   '$1' ++ ['$3'].
 expression      -> expression '.' union                         :   '$1' ++ resolv_operation_for('$3').
-expression      -> expression '.' '[' wildcard ']'              :   '$1' ++ [extract('$4')].
+expression      -> expression '.' '[' wildcard ']'              :   '$1' ++ ['$4'].
 
 expression      -> expression union                             :   '$1' ++ resolv_operation_for('$2').
-expression      -> expression '[' wildcard ']'                  :   '$1' ++ [extract('$3')].
+expression      -> expression '[' wildcard ']'                  :   '$1' ++ ['$3'].
 expression      -> expression filter_exp                        :   '$1' ++ ['$2'].
 expression      -> expression array_indexes                     :   '$1' ++ ['$2'].
 expression      -> expression array_slice                       :   '$1' ++ ['$2'].
 
-expression      -> expression scan property                     :   '$1' ++ [build_scan(property('$3'))].
-expression      -> expression scan '[' quoted_word ']'          :   '$1' ++ [build_scan(property('$4'))].
-expression      -> expression scan array_indexes                :   '$1' ++ [build_scan('$3')].
-expression      -> expression scan filter_exp                   :   '$1' ++ [build_scan('$3')].
-expression      -> expression scan wildcard                     :   '$1' ++ [build_scan(extract('$3'))].
-expression      -> expression scan '[' wildcard ']'             :   '$1' ++ [build_scan(extract('$4'))].
+expression      -> expression '..' property                     :   '$1' ++ [build_scan(property('$3'))].
+expression      -> expression '..' '[' quoted_word ']'          :   '$1' ++ [build_scan(property('$4'))].
+expression      -> expression '..' array_indexes                :   '$1' ++ [build_scan('$3')].
+expression      -> expression '..' filter_exp                   :   '$1' ++ [build_scan('$3')].
+expression      -> expression '..' wildcard                     :   '$1' ++ [build_scan('$3')].
+expression      -> expression '..' '[' wildcard ']'             :   '$1' ++ [build_scan('$4')].
 
 %%Key collector
 union           -> '[' union_prop ']'                           :   '$2'.
@@ -48,6 +48,9 @@ union_prop      -> union_prop ',' quoted_word                   :   '$1' ++ [{do
 property        -> word                                         :   '$1'.
 property        -> quoted_word                                  :   '$1'.
 property        -> int                                          :   '$1'.
+
+%%Wildcard
+wildcard        -> '*'                                          :   {wildcard, '*'}.
 
 %%Array
 array_indexes	-> '[' indexes ']'                              :   {array_indexes, '$2'}.
@@ -97,8 +100,6 @@ number          -> negative_int                                 :   extract_valu
 Erlang code.
 
 build_scan(Exp) -> {scan, Exp}.
-
-extract({Token, _, Value}) -> {Token, Value}.
 
 extract_value({_, _, Value}) -> Value.
 

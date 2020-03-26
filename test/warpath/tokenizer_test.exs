@@ -5,7 +5,7 @@ defmodule Warpath.TokenizerTest do
 
   describe "tokenize/1 generate tokens for" do
     test "root" do
-      assert Tokenizer.tokenize("$") == {:ok, [{:root, 1, "$"}]}
+      assert Tokenizer.tokenize("$") == {:ok, [{:"$", 1}]}
     end
 
     test "word" do
@@ -79,7 +79,7 @@ defmodule Warpath.TokenizerTest do
     end
 
     test "multiply" do
-      assert Tokenizer.tokenize("*") == {:ok, [{:wildcard, 1, :*}]}
+      assert Tokenizer.tokenize("*") == {:ok, [{:*, 1}]}
     end
 
     test "comma" do
