@@ -3,10 +3,25 @@ Definitions.
 Root                 = \$
 CurrentNode          = @
 Word                 = ([A-Za-z_]+-*[A-Za-z0-9]*-*)
-SingleQuotedWord   = '([^\']*)'
+SingleQuotedWord     = '([^\']*)'
 Comparator           = (<|>|<=|>=|==|!=|===|!==)
 Minus                = \-
 Int                  = [0-9]+
+
+
+% Int Value
+Digit               = [0-9]
+NegativeSign        = -
+IntegerPart         = {NegativeSign}?{Digit}+
+IntValue            = {IntegerPart}
+
+% Float Value
+FractionalPart      = \.{Digit}+
+Sign                = [+\-]
+ExponentIndicator   = [eE]
+ExponentPart        = {ExponentIndicator}{Sign}?{Digit}+
+FloatValue          = ({IntegerPart}{FractionalPart}|{IntegerPart}{ExponentPart}|{IntegerPart}{FractionalPart}{ExponentPart})
+
 OpenBracket          = \[
 CloseBracket         = \]
 OpenParenthese      = \(
@@ -35,10 +50,8 @@ in                      : {token, {in_op,           TokenLine}}.
 {SingleQuotedWord}      : {token, {quoted_word,     TokenLine, single_quoted_word_to_binary(TokenChars)}}.
 {CurrentNode}           : {token, {current_node,    TokenLine, list_to_binary(TokenChars)}}.
 {Comparator}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
-{Int}                   : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
-{Int}{Dot}{Int}         : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
--{Int}                  : {token, {negative_int,    TokenLine, list_to_integer(TokenChars)}}.
--{Int}{Dot}{Int}        : {token, {negative_flot,   TokenLine, list_to_float(TokenChars)}}.
+{FloatValue}            : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
+{IntValue}              : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
 {Dot}{Dot}              : {token, {scan,            TokenLine, list_to_atom(TokenChars)}}.
 {Dot}                   : {token, {'.',             TokenLine}}.
 {Minus}                 : {token, {'-',             TokenLine}}.
