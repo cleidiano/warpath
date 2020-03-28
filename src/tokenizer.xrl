@@ -6,10 +6,10 @@
 Definitions.
 
 % Ignored tokens
-WhiteSpace          = \s
+WhiteSpace          = \x{0009}\x{000B}\x{000C}\x{0020}\x{00A0}
 _LineTerminator     = \x{000A}\x{000D}\x{2028}\x{2029}
 LineTerminator      = [{_LineTerminator}]
-Ignored             = {WhiteSpace}|{LineTerminator}
+Ignored             = [{WhiteSpace}]|{LineTerminator}
 
 %Especial Symbols
 At                  = \@
