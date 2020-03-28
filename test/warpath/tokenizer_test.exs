@@ -5,7 +5,7 @@ defmodule Warpath.TokenizerTest do
 
   describe "tokenize/1 generate tokens for" do
     test "root" do
-      assert Tokenizer.tokenize("$") == {:ok, [{:root, 1, "$"}]}
+      assert Tokenizer.tokenize("$") == {:ok, [{:"$", 1}]}
     end
 
     test "word" do
@@ -31,7 +31,7 @@ defmodule Warpath.TokenizerTest do
     end
 
     test "current node" do
-      assert Tokenizer.tokenize("@") == {:ok, [{:current_node, 1, "@"}]}
+      assert Tokenizer.tokenize("@") == {:ok, [{:@, 1}]}
     end
 
     test "operators" do
@@ -79,7 +79,7 @@ defmodule Warpath.TokenizerTest do
     end
 
     test "multiply" do
-      assert Tokenizer.tokenize("*") == {:ok, [{:wildcard, 1, :*}]}
+      assert Tokenizer.tokenize("*") == {:ok, [{:*, 1}]}
     end
 
     test "comma" do
@@ -91,8 +91,8 @@ defmodule Warpath.TokenizerTest do
     end
 
     test "boolean" do
-      assert Tokenizer.tokenize("true") == {:ok, [{true, 1}]}
-      assert Tokenizer.tokenize("false") == {:ok, [{false, 1}]}
+      assert Tokenizer.tokenize("true") == {:ok, [{:boolean, 1, true}]}
+      assert Tokenizer.tokenize("false") == {:ok, [{:boolean, 1, false}]}
     end
 
     test "not" do
@@ -120,11 +120,14 @@ defmodule Warpath.TokenizerTest do
     test "single quoted atom" do
       assert Tokenizer.tokenize(~S{:'quoted atom'}) == {:ok, [{:word, 1, :"quoted atom"}]}
     end
-  end
 
-  test "tokenize/1 should return {:error, reason} for invalid syntax" do
-    message = "Invalid syntax on line 1, {:illegal, '#'}"
-    assert Tokenizer.tokenize("$.name.#") == {:error, %TokenizerError{message: message}}
+    test "special symbol" do
+      assert Tokenizer.tokenize("#") == {:ok, [{:word, 1, "#"}]}
+    end
+
+    test "unicode symbol" do
+      assert Tokenizer.tokenize("🌢") == {:ok, [{:word, 1, "🌢"}]}
+    end
   end
 
   test "tokenize/1 should return {:error, reason} for nested single quote" do
@@ -134,11 +137,17 @@ defmodule Warpath.TokenizerTest do
              {:error, %TokenizerError{message: message}}
   end
 
-  describe "tokenize!/1 rise" do
-    test "rise TokenizerError for invalid syntax" do
-      assert_raise TokenizerError, fn ->
-        Tokenizer.tokenize!("#.name")
-      end
-    end
+  test "brancket notation with quoted ponctuation as identifier" do
+    assert Tokenizer.tokenize("['@']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "@"}, {:"]", 1}]}
+    assert Tokenizer.tokenize("['$']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "$"}, {:"]", 1}]}
+    assert Tokenizer.tokenize("['[']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "["}, {:"]", 1}]}
+    assert Tokenizer.tokenize("[']']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "]"}, {:"]", 1}]}
+    assert Tokenizer.tokenize("['(']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "("}, {:"]", 1}]}
+    assert Tokenizer.tokenize("[')']") == {:ok, [{:"[", 1}, {:quoted_word, 1, ")"}, {:"]", 1}]}
+    assert Tokenizer.tokenize("['.']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "."}, {:"]", 1}]}
+    assert Tokenizer.tokenize("['?']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "?"}, {:"]", 1}]}
+    assert Tokenizer.tokenize("['*']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "*"}, {:"]", 1}]}
+    assert Tokenizer.tokenize("[':']") == {:ok, [{:"[", 1}, {:quoted_word, 1, ":"}, {:"]", 1}]}
+    assert Tokenizer.tokenize("[',']") == {:ok, [{:"[", 1}, {:quoted_word, 1, ","}, {:"]", 1}]}
   end
 end
