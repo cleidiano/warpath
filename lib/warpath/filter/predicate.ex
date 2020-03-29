@@ -54,7 +54,7 @@ defmodule Warpath.Filter.Predicate do
   defp resolve({:property, name}, context) when is_map(context),
     do: context[name]
 
-  defp resolve({:index_access, index}, context),
+  defp resolve({:index_access, index}, context) when is_list(context) or is_map(context),
     do: Enum.at(context, index)
 
   defp resolve(:current_node, context),
