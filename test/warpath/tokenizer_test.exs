@@ -128,6 +128,14 @@ defmodule Warpath.TokenizerTest do
     test "unicode symbol" do
       assert Tokenizer.tokenize("🌢") == {:ok, [{:word, 1, "🌢"}]}
     end
+
+    test "double quote surround by single quote token" do
+      assert Tokenizer.tokenize(~S/'"'/) == {:ok, [{:quoted_word, 1, "\""}]}
+    end
+
+    test "single quote surround by dougle quote" do
+      assert Tokenizer.tokenize(~S/"name'"/) == {:ok, [{:quoted_word, 1, "name'"}]}
+    end
   end
 
   test "tokenize/1 should return {:error, reason} for nested single quote" do
