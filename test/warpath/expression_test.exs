@@ -62,13 +62,11 @@ defmodule Warpath.ExpressionTest do
     end
 
     test "double quote surround by single quoted" do
-      assert Expression.compile(~S{$."'"}) ==
-               {:ok, [{:root, "$"}, {:dot, {:property, "'"}}]}
+      assert Expression.compile(~S{$."'"}) == {:ok, [{:root, "$"}, {:dot, {:property, "'"}}]}
     end
 
     test "single quote surround by double quoted" do
-      assert Expression.compile(~S{$.'"'}) ==
-               {:ok, [{:root, "$"}, {:dot, {:property, "\""}}]}
+      assert Expression.compile(~S{$.'"'}) == {:ok, [{:root, "$"}, {:dot, {:property, "\""}}]}
     end
   end
 
