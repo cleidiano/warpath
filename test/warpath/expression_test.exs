@@ -279,8 +279,34 @@ defmodule Warpath.ExpressionTest do
                 ]}
     end
 
+    test "that use a bracket notation with property on it" do
+      assert Expression.compile("$[?(@['age'] > 10)]") ==
+               {:ok,
+                [
+                  {:root, "$"},
+                  {:filter, {:>, [{:property, "age"}, 10]}}
+                ]}
+    end
+
+    test "that use a index access on it" do
+      assert Expression.compile("$[?(@[1] > 10)]") ==
+               {:ok,
+                [
+                  {:root, "$"},
+                  {:filter, {:>, [{:index_access, 1}, 10]}}
+                ]}
+    end
+
     test "that is a has_property? operator" do
       assert Expression.compile("$.persons[?(@.age)]") ==
+               {:ok,
+                [
+                  {:root, "$"},
+                  {:dot, {:property, "persons"}},
+                  {:filter, {:has_property?, {:property, "age"}}}
+                ]}
+
+      assert Expression.compile("$.persons[?(@['age'])]") ==
                {:ok,
                 [
                   {:root, "$"},

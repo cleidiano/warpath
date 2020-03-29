@@ -511,7 +511,7 @@ queries:
     selector: $[?(@.key>42 && @.key<44)]
     document: [{"key": 42}, {"key": 43}, {"key": 44}]
   - id: filter_expression_with_bracket_notation
-    warpath: skip
+    warpath: run
     selector: $[?(@['key']==42)]
     document: [{"key": 0}, {"key": 42}, {"key": -1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"some": "value"}]
     consensus: [{"key": 42}]
@@ -520,7 +520,7 @@ queries:
     selector: $[?(@['@key']==42)]
     document: [{"@key": 0}, {"@key": 42}, {"key": 42}, {"@key": 43}, {"some": "value"}]
   - id: filter_expression_with_bracket_notation_with_number
-    warpath: skip
+    warpath: run
     selector: $[?(@[1]=='b')]
     document: [["a", "b"], ["x", "y"]]
     consensus: [["a", "b"]]
