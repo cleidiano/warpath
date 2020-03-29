@@ -72,6 +72,7 @@ filter_exp      -> '[' '?' '(' boolean_exp ')' ']'              :   {filter, '$4
 boolean_exp     -> boolean                                      :   extract_value('$1').
 boolean_exp     -> predicate                                    :   '$1'.     
 boolean_exp     -> '@' '.' property                             :   {'has_property?', property('$3')}.
+boolean_exp     -> '@' '[' quoted_word ']'                      :   {'has_property?', property('$3')}.
 boolean_exp     -> boolean_exp or_op boolean_exp                :   {'or',  ['$1', '$3']}.     
 boolean_exp     -> boolean_exp and_op boolean_exp               :   {'and', ['$1', '$3']}.     
 boolean_exp     -> not_op boolean_exp                           :   {'not', '$2'}.
@@ -84,6 +85,8 @@ predicate       -> item in_op elements                          :   {in, ['$1', 
 item            -> number                                       :   '$1'.
 item            -> boolean                                      :   extract_value('$1').
 item            -> '@' '.' property                             :   property('$3').
+item            -> '@' '[' quoted_word ']'                      :   property('$3').
+item            -> '@' '[' int ']'                              :   index_access(extract_value('$3')).
 item            -> '@'                                          :   current_node.
 item            -> word                                         :   extract_value('$1').
 item            -> quoted_word                                  :   extract_value('$1').
