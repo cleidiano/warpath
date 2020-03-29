@@ -577,7 +577,7 @@ queries:
     selector: $[?(@.key=="hi@example.com")]
     document: [{"key": "some"}, {"key": "value"}, {"key": "hi@example.com"}]
   - id: filter_expression_with_equals_on_string_with_dot_literal
-    warpath: skip
+    warpath: run
     selector: $[?(@.key=="some.value")]
     document: [{"key": "some"}, {"key": "value"}, {"key": "some.value"}]
     consensus: [{"key": "some.value"}]

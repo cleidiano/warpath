@@ -60,6 +60,14 @@ defmodule Warpath.ExpressionTest do
       assert Expression.compile(~S{$.:atom_key}) ==
                {:ok, [{:root, "$"}, {:dot, {:property, :atom_key}}]}
     end
+
+    test "double quote surround by single quoted" do
+      assert Expression.compile(~S{$."'"}) == {:ok, [{:root, "$"}, {:dot, {:property, "'"}}]}
+    end
+
+    test "single quote surround by double quoted" do
+      assert Expression.compile(~S{$.'"'}) == {:ok, [{:root, "$"}, {:dot, {:property, "\""}}]}
+    end
   end
 
   describe "compile/1 compile scan" do
