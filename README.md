@@ -4,7 +4,7 @@
 # Warpath
 A implementation of Jsonpath expression proposal by [Stefan Goessner](https://goessner.net/articles/JsonPath/) for Elixir.
 
-To see a comparisions between warpath and others json path libraries, visit [json-path-comparison/](https://cburgmer.github.io/json-path-comparison/) e see the great job done by `Christoph Burgmer`.
+To see a comparisions between warpath and others json path libraries, visit [json-path-comparison](https://cburgmer.github.io/json-path-comparison/) and see the great job done by `Christoph Burgmer`.
 
 **Installation:**
 
