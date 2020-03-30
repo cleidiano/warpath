@@ -4,6 +4,8 @@
 # Warpath
 A implementation of Jsonpath expression proposal by [Stefan Goessner](https://goessner.net/articles/JsonPath/) for Elixir.
 
+To see a comparisions between warpath and others json path libraries, visit [json-path-comparison/](https://cburgmer.github.io/json-path-comparison/) e see the great job done by `Christoph Burgmer`.
+
 **Installation:**
 
 The package can be installed by adding `warpath` to your list of dependencies in `mix.exs`:
@@ -11,7 +13,7 @@ The package can be installed by adding `warpath` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:warpath, "~> 0.1.1"}
+    {:warpath, "~> 0.2.0"}
   ]
 end
 ```
