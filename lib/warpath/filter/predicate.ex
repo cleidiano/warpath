@@ -54,8 +54,19 @@ defmodule Warpath.Filter.Predicate do
   defp resolve({:property, name}, context) when is_map(context),
     do: context[name]
 
-  defp resolve({:index_access, index}, context) when is_list(context) or is_map(context),
-    do: Enum.at(context, index)
+  defp resolve({:index_access, index}, context) do
+    case context do
+      nil ->
+        nil
+
+      list when is_list(list) ->
+        Enum.at(context, index)
+
+      value ->
+        raise Warpath.UnsupportedOperationError,
+              "You are try to access index '[#{index}]' on '#{inspect(value)}' that is not support for this data type."
+    end
+  end
 
   defp resolve(:current_node, context),
     do: context
