@@ -12,7 +12,7 @@ defmodule Warpath do
     | `*`                       | Wildcard. All objects/elements regardless their names.             |
     | `..`                      | Deep scan, recursive descent.                                      |
     | `.name`                   | Dot-notated child, it support string or atom as keys.              |
-    | `['name']`,`["name"]      | Bracket-notated child, it support string or atom as keys.          |
+    | `['name']`,`["name"]`     | Bracket-notated child, it support string or atom as keys.          |
     | `[int (,int>)]`           | Array index or indexes                                             |
     | `[start:end:step]`        | Array slice operator. Start index **inclusive**, end index **exclusive**. |
     | `[?(expression)]`         | Filter expression. Expression must evaluate to a boolean value.    |
@@ -56,7 +56,7 @@ defmodule Warpath do
     | >=                       | left is greater than or equal to right                              |
     | in                       | left exists in right `[?(@.price in [10, 20, 30])]`                 |
     | and,&&                   | logical and operator `[?(@.price > 50 and @.price < 100)]`          |
-    | or,||                    | logical or operator `[?(@.category == 'fiction' or @.price < 100)]` |
+    | or,&#124;&#124;          | logical or operator `[?(@.category == 'fiction' or @.price < 100)]` |
     | not                      | logical not operator `[?(not @.category == 'fiction')]`             |
 
 
