@@ -28,6 +28,7 @@ This realease put a effort to become compatible as possible with the concensus i
  
 
 ### Changed
+- Update jason dependency from `1.1.2` to `1.2.0`.
 - Flatten query that have previous fragment other then `root` and end with a wildcard operator, ex. `$.bar.*`.
 - Unwrap output of query that the only possible result is as scalar value, ex. `Warpath.query!([1, 2, 3], "$[0]")` will return `1` instead of `[1]`.
 
