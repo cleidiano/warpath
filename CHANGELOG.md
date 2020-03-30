@@ -13,7 +13,7 @@ This realease put a effort to become compatible as possible with the concensus i
 ### Added
 
 - Add CHANGELOG.md file.
-- Add support for double quoted key, ex. `$."my key"`.
+- Add support for double quoted key, ex. `$["my key"]`.
 - Add support to query with negative index, ex. `$[-1]`.
 - Add support to query using union property, like `$['one', 'two', 'three']`.  
 - Add support for Unicode property, ex. `$.🌢`.
