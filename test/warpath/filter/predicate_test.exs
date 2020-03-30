@@ -182,4 +182,30 @@ defmodule Warpath.Filter.PredicateTest do
       assert Predicate.eval({:is_map, :current_node}, %{})
     end
   end
+
+  describe "eval/2 evaluate index access" do
+    test "from context when it exists" do
+      context = [1, 2, 3, 4]
+
+      assert Predicate.eval({:==, [1, {:index_access, 0}]}, context)
+    end
+
+    test "from context when it doesn't exists" do
+      context = [1, 2, 3, 4]
+
+      refute Predicate.eval({:==, [1, {:index_access, 5}]}, context)
+    end
+
+    test "from context when the context is not a list" do
+      context = :atom
+
+      assert_raise Warpath.UnsupportedOperationError, fn ->
+        Predicate.eval({:==, [{:index_access, 1}, {:index_access, 1}]}, context)
+      end
+    end
+
+    test "from context when the context is nil, nil will be returned" do
+      assert Predicate.eval({:==, [nil, {:index_access, 1}]}, nil)
+    end
+  end
 end
