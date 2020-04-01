@@ -107,6 +107,7 @@ defmodule Warpath.TokenizerTest do
     assert_tokens 'Bar',            [{ :word, 1, "Bar" }]
     assert_tokens '_bar',           [{ :word, 1, "_bar" }]
     assert_tokens 'bar0',           [{ :word, 1, "bar0" }]
+    assert_tokens 'bar-bar',        [{ :word, 1, "bar-bar" }]
     assert_tokens '_xu_Da_QX_2',    [{ :word, 1, "_xu_Da_QX_2" }]
     assert_tokens '#',              [{ :word, 1, "#" }]
     assert_tokens '🌢',              [{ :word, 1, "🌢" }]
@@ -126,7 +127,9 @@ defmodule Warpath.TokenizerTest do
     assert_tokens ~c{:'a\\n'},       [{ :word, 1, :"a\\n" }]
 
     assert_tokens ~c{:'a b'},        [{ :word, 1, :"a b" }]
+    assert_tokens ~c{:'a-b'},        [{ :word, 1, :"a-b" }]
     assert_tokens ~c{:"a b"},        [{ :word, 1, :"a b" }]
+    assert_tokens ~c{:"a-b"},        [{ :word, 1, :"a-b" }]
     assert_tokens ~c{:"'"},          [{ :word, 1, :"'" }]
     assert_tokens ~c{:'"'},          [{ :word, 1, :"\"" }]
     assert_tokens ~c{:'#'},          [{ :word, 1, :"#" }]
