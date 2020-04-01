@@ -20,7 +20,7 @@ OpenParens             = \(
 CloseParens            = \)
 Dot                    = \.
 QuestionMark           = \?
-Start                  = \*
+Star                   = \*
 Colon                  = \:
 Comma                  = \,
 SingleQuote            = '
@@ -45,7 +45,7 @@ FloatValue             = ({IntegerPart}{FractionalPart}|{IntegerPart}{ExponentPa
 
 
 % Punctuator
-_Punctuator            = {At}{Dollar}{OpenBracket}{CloseBracket}{OpenParens}{CloseParens}{Dot}{QuestionMark}{Start}{Colon}{Comma}
+_Punctuator            = {At}{Dollar}{OpenBracket}{CloseBracket}{OpenParens}{CloseParens}{Dot}{QuestionMark}{Star}{Colon}{Comma}
 Punctuator             = [{_Punctuator}]|{RecursiveDescent}
 
 
@@ -71,8 +71,8 @@ QuotedIdentifier       = {SingleQuotedIdentifier}|{DoubleQuotedIdentifier}
 AllowedUnicode         = [^{SingleQuote}{DoubleQuote}{_LineTerminator}]
 ToQuoteAtom            = ({AllowedUnicode}|{EscapedSequence})
 UnquotedAtom           = ([a-zA-Z_][0-9a-zA-Z_?!]*)
-DoubleQuotedAtom       = "({UnquotedAtom}|{ToQuoteAtom})*"
-SingleQuotedAtom       = '({UnquotedAtom}|{ToQuoteAtom})*'
+DoubleQuotedAtom       = "({SingleQuote}|{UnquotedAtom}|{ToQuoteAtom})*"
+SingleQuotedAtom       = '({DoubleQuote}|{UnquotedAtom}|{ToQuoteAtom})*'
 Atom                   = :({UnquotedAtom}|{DoubleQuotedAtom}|{SingleQuotedAtom})
 
 
@@ -105,22 +105,22 @@ Rules.
 
 Erlang code.
 
-match_drop_last(List, Char) when is_list(List) ->
+match_drop_last(List, Quote) when is_list(List) ->
     Last = lists:last(List),
-    if Last == Char -> lists:droplast(List);
+    if Last == Quote -> lists:droplast(List);
        true -> {error, Last}
     end.
 
 quoted_word_to_binary([$', $']) -> <<>>;
 quoted_word_to_binary([$", $"]) -> <<>>;
-quoted_word_to_binary([SingleQuote | Chars])
-    when SingleQuote == $'; SingleQuote == $" ->
-    Word = match_drop_last(Chars, SingleQuote),
-    unicode:characters_to_binary(Word).
+quoted_word_to_binary([Quote | Chars])
+    when Quote == $'; Quote == $" ->
+    Identifier = match_drop_last(Chars, Quote),
+    unicode:characters_to_binary(Identifier).
 
 to_atom([$: | Chars]) -> to_atom(Chars);
-to_atom([SingleQuote | Chars])
-    when SingleQuote == $'; SingleQuote == $" ->
-    Word = match_drop_last(Chars, SingleQuote),
-    to_atom(Word);
+to_atom([Quote | Chars])
+    when Quote == $'; Quote == $" ->
+    Identifier = match_drop_last(Chars, Quote),
+    list_to_atom(Identifier);
 to_atom(Chars) -> list_to_atom(Chars).

@@ -3,139 +3,166 @@ defmodule Warpath.TokenizerTest do
 
   alias Warpath.{Tokenizer, TokenizerError}
 
-  describe "tokenize/1 generate tokens for" do
-    test "root" do
-      assert Tokenizer.tokenize("$") == {:ok, [{:"$", 1}]}
+  def assert_tokens(input, tokens) do
+    case :tokenizer.string(input) do
+      {:ok, output, _} ->
+        assert output == tokens
+
+      {:error, {_, :tokenizer, output}, _} ->
+        assert output == tokens
     end
+  end
 
-    test "word" do
-      assert Tokenizer.tokenize("any") == {:ok, [{:word, 1, "any"}]}
-    end
+  # Ignored tokens
+  test "WhiteSpace is ignored" do
+    assert_tokens '\u0009', [] # horizontal tab
+    assert_tokens '\u000B', [] # vertical tab
+    assert_tokens '\u000C', [] # form feed
+    assert_tokens '\u0020', [] # space
+    assert_tokens '\u00A0', [] # non-breaking space
+  end
 
-    test "list of single quote word to double quote word when it's a IN expression" do
-      assert Tokenizer.tokenize("in ['word one', other]") ==
-               {:ok,
-                [
-                  {:in_op, 1},
-                  {:"[", 1},
-                  {:quoted_word, 1, "word one"},
-                  {:",", 1},
-                  {:word, 1, "other"},
-                  {:"]", 1}
-                ]}
-    end
+  test "LineTerminator is ignored" do
+    assert_tokens '\u000A', [] # new line
+    assert_tokens '\u000D', [] # carriage return
+    assert_tokens '\u2028', [] # line separator
+    assert_tokens '\u2029', [] # paragraph separator
+  end
 
-    test "single quoted word" do
-      assert Tokenizer.tokenize("'single quoted word'") ==
-               {:ok, [{:quoted_word, 1, "single quoted word"}]}
-    end
+  test "Punctuator" do
+    assert_tokens '$',  [{ :"$", 1 }]
+    assert_tokens '[',  [{ :"[", 1 }]
+    assert_tokens ']',  [{ :"]", 1 }]
+    assert_tokens '(',  [{ :"(", 1 }]
+    assert_tokens ')',  [{ :")", 1 }]
+    assert_tokens '?',  [{ :"?", 1 }]
+    assert_tokens ':',  [{ :":", 1 }]
+    assert_tokens ',',  [{ :",", 1 }]
+    assert_tokens '.',  [{ :., 1 }]
+    assert_tokens '*',  [{ :*, 1 }]
+    assert_tokens '@',  [{ :@, 1 }]
+    assert_tokens '..', [{ :.., 1 }]
+  end
 
-    test "current node" do
-      assert Tokenizer.tokenize("@") == {:ok, [{:@, 1}]}
-    end
+  test "Comparator" do
+    assert_tokens '>',   [{ :comparator, 1, :> }]
+    assert_tokens '<',   [{ :comparator, 1, :< }]
+    assert_tokens '<=',  [{ :comparator, 1, :<= }]
+    assert_tokens '>=',  [{ :comparator, 1, :>= }]
+    assert_tokens '==',  [{ :comparator, 1, :== }]
+    assert_tokens '!=',  [{ :comparator, 1, :!= }]
+    assert_tokens '===', [{ :comparator, 1, :=== }]
+    assert_tokens '!==', [{ :comparator, 1, :!== }]
+  end
 
-    test "operators" do
-      operators = ["<", ">", "<=", ">=", "==", "!=", "===", "!=="]
+  test "Boolean" do
+    assert_tokens 'true',  [{ :boolean, 1, true }]
+    assert_tokens 'false', [{ :boolean, 1, false }]
+  end
 
-      expected =
-        Enum.map(operators, fn operator ->
-          {:ok, [{:comparator, 1, String.to_atom(operator)}]}
-        end)
+  test "IntValue" do
+    assert_tokens '0',     [{ :int, 1, 0 }]
+    assert_tokens '-0',    [{ :int, 1, -0 }]
+    assert_tokens '-1',    [{ :int, 1, -1 }]
+    assert_tokens '2340',  [{ :int, 1, 2340 }]
+    assert_tokens '56789', [{ :int, 1, 56789 }]
+  end
 
-      generated_tokens = Enum.map(operators, &Tokenizer.tokenize(&1))
-      assert generated_tokens == expected
-    end
+  test "FloatValue" do
+    assert_tokens '0.0',      [{ :float, 1, 0.0 }]
+    assert_tokens '-0.1',     [{ :float, 1, -0.1 }]
+    assert_tokens '0.1',      [{ :float, 1, 0.1 }]
+    assert_tokens '2.340',    [{ :float, 1, 2.340 }]
+    assert_tokens '5678.9',   [{ :float, 1, 5678.9 }]
+    assert_tokens '1.23e+45', [{ :float, 1, 1.23e+45 }]
+    assert_tokens '1.23E-45', [{ :float, 1, 1.23e-45 }]
+    assert_tokens '0.23E-45', [{ :float, 1, 0.23e-45 }]
+  end
 
-    test "int" do
-      assert Tokenizer.tokenize("10") == {:ok, [{:int, 1, 10}]}
-    end
+  test "Identifier" do
+    assert_tokens '""',             [{ :quoted_word, 1, "" }]
+    assert_tokens '"a"',            [{ :quoted_word, 1, "a" }]
+    assert_tokens '"\u000f"',       [{ :quoted_word, 1, "\u000f"  }]
+    assert_tokens '"\t"',           [{ :quoted_word, 1, "\t"  }]
+    assert_tokens '"\\""',          [{ :quoted_word, 1, "\\\""  }]
+    assert_tokens '"a\\n"',         [{ :quoted_word, 1, "a\\n"  }]
 
-    test "float" do
-      assert Tokenizer.tokenize("1.1") == {:ok, [{:float, 1, 1.1}]}
-    end
+    assert_tokens ~c{''},           [{ :quoted_word, 1, "" }]
+    assert_tokens ~c{'a'},          [{ :quoted_word, 1, "a" }]
+    assert_tokens ~c{'\u000f'},     [{ :quoted_word, 1, "\u000f"  }]
+    assert_tokens ~c{'\t'},         [{ :quoted_word, 1, "\t"  }]
+    assert_tokens ~c{'\\''},        [{ :quoted_word, 1, "\\\'"  }]
+    assert_tokens ~c{'a\\n'},       [{ :quoted_word, 1, "a\\n"  }]
 
-    test "dot" do
-      assert Tokenizer.tokenize(".") == {:ok, [{:., 1}]}
-    end
+    assert_tokens ~c{'a b'},        [{ :quoted_word, 1, "a b" }]
+    assert_tokens ~c{"a b"},        [{ :quoted_word, 1, "a b" }]
+    assert_tokens ~c{"'"},          [{ :quoted_word, 1, "'" }]
+    assert_tokens ~c{'"'},          [{ :quoted_word, 1, "\"" }]
 
-    test "open bracket" do
-      assert Tokenizer.tokenize("[") == {:ok, [{:"[", 1}]}
-    end
+    assert_tokens 'identifier',     [{ :word, 1, "identifier" }]
+    assert_tokens '_',              [{ :word, 1, "_" }]
+    assert_tokens 'a',              [{ :word, 1, "a" }]
+    assert_tokens 'Z',              [{ :word, 1, "Z" }]
+    assert_tokens 'bar',            [{ :word, 1, "bar" }]
+    assert_tokens 'Bar',            [{ :word, 1, "Bar" }]
+    assert_tokens '_bar',           [{ :word, 1, "_bar" }]
+    assert_tokens 'bar0',           [{ :word, 1, "bar0" }]
+    assert_tokens '_xu_Da_QX_2',    [{ :word, 1, "_xu_Da_QX_2" }]
+    assert_tokens '#',              [{ :word, 1, "#" }]
+    assert_tokens '🌢',              [{ :word, 1, "🌢" }]
+  end
 
-    test "close bracket" do
-      assert Tokenizer.tokenize("]") == {:ok, [{:"]", 1}]}
-    end
+  test "Atom" do
+    assert_tokens ':""',             [{ :word, 1, :""}]
+    assert_tokens ':"\u000f"',       [{ :word, 1, :"\u000f" }]
+    assert_tokens ':"\t"',           [{ :word, 1, :"\t" }]
+    assert_tokens ':"\\""',          [{ :word, 1, :"\\\"" }]
+    assert_tokens ':"a\\n"',         [{ :word, 1, :"a\\n" }]
 
-    test "question mark" do
-      assert Tokenizer.tokenize("?") == {:ok, [{:"?", 1}]}
-    end
+    assert_tokens ~c{:''},           [{ :word, 1, :""}]
+    assert_tokens ~c{:'\u000f'},     [{ :word, 1, :"\u000f" }]
+    assert_tokens ~c{:'\t'},         [{ :word, 1, :"\t" }]
+    assert_tokens ~c{:'\\''},        [{ :word, 1, :"\\\'" }]
+    assert_tokens ~c{:'a\\n'},       [{ :word, 1, :"a\\n" }]
 
-    test "open parentheses" do
-      assert Tokenizer.tokenize("(") == {:ok, [{:"(", 1}]}
-    end
+    assert_tokens ~c{:'a b'},        [{ :word, 1, :"a b" }]
+    assert_tokens ~c{:"a b"},        [{ :word, 1, :"a b" }]
+    assert_tokens ~c{:"'"},          [{ :word, 1, :"'" }]
+    assert_tokens ~c{:'"'},          [{ :word, 1, :"\"" }]
+    assert_tokens ~c{:'#'},          [{ :word, 1, :"#" }]
+    assert_tokens ~c{:'🌢'},          [{ :word, 1, :"🌢" }]
 
-    test "close parentheses" do
-      assert Tokenizer.tokenize(")") == {:ok, [{:")", 1}]}
-    end
+    assert_tokens ':identifier',     [{ :word, 1, :identifier }]
+    assert_tokens ':_',              [{ :word, 1, :_ }]
+    assert_tokens ':a',              [{ :word, 1, :a }]
+    assert_tokens ':Z',              [{ :word, 1, :Z }]
+    assert_tokens ':bar',            [{ :word, 1, :bar }]
+    assert_tokens ':Bar',            [{ :word, 1, :Bar }]
+    assert_tokens ':_bar',           [{ :word, 1, :_bar }]
+    assert_tokens ':bar0',           [{ :word, 1, :bar0 }]
+    assert_tokens ':_xu_Da_QX_2',    [{ :word, 1, :_xu_Da_QX_2 }]
+  end
 
-    test "multiply" do
-      assert Tokenizer.tokenize("*") == {:ok, [{:*, 1}]}
-    end
+  test "Boolean Operators" do
+    assert_tokens 'and', [{:and_op, 1}]
+    assert_tokens '&&',  [{:and_op, 1}]
+    assert_tokens 'or',  [{:or_op, 1}]
+    assert_tokens '||',  [{:or_op, 1}]
+    assert_tokens 'not', [{:not_op, 1}]
+    assert_tokens 'in',  [{:in_op, 1}]
+  end
 
-    test "comma" do
-      assert Tokenizer.tokenize(",") == {:ok, [{:",", 1}]}
-    end
-
-    test "colon" do
-      assert Tokenizer.tokenize(":") == {:ok, [{:":", 1}]}
-    end
-
-    test "boolean" do
-      assert Tokenizer.tokenize("true") == {:ok, [{:boolean, 1, true}]}
-      assert Tokenizer.tokenize("false") == {:ok, [{:boolean, 1, false}]}
-    end
-
-    test "not" do
-      assert Tokenizer.tokenize("not") == {:ok, [{:not_op, 1}]}
-    end
-
-    test "or" do
-      assert Tokenizer.tokenize("or") == {:ok, [{:or_op, 1}]}
-      assert Tokenizer.tokenize("||") == {:ok, [{:or_op, 1}]}
-    end
-
-    test "and" do
-      assert Tokenizer.tokenize("and") == {:ok, [{:and_op, 1}]}
-      assert Tokenizer.tokenize("&&") == {:ok, [{:and_op, 1}]}
-    end
-
-    test "atom" do
-      assert Tokenizer.tokenize(":any") == {:ok, [{:word, 1, :any}]}
-    end
-
-    test "quoted atom" do
-      assert Tokenizer.tokenize(~S{:"quoted atom"}) == {:ok, [{:word, 1, :"quoted atom"}]}
-    end
-
-    test "single quoted atom" do
-      assert Tokenizer.tokenize(~S{:'quoted atom'}) == {:ok, [{:word, 1, :"quoted atom"}]}
-    end
-
-    test "special symbol" do
-      assert Tokenizer.tokenize("#") == {:ok, [{:word, 1, "#"}]}
-    end
-
-    test "unicode symbol" do
-      assert Tokenizer.tokenize("🌢") == {:ok, [{:word, 1, "🌢"}]}
-    end
-
-    test "double quote surround by single quote token" do
-      assert Tokenizer.tokenize(~S/'"'/) == {:ok, [{:quoted_word, 1, "\""}]}
-    end
-
-    test "single quote surround by dougle quote" do
-      assert Tokenizer.tokenize(~S/"name'"/) == {:ok, [{:quoted_word, 1, "name'"}]}
-    end
+  test "in expression" do
+    assert_tokens ~c{in ['word one', other, :atom] }, [
+      { :in_op, 1 },
+      { :"[", 1 },
+      { :quoted_word, 1, "word one" },
+      { :",", 1 },
+      { :word, 1, "other" },
+      { :",", 1 },
+      { :word, 1, :atom },
+      { :"]", 1 }
+    ]
   end
 
   test "tokenize/1 should return {:error, reason} for nested single quote" do
@@ -143,19 +170,5 @@ defmodule Warpath.TokenizerTest do
 
     assert Tokenizer.tokenize("'nested single ' quote'") ==
              {:error, %TokenizerError{message: message}}
-  end
-
-  test "brancket notation with quoted ponctuation as identifier" do
-    assert Tokenizer.tokenize("['@']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "@"}, {:"]", 1}]}
-    assert Tokenizer.tokenize("['$']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "$"}, {:"]", 1}]}
-    assert Tokenizer.tokenize("['[']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "["}, {:"]", 1}]}
-    assert Tokenizer.tokenize("[']']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "]"}, {:"]", 1}]}
-    assert Tokenizer.tokenize("['(']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "("}, {:"]", 1}]}
-    assert Tokenizer.tokenize("[')']") == {:ok, [{:"[", 1}, {:quoted_word, 1, ")"}, {:"]", 1}]}
-    assert Tokenizer.tokenize("['.']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "."}, {:"]", 1}]}
-    assert Tokenizer.tokenize("['?']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "?"}, {:"]", 1}]}
-    assert Tokenizer.tokenize("['*']") == {:ok, [{:"[", 1}, {:quoted_word, 1, "*"}, {:"]", 1}]}
-    assert Tokenizer.tokenize("[':']") == {:ok, [{:"[", 1}, {:quoted_word, 1, ":"}, {:"]", 1}]}
-    assert Tokenizer.tokenize("[',']") == {:ok, [{:"[", 1}, {:quoted_word, 1, ","}, {:"]", 1}]}
   end
 end
