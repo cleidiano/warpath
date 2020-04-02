@@ -300,7 +300,7 @@ defmodule Warpath do
     |> Enum.reverse()
   end
 
-  defp transform(element, %Context{current_token: {:array_indexes, _}} = context) do
+  defp transform({_, _} = element, %Context{current_token: {:array_indexes, _}} = context) do
     index_token = Context.current_token(context)
     {_, indexes} = index_token
     should_unwrapp? = length(indexes) == 1
