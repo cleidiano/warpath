@@ -1,321 +1,203 @@
 defmodule Warpath.ExpressionTest do
   use ExUnit.Case, async: true
 
-  import Match
-
   alias Warpath.Expression
   alias Warpath.ExpressionError
 
-  describe "compile/1 compile dot notation" do
-    test "string property" do
-      assert Expression.compile("$.name") == {:ok, [{:root, "$"}, {:dot, {:property, "name"}}]}
+  def assert_compile(query, output, type \\ :ok) do
+    assert Expression.compile(query) == {type, output}
+  end
+
+  describe "children lookup" do
+    test "with simple string as identifier using dot notation" do
+      assert_compile "$.name", [
+        {:root, "$"},
+        {:dot, {:property, "name"}}
+      ]
     end
 
-    test "string that contains a dash" do
-      assert Expression.compile("$.property-name") ==
-               {:ok, [{:root, "$"}, {:dot, {:property, "property-name"}}]}
+    test "with simple atom as identifier" do
+      assert_compile ~S{$.:atom_key}, [
+        {:root, "$"},
+        {:dot, {:property, :atom_key}}
+      ]
     end
 
-    test "string that contains a underline" do
-      assert Expression.compile("$.property_name") ==
-               {:ok, [{:root, "$"}, {:dot, {:property, "property_name"}}]}
+    test "with int as identifier using dot notation" do
+      assert_compile "$.1", [
+        {:root, "$"},
+        {:dot, {:property, "1"}}
+      ]
     end
 
-    test "int property" do
-      assert Expression.compile("$.1") == {:ok, [{:root, "$"}, {:dot, {:property, "1"}}]}
+    test "with wildcard using dot notation " do
+      assert_compile "$.persons.*", [
+        {:root, "$"},
+        {:dot, {:property, "persons"}},
+        {:wildcard, :*}
+      ]
+    end
+
+    test "with index" do
+      assert_compile "$[0]", [
+        {:root, "$"},
+        {:array_indexes, [{:index_access, 0}]}
+      ]
+    end
+
+    test "with union of index" do
+      assert_compile "$[0, 1, 2]", [
+        {:root, "$"},
+        {:array_indexes,
+         [
+           {:index_access, 0},
+           {:index_access, 1},
+           {:index_access, 2}
+         ]}
+      ]
+    end
+
+    test "with union of identifier" do
+      assert_compile "$['one', 'two']", [
+        {:root, "$"},
+        {:union,
+         [
+           {:dot, {:property, "one"}},
+           {:dot, {:property, "two"}}
+         ]}
+      ]
     end
   end
 
-  describe "compile/1 compile" do
-    test "root expression" do
-      assert Expression.compile("$") == {:ok, [{:root, "$"}]}
-    end
-
-    test "index based access" do
-      assert Expression.compile("$[0]") ==
-               {:ok, [{:root, "$"}, {:array_indexes, [{:index_access, 0}]}]}
-    end
-
-    test "wildcard property access" do
-      assert Expression.compile("$.persons.*") ==
-               {:ok, [{:root, "$"}, {:dot, {:property, "persons"}}, {:wildcard, :*}]}
-    end
-
-    test "access many array index" do
-      assert Expression.compile("$[0, 1, 2]") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:array_indexes, [{:index_access, 0}, {:index_access, 1}, {:index_access, 2}]}
-                ]}
-    end
-
-    test "union properties" do
-      assert Expression.compile("$['one', 'two']") ==
-               {:ok,
-                [{:root, "$"}, {:union, [{:dot, {:property, "one"}}, {:dot, {:property, "two"}}]}]}
-    end
-
-    test "atom based access" do
-      assert Expression.compile(~S{$.:atom_key}) ==
-               {:ok, [{:root, "$"}, {:dot, {:property, :atom_key}}]}
-    end
-
-    test "double quote surround by single quoted" do
-      assert Expression.compile(~S{$."'"}) == {:ok, [{:root, "$"}, {:dot, {:property, "'"}}]}
-    end
-
-    test "single quote surround by double quoted" do
-      assert Expression.compile(~S{$.'"'}) == {:ok, [{:root, "$"}, {:dot, {:property, "\""}}]}
-    end
-  end
-
-  describe "compile/1 compile scan" do
-    test "property expression" do
-      assert Expression.compile("$..name") == {:ok, [{:root, "$"}, {:scan, {:property, "name"}}]}
-      assert Expression.compile("$..1") == {:ok, [{:root, "$"}, {:scan, {:property, "1"}}]}
-    end
-
-    test "array indexes access expression" do
-      assert Expression.compile("$..[1]") ==
-               {:ok, [{:root, "$"}, {:scan, {:array_indexes, [index_access: 1]}}]}
-    end
-
-    test "wildcard expression" do
-      assert Expression.compile("$..*") == {:ok, [{:root, "$"}, {:scan, {:wildcard, :*}}]}
-    end
-
-    test "wildcard with comparator filter expression" do
-      expression =
-        {:ok,
+  describe "children lookup with slice" do
+    test "when all parameters are supplied" do
+      assert_compile "$[0:1:1]", [
+        {:root, "$"},
+        {:array_slice,
          [
-           {:root, "$"},
-           {:scan, {:wildcard, :*}},
-           {:filter, {:>, [{:property, "age"}, 18]}}
+           start_index: 0,
+           end_index: 1,
+           step: 1
          ]}
-
-      assert Expression.compile("$..*.[?(@.age > 18)]") == expression
-      assert Expression.compile("$..*[?(@.age > 18)]") == expression
-      assert Expression.compile("$..[*].[?(@.age > 18)]") == expression
-      assert Expression.compile("$..[*][?(@.age > 18)]") == expression
+      ]
     end
 
-    test "wildcard with has_property? filter expression" do
-      expression =
-        {:ok,
-         [
-           {:root, "$"},
-           {:scan, {:wildcard, :*}},
-           {:filter, {:has_property?, {:property, "age"}}}
-         ]}
-
-      assert Expression.compile("$..*.[?(@.age)]") == expression
-      assert Expression.compile("$..*[?(@.age)]") == expression
-      assert Expression.compile("$..[*].[?(@.age)]") == expression
-      assert Expression.compile("$..[*][?(@.age)]") == expression
+    test "when only start_index is supplied" do
+      assert_compile "$[0:]", [
+        {:root, "$"},
+        {:array_slice, [start_index: 0]}
+      ]
     end
 
-    test "with filter expression" do
-      assert Expression.compile("$..[?(@.age > 18)]") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:scan, {:filter, {:>, [{:property, "age"}, 18]}}}
-                ]}
+    test "when only end_index is supplied" do
+      assert_compile "$[:1]", [
+        {:root, "$"},
+        {:array_slice, [end_index: 1]}
+      ]
     end
 
-    test "with has_property? filter expression" do
-      assert Expression.compile("$..[?(@.age)]") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:scan, {:filter, {:has_property?, {:property, "age"}}}}
-                ]}
+    test "when negative start_index are supplied" do
+      assert_compile "$[-1:]", [
+        {:root, "$"},
+        {:array_slice, [start_index: -1]}
+      ]
     end
 
-    test "wildcard followed by array access expression" do
-      expected =
-        {:ok,
-         [
-           {:root, "$"},
-           {:scan, {:wildcard, :*}},
-           {:array_indexes, [index_access: 1]}
-         ]}
-
-      assert Expression.compile("$..*[1]") == expected
-      assert Expression.compile("$..[*][1]") == expected
+    test "when negative end_index are supplied" do
+      assert_compile "$[:-1]", [
+        {:root, "$"},
+        {:array_slice, [end_index: -1]}
+      ]
     end
 
-    test "wildcard followed by dot call and array access expression" do
-      expected =
-        {:ok,
-         [
-           {:root, "$"},
-           {:scan, {:wildcard, :*}},
-           {:array_indexes, [index_access: 1]}
-         ]}
+    test "when only colon keyword are supplied" do
+      expression = [{:root, "$"}, {:array_slice, []}]
 
-      assert Expression.compile("$..*.[1]") == expected
-      assert Expression.compile("$..[*].[1]") == expected
+      assert_compile "$[:]", expression
+      assert_compile "$[::]", expression
     end
 
-    test "wildcard followed by dot property expression" do
-      assert Expression.compile("$..*.name") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:scan, {:wildcard, :*}},
-                  {:dot, {:property, "name"}}
-                ]}
-    end
-
-    test "array wildcard followed by dot property expression" do
-      assert Expression.compile("$..[*].name") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:scan, {:wildcard, :*}},
-                  {:dot, {:property, "name"}}
-                ]}
-    end
-  end
-
-  describe "compile/1 compile array slice expression" do
-    test "with all parameters supplied" do
-      assert Expression.compile("$[0:1:1]") ==
-               {:ok, [{:root, "$"}, {:array_slice, [start_index: 0, end_index: 1, step: 1]}]}
-    end
-
-    test "with only start index supplied" do
-      assert Expression.compile("$[0:]") ==
-               {:ok, [{:root, "$"}, {:array_slice, [start_index: 0]}]}
-    end
-
-    test "with only end index supplied" do
-      assert Expression.compile("$[:1]") == {:ok, [{:root, "$"}, {:array_slice, [end_index: 1]}]}
-    end
-
-    test "with negative start index" do
-      assert Expression.compile("$[-1:]") ==
-               {:ok, [{:root, "$"}, {:array_slice, [start_index: -1]}]}
-    end
-
-    test "with negative end index" do
-      assert Expression.compile("$[:-1]") ==
-               {:ok, [{:root, "$"}, {:array_slice, [end_index: -1]}]}
-    end
-
-    test "with negative step argument" do
+    test "when negative step argument are supplied" do
       message = "Parser error: Invalid token on line 1, slice step can't be negative"
 
-      assert Expression.compile("$[1:1:-1]") == {:error, %ExpressionError{message: message}}
+      assert_compile "$[1:1:-1]", %ExpressionError{message: message}, :error
     end
 
-    test "with one colon separator" do
-      assert Expression.compile("$[:]") == {:ok, [{:root, "$"}, {:array_slice, []}]}
-    end
-
-    test "with two colon separator" do
-      assert Expression.compile("$[::]") == {:ok, [{:root, "$"}, {:array_slice, []}]}
-    end
-
-    test "with to many arguments supplied" do
+    test "when to many arguments are supplied" do
       message =
         "Parser error: Invalid token on line 1, " <>
           "to many params found for slice operation, " <>
           "the valid syntax is [start_index:end_index:step]"
 
-      assert Expression.compile("$[1:3:2:1]") == {:error, %ExpressionError{message: message}}
+      assert_compile "$[1:3:2:1]", %ExpressionError{message: message}, :error
     end
   end
 
-  describe "compile/1 compile filter expression" do
-    test "that have a AND operator" do
-      assert Expression.compile("$[?(true and true)]") ==
-               ok([
-                 {:root, "$"},
-                 {:filter, {:and, [true, true]}}
-               ])
+  describe "children lookup filter" do
+    test "combined with AND operator" do
+      assert_compile "$[?(true and true)]", [
+        {:root, "$"},
+        {:filter, {:and, [true, true]}}
+      ]
     end
 
-    test "that have OR operator" do
-      assert Expression.compile("$[?(true or true)]") ==
-               ok([
-                 {:root, "$"},
-                 {:filter, {:or, [true, true]}}
-               ])
+    test "combined with OR operator" do
+      assert_compile "$[?(true or true)]", [
+        {:root, "$"},
+        {:filter, {:or, [true, true]}}
+      ]
     end
 
-    test "that is a OR precedence" do
-      assert Expression.compile("$[?(true and true or false)]") ==
-               ok([
-                 {:root, "$"},
-                 {:filter, {:or, [{:and, [true, true]}, false]}}
-               ])
+    test "that have a precedence OR operation" do
+      assert_compile "$[?(true and true or false)]", [
+        {:root, "$"},
+        {:filter, {:or, [{:and, [true, true]}, false]}}
+      ]
     end
 
-    test "that is a parenthesis precedence" do
-      assert Expression.compile("$[?(true and (true or false))]") ==
-               ok([
-                 {:root, "$"},
-                 {:filter, {:and, [true, {:or, [true, false]}]}}
-               ])
+    test "that have a precedence parenthesis defined" do
+      assert_compile "$[?(true and (true or false))]", [
+        {:root, "$"},
+        {:filter, {:and, [true, {:or, [true, false]}]}}
+      ]
     end
 
     test "that is a NOT operator" do
-      assert Expression.compile("$[?(not true)]") ==
-               ok([
-                 {:root, "$"},
-                 {:filter, {:not, true}}
-               ])
+      assert_compile "$[?(not true)]", [
+        {:root, "$"},
+        {:filter, {:not, true}}
+      ]
     end
 
-    test "that have a property on it" do
-      assert Expression.compile("$[?(@.age > 10)]") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:filter, {:>, [{:property, "age"}, 10]}}
-                ]}
-    end
+    test "that have a children property lookup on it" do
+      expression = [
+        {:root, "$"},
+        {:filter, {:>, [{:property, "age"}, 10]}}
+      ]
 
-    test "that use a bracket notation with property on it" do
-      assert Expression.compile("$[?(@['age'] > 10)]") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:filter, {:>, [{:property, "age"}, 10]}}
-                ]}
+      assert_compile "$[?(@.age > 10)]", expression
+      assert_compile "$[?(@['age'] > 10)]", expression
     end
 
     test "that use a index access on it" do
-      assert Expression.compile("$[?(@[1] > 10)]") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:filter, {:>, [{:index_access, 1}, 10]}}
-                ]}
+      assert_compile "$[?(@[1] > 10)]", [
+        {:root, "$"},
+        {:filter, {:>, [{:index_access, 1}, 10]}}
+      ]
     end
 
     test "that is a has_property? operator" do
-      assert Expression.compile("$.persons[?(@.age)]") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:dot, {:property, "persons"}},
-                  {:filter, {:has_property?, {:property, "age"}}}
-                ]}
+      expression = [
+        {:root, "$"},
+        {:dot, {:property, "persons"}},
+        {:filter, {:has_property?, {:property, "age"}}}
+      ]
 
-      assert Expression.compile("$.persons[?(@['age'])]") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:dot, {:property, "persons"}},
-                  {:filter, {:has_property?, {:property, "age"}}}
-                ]}
+      assert_compile "$.persons[?(@.age)]", expression
+      assert_compile "$.persons[?(@['age'])]", expression
     end
 
-    test "that is any of [:<, :>, :<=, :>=, :==, :!=, :===, :!==]" do
+    test "that is any operator of [:<, :>, :<=, :>=, :==, :!=, :===, :!==]" do
       operators = [:<, :>, :<=, :>=, :==, :!=, :===, :!==]
 
       expected =
@@ -332,15 +214,20 @@ defmodule Warpath.ExpressionTest do
     end
 
     test "that is a IN operator with one element on list" do
-      assert Expression.compile("$[?(@.name in ['Warpath'])]") ==
-               {:ok,
-                [
-                  {:root, "$"},
-                  {:filter, {:in, [{:property, "name"}, ["Warpath"]]}}
-                ]}
+      assert_compile "$[?(@.name in ['Warpath'])]", [
+        {:root, "$"},
+        {:filter, {:in, [{:property, "name"}, ["Warpath"]]}}
+      ]
     end
 
-    test "that is a allowed function call of " do
+    test "that use a current children as a target" do
+      assert_compile "$[?(@ == 10)]", [
+        {:root, "$"},
+        {:filter, {:==, [:current_node, 10]}}
+      ]
+    end
+
+    test "that is a allowed function call" do
       functions = [
         :is_atom,
         :is_binary,
@@ -370,18 +257,99 @@ defmodule Warpath.ExpressionTest do
     end
 
     test "that is a invalid function call" do
-      assert {:error,
-              %ExpressionError{
-                message: "Parser error: Invalid token on line 1, 'function_name'"
-              }} = Expression.compile("$[?(function_name(@.any))]")
+      message = "Parser error: Invalid token on line 1, 'function_name'"
+
+      assert_compile "$[?(function_name(@.any))]", %ExpressionError{message: message}, :error
+    end
+  end
+
+  describe "recursive descent followed by" do
+    test "a simple string as identifier" do
+      assert_compile "$..name", [
+        {:root, "$"},
+        {:scan, {:property, "name"}}
+      ]
     end
 
-    test "that use a current node as a target" do
-      assert Expression.compile("$[?(@ == 10)]") ==
-               ok([
-                 {:root, "$"},
-                 {:filter, {:==, [:current_node, 10]}}
-               ])
+    test "a int as identifier" do
+      assert_compile "$..1", [
+        {:root, "$"},
+        {:scan, {:property, "1"}}
+      ]
+    end
+
+    test "a children index lookup" do
+      assert_compile "$..[1]", [
+        {:root, "$"},
+        {:scan, {:array_indexes, [index_access: 1]}}
+      ]
+    end
+
+    test "a children lookup filter" do
+      assert_compile "$..[?(@.age > 18)]", [
+        {:root, "$"},
+        {:scan, {:filter, {:>, [{:property, "age"}, 18]}}}
+      ]
+
+      assert_compile "$..[?(@.age)]", [
+        {:root, "$"},
+        {:scan, {:filter, {:has_property?, {:property, "age"}}}}
+      ]
+    end
+
+    test "a wildcard lookup" do
+      assert_compile "$..*", [
+        {:root, "$"},
+        {:scan, {:wildcard, :*}}
+      ]
+    end
+
+    test "a wildcard and then a children filter lookup" do
+      comparator_filter = [
+        {:root, "$"},
+        {:scan, {:wildcard, :*}},
+        {:filter, {:>, [{:property, "age"}, 18]}}
+      ]
+
+      assert_compile "$..*.[?(@.age > 18)]", comparator_filter
+      assert_compile "$..*[?(@.age > 18)]", comparator_filter
+      assert_compile "$..[*].[?(@.age > 18)]", comparator_filter
+      assert_compile "$..[*][?(@.age > 18)]", comparator_filter
+
+      has_property_filter = [
+        {:root, "$"},
+        {:scan, {:wildcard, :*}},
+        {:filter, {:has_property?, {:property, "age"}}}
+      ]
+
+      assert_compile "$..*.[?(@.age)]", has_property_filter
+      assert_compile "$..*[?(@.age)]", has_property_filter
+      assert_compile "$..[*].[?(@.age)]", has_property_filter
+      assert_compile "$..[*][?(@.age)]", has_property_filter
+    end
+
+    test "a wildcard and then a children index lookup" do
+      expression = [
+        {:root, "$"},
+        {:scan, {:wildcard, :*}},
+        {:array_indexes, [index_access: 1]}
+      ]
+
+      assert_compile "$..*[1]", expression
+      assert_compile "$..*.[1]", expression
+      assert_compile "$..[*][1]", expression
+      assert_compile "$..[*].[1]", expression
+    end
+
+    test "a wildcard and then a identifier using dot notation" do
+      expression = [
+        {:root, "$"},
+        {:scan, {:wildcard, :*}},
+        {:dot, {:property, "name"}}
+      ]
+
+      assert_compile "$..*.name", expression
+      assert_compile "$..[*].name", expression
     end
   end
 end
