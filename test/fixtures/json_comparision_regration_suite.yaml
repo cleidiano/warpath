@@ -185,6 +185,11 @@ queries:
     warpath: skip
     selector: $[0]
     document: "Hello World"
+  - id: bracket_notation_with_number_after_dot_notation_with_wildcard_on_nested_arrays_with_different_length
+    warpath: run
+    selector: $.*[1]
+    document: [["a"], ["b", "c"]]
+    warpath_output: ["c"]
   - id: bracket_notation_with_quoted_array_slice_literal
     warpath: run
     selector: $[':']
