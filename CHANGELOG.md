@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased][unreleased]
 
+### Added
+
+### Fixed
+- Fix regression with wildcard followed by a outbound index query.
+     Ex. `Warpath.query([["a"], ["b", "c"]], "$.*[1]") => {:ok, ["c"]}`
+
+### Changed
+
 ## [0.2.0] - 2020-03-30
 This realease put a effort to become compatible as possible with the concensus implementaion of others json path library, to see a comparisions between libraries, visit [json-path-comparison/](https://cburgmer.github.io/json-path-comparison/).
 

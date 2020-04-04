@@ -149,6 +149,7 @@ defmodule Warpath do
   alias Warpath.Element.Path
   alias Warpath.Element.PathMarker
   alias Warpath.EnumWalker
+  alias Warpath.ExecutionContext, as: Context
   alias Warpath.Expression
   alias Warpath.Filter
   alias Warpath.Scanner
@@ -209,17 +210,30 @@ defmodule Warpath do
   end
 
   defp do_query(document, tokens) when is_list(tokens) do
+    # TODO Move this to Expression.compile
+    linked_context =
+      tokens
+      |> Stream.with_index()
+      |> Enum.map(fn {token, index} ->
+        if index === 0 do
+          Context.new(token)
+        else
+          previous = Enum.at(tokens, index - 1)
+          Context.new(token, previous)
+        end
+      end)
+
     last_token = length(tokens) - 1
 
     terms =
-      tokens
+      linked_context
       |> Stream.with_index()
       |> Enum.reduce(
         _acc = {document, []},
-        _transformer = fn {item, index}, acc ->
-          result = transform(acc, item)
+        _transformer = fn {context, index}, acc ->
+          result = transform(acc, context)
 
-          case {index, item} do
+          case {index, Context.current_token(context)} do
             {^last_token, {:wildcard, _}} ->
               List.flatten(result)
 
@@ -238,17 +252,25 @@ defmodule Warpath do
   @typep member :: any()
   @typep members :: [member, ...]
   @typep element :: {member | members, Path.token()}
-  @typep token :: Expression.token()
+  @typep context :: Context.t()
 
-  @spec transform(element, token) :: element | [element, ...]
-  defp transform({member, path}, {:root, _} = token),
-    do: {member, Path.accumulate(token, path)}
+  @spec transform(element, context) :: element | [element, ...]
+  defp transform({member, path}, %Context{current_token: {:root, _}} = context) do
+    path =
+      context
+      |> Context.current_token()
+      |> Path.accumulate(path)
 
-  defp transform({members, path} = element, {:dot, {:property, name} = property} = token)
+    {member, path}
+  end
+
+  defp transform({members, path} = element, %Context{current_token: {:dot, property}} = context)
        when is_list(members) do
     if Keyword.keyword?(members) do
-      access(element, token)
+      access(element, Context.current_token(context))
     else
+      {:property, name} = property
+
       tips =
         "You are trying to traverse a list using dot " <>
           "notation '#{Path.accumulate(property, path) |> Path.dotify()}', " <>
@@ -259,10 +281,15 @@ defmodule Warpath do
     end
   end
 
-  defp transform({member, _} = element, {:dot, _} = dot_token) when is_map(member),
-    do: access(element, dot_token)
+  defp transform({member, _} = element, %Context{current_token: {:dot, _}} = context)
+       when is_map(member) do
+    access(element, Context.current_token(context))
+  end
 
-  defp transform({member, _} = element, {:union, tokens}) when is_map(member) do
+  defp transform({member, _} = element, %Context{current_token: {:union, _}} = context)
+       when is_map(member) do
+    {:union, tokens} = Context.current_token(context)
+
     tokens
     |> Enum.reduce([], fn dot_property_token, acc ->
       case access(element, dot_property_token, :not_found) do
@@ -273,48 +300,44 @@ defmodule Warpath do
     |> Enum.reverse()
   end
 
-  defp transform({members, _} = element, {:array_indexes, target} = indexes) do
-    case target do
-      [{_, index} | []] = _should_unwrap? ->
-        if index > Enum.count(members) - 1 do
-          message =
-            "The query should be resolved to scalar value " <>
-              "but the index #{index} is out of bounds for emum #{inspect(members)}."
+  defp transform({_, _} = element, %Context{current_token: {:array_indexes, _}} = context) do
+    index_token = Context.current_token(context)
+    {_, indexes} = index_token
+    should_unwrapp? = length(indexes) == 1
 
-          raise Enum.OutOfBoundsError, message
-        else
-          [head | []] = value_for_indexes(element, indexes)
-          head
-        end
-
-      _ ->
-        value_for_indexes(element, indexes)
+    if should_unwrapp? do
+      value_for_index_unwrapped(element, context)
+    else
+      value_for_indexes(element, index_token)
     end
   end
 
-  defp transform({members, _} = element, {:wildcard, :*}) when is_container(members) do
+  defp transform({members, _} = element, %Context{current_token: {:wildcard, :*}})
+       when is_container(members) do
     element
     |> PathMarker.stream()
     |> Enum.to_list()
   end
 
-  defp transform(element, {:filter, filter_expression}) do
+  defp transform(element, %Context{current_token: {:filter, filter_expression}}) do
     Filter.filter(element, filter_expression)
   end
 
-  defp transform(element, {:scan, {tag, _} = target}) when tag in [:property, :wildcard] do
+  defp transform(element, %Context{current_token: {:scan, {tag, _} = target}})
+       when tag in [:property, :wildcard] do
     Scanner.scan(element, target, &Path.accumulate/2)
   end
 
-  defp transform(element, {:scan, {:filter, _} = filter}) do
+  defp transform(element, %Context{current_token: {:scan, {:filter, _} = filter}} = context) do
     self_included = [element]
+    sub_context = Context.put_current_token(context, filter)
 
     self_included
     |> search_for_lists()
-    |> Enum.flat_map(&transform(&1, filter))
+    |> Enum.flat_map(&transform(&1, sub_context))
   end
 
-  defp transform(element, {:scan, {:array_indexes, _} = indexes}) do
+  defp transform(element, %Context{current_token: {:scan, {:array_indexes, _} = indexes}}) do
     self_included = [element]
 
     self_included
@@ -322,7 +345,7 @@ defmodule Warpath do
     |> Enum.flat_map(&value_for_indexes(&1, indexes))
   end
 
-  defp transform({members, _} = element, {:array_slice, slice}) do
+  defp transform({members, _} = element, %Context{current_token: {:array_slice, slice}}) do
     case members do
       data when is_list(data) ->
         {start_index, end_index, step, range} = create_slice_range(members, slice)
@@ -343,21 +366,49 @@ defmodule Warpath do
     end
   end
 
-  defp transform(members, token) when is_list(members) do
+  defp transform(members, context) when is_list(members) do
+    previous_token = Context.previous_token(context)
+
     members
     |> List.flatten()
     |> Enum.reduce([], fn element, acc ->
-      case transform(element, token) do
-        {nil, _path} -> acc
-        result -> [result | acc]
+      case {previous_token, transform(element, context)} do
+        {{:wildcard, _}, {nil, _path}} ->
+          acc
+
+        {_, result} ->
+          [result | acc]
       end
     end)
     |> Enum.reverse()
   end
 
-  defp transform({_member, path}, token) do
+  defp transform({_member, path}, %Context{current_token: token}) do
     raise UnsupportedOperationError,
           "token=#{inspect(token)}, path=#{inspect(path)}"
+  end
+
+  defp value_for_index_unwrapped({members, _} = element, context) do
+    current_token = Context.current_token(context)
+    {:array_indexes, [{_label, index}]} = current_token
+
+    outofbounds? = index > Enum.count(members) - 1
+
+    case {outofbounds?, Context.previous_token(context)} do
+      {false, _} ->
+        [head | []] = value_for_indexes(element, current_token)
+        head
+
+      {true, {:wildcard, _}} ->
+        {nil, :out_of_bounds}
+
+      {true, _} ->
+        message =
+          "The query should be resolved to scalar value " <>
+            "but the index #{index} is out of bounds for emum #{inspect(members)}."
+
+        raise Enum.OutOfBoundsError, message
+    end
   end
 
   defp value_for_indexes({members, path}, {:array_indexes, indexes}) do
