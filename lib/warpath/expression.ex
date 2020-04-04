@@ -25,8 +25,8 @@ defmodule Warpath.Expression do
           | :is_tuple
 
   @type filter :: {:filter, has_property | {operator | fun, term}}
-  @type scan :: {:scan, property} | wildcard | filter | array_indexes | {wildcard, filter}
-  @type token :: root | dot_access | array_indexes | filter | scan
+  @type scan :: {:scan, property | wildcard | filter | array_indexes}
+  @type token :: root | dot_access | wildcard | array_indexes | filter | scan
 
   @spec compile(String.t()) :: {:ok, [token, ...]} | {:error, ExpressionError.t()}
   def compile(expression) when is_binary(expression) do
