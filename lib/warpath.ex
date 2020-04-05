@@ -79,6 +79,10 @@ defmodule Warpath do
       iex>Warpath.query(%{"category" => "fiction", "price" => 12.99}, "$.category")
       {:ok, "fiction"}
 
+      #Dot-notated using unicode as key
+      iex>Warpath.query(%{"🌢" => "Elixir"}, "$.🌢")
+      {:ok, "Elixir"}
+
       #Bracket-notated access
       iex>Warpath.query(%{"key with whitespace" => "some value"}, "$.['key with whitespace']")
       {:ok, "some value"}
@@ -116,10 +120,23 @@ defmodule Warpath do
       ...> Warpath.query(document, "$.integers[0, 1]")
       {:ok, [100, 200]}
 
+      iex>document = %{"integers" => [100, 200, 300]}
+      ...> Warpath.query(document, "$.integers[-1]")
+      {:ok, 300}
+
       #wildcard as index access
       iex>document = %{"integers" => [100, 200, 300]}
       ...> Warpath.query(document, "$.integers[*]")
       {:ok, [100, 200, 300]}
+
+      #union
+      iex>document = %{"key" => "value", "another" => "entry"}
+      ...> Warpath.query(document, "$['key', 'another']")
+      {:ok, ["value", "entry"]}
+
+      iex> document = [0, 1, 2, 3, 4]
+      ...> Warpath.query(document, "$[0,3]")
+      {:ok, [0, 3]}
 
       #slice operator
       iex> document = [0, 1, 2, 3, 4]
@@ -180,7 +197,11 @@ defmodule Warpath do
     * `:value` -  return the value of evaluated expression - `default`
     * `:value_path` - return both path and value.
   """
-  @spec query(term, String.t(), result_type: :value | :path | :value_path) :: any
+  @type json :: String.t()
+  @type document :: map | list | json
+  @type opts :: [result_type: :value | :path | :value_path]
+
+  @spec query(document, String.t(), opts) :: any
   def query(term, expression, opts \\ [])
 
   def query(term, expression, opts) when is_binary(term) do
@@ -202,6 +223,7 @@ defmodule Warpath do
   @doc """
     The same as query/3, but rise exception if it fail.
   """
+  @spec query!(document, String.t(), opts) :: any
   def query!(term, expression, opts \\ []) do
     case query(term, expression, opts) do
       {:ok, result} -> result

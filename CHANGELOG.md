@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 ### Fixed
+
+### Changed
+
+
+## [0.2.1][2020-04-05]
+
+### Added
+
+### Fixed
 - Fix regression with wildcard followed by a outbound index query.
      Ex. `Warpath.query([["a"], ["b", "c"]], "$.*[1]") => {:ok, ["c"]}`
 
@@ -43,7 +52,8 @@ This realease put a effort to become compatible as possible with the concensus i
 - Unwrap output of query that the only possible result is as scalar value, ex. `Warpath.query!([1, 2, 3], "$[0]")` will return `1` instead of `[1]`.
 
 
-[unreleased]: https://github.com/Cleidiano/warpath/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/Cleidiano/warpath/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/Cleidiano/warpath/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Cleidiano/warpath/compare/v0.1.0...v0.2.0
 [0.1.1]: https://github.com/Cleidiano/warpath/compare/v0.1.0...v0.1.1
 [0.0.2]: https://github.com/Cleidiano/warpath/compare/v0.0.2...v0.1.0
