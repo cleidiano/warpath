@@ -39,7 +39,7 @@ queries:
     selector: $[3:0:-2]
     document: ["first", "second", "third", "forth", "fifth"]
   - id: array_slice_with_negative_step_only
-    warpath: run
+    warpath: skip
     selector: $[::-2]
     document: ["first", "second", "third", "forth", "fifth"]
   - id: array_slice_with_open_end

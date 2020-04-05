@@ -117,10 +117,13 @@ defmodule Warpath.ExpressionTest do
       assert_compile "$[::]", expression
     end
 
-    test "when negative step argument are supplied" do
+    test "when step argument supplied are less then 1" do
       message = "Parser error: Invalid token on line 1, slice step can't be negative"
 
+      assert_compile "$[:1:-1]", %ExpressionError{message: message}, :error
+      assert_compile "$[::-1]", %ExpressionError{message: message}, :error
       assert_compile "$[1:1:-1]", %ExpressionError{message: message}, :error
+      assert_compile "$[::0]", %ExpressionError{message: message}, :error
     end
 
     test "when to many arguments are supplied" do

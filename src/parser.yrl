@@ -138,28 +138,29 @@ resolv_operation_for([{dot, {property, _}}] = Property) -> Property;
 resolv_operation_for(Union) -> [{union, Union}].
 
 slice_op(Line, Tokens) -> 
-	Params = slice_params(0, [], Tokens),
+	Params = slice_params(Line, 0, [], Tokens),
 	check_slice_params(Line, Params).
 
-slice_params(Position, SliceTokens, [colon | Rest]) ->
-    slice_params(Position + 1, SliceTokens, Rest);
+slice_params(Line, Label, SliceTokens, [colon | Rest]) ->
+    slice_params(Line, Label + 1, SliceTokens, Rest);
 
-slice_params(Position, SliceTokens, [Index | []]) ->
-    SliceTokens ++ [{label_of(Position), Index}];
+slice_params(Line, Label, SliceTokens, [Index | []]) ->
+    SliceTokens ++ [token_for(Line, Label, Index)];
 
-slice_params(Position, SliceTokens, [Index | Rest])
+slice_params(Line, Label, SliceTokens, [Index | Rest])
     when length(Rest) > 0 ->
     [colon | R] = Rest,
-    Tokens = SliceTokens ++ [{label_of(Position), Index}],
-    slice_params(Position + 1, Tokens, R);
+    Tokens = SliceTokens ++ [token_for(Line, Label, Index)],
+    slice_params(Line, Label + 1, Tokens, R);
 
-slice_params(_, Tokens, _) -> Tokens.
+slice_params(_Line, _Label, Tokens, []) -> Tokens.
 
-label_of(Position) ->
-    case Position of
-      0 -> start_index;
-      1 -> end_index;
-      2 -> step;
+token_for(Line, Label, Index) ->
+    case Label of
+      2 when Index < 1 -> return_error(Line, "slice step can't be negative");
+      0 -> {start_index, Index};
+      1 -> {end_index, Index};
+      2 -> {step, Index};
       _ -> unknow
     end.
 
@@ -168,13 +169,6 @@ check_slice_params(Line, Tokens) when length(Tokens) > 3 ->
 	"to many params found for slice operation, "
 	"the valid syntax is [start_index:end_index:step]",
 	return_error(Line, ErrorMessage);
-
-check_slice_params(Line, Tokens) when length(Tokens) == 3 ->
-	case lists:last(Tokens) of
-	 {step, Step} when Step < 0 ->
-		return_error(Line, "slice step can't be negative");
-	_ -> Tokens
-	end;
 
 check_slice_params(_StartLine, Tokens) -> Tokens.
 
