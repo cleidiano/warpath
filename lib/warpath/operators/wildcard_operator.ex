@@ -1,13 +1,25 @@
+alias Warpath.ExecutionEnv, as: Env
+alias Warpath.Element.Path, as: ElementPath
+
 defprotocol WildcardOperator do
   @fallback_to_any true
+
+  @type document :: map() | list()
+  @type result :: Element.t() | [Element.t()]
+
+  @spec evaluate(document(), ElementPath.t(), Env.t()) :: result
   def evaluate(document, relative_path, env)
+
+  @spec evaluate(Element.t(), Env.t()) :: Element.t() | [Element.t()]
   def evaluate(element, env)
 end
 
-defimpl WildcardOperator, for: [Map, List] do
+defimpl WildcardOperator, for: [Map, Element, List] do
   alias Warpath.Element.PathMarker
 
-  def evaluate(document, relative_path, _env) do
+  defguardp is_document(doc) when is_map(doc) or is_list(doc)
+
+  def evaluate(document, relative_path, _env) when is_document(document) do
     {document, relative_path}
     |> PathMarker.stream()
     |> Enum.map(&Element.new/1)

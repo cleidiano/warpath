@@ -1,6 +1,16 @@
+alias Warpath.ExecutionEnv, as: Env
+alias Warpath.Element.Path, as: ElementPath
+
 defprotocol DescendantOperator do
   @fallback_to_any true
+
+  @type document :: list() | map()
+  @type result :: Element.t() | [Element.t()]
+
+  @spec evaluate(document(), ElementPath.t(), Env.t()) :: result()
   def evaluate(data, relative_path, env)
+
+  @spec evaluate(Element.t(), Env.t()) :: result()
   def evaluate(element, env)
 end
 
