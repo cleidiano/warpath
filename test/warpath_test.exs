@@ -220,7 +220,6 @@ defmodule WarpathTest do
   end
 
   describe "query/3 handle array" do
-    @tag :skip
     test "index access expression", %{data: document} do
       path = "$['store']['book'][0]"
 
@@ -234,7 +233,6 @@ defmodule WarpathTest do
       assert Engine.query(document, "$.store.book[0]", @value_path) == {:ok, {book, path}}
     end
 
-    @tag :skip
     test "index access with many indexes", %{data: document} do
       trace = [
         {
@@ -261,7 +259,6 @@ defmodule WarpathTest do
       assert Engine.query(document, "$.store.book[1, 2]", @value_path) == {:ok, trace}
     end
 
-    @tag :skip
     test "wildcard expression", %{data: document} do
       expected =
         document["store"]["book"]
@@ -271,7 +268,6 @@ defmodule WarpathTest do
       assert Engine.query(document, "$.store.book[*]", @value_path) == {:ok, expected}
     end
 
-    @tag :skip
     test "wildcard expression with property after it", %{data: document} do
       query_result = [
         {"Nigel Rees", "$['store']['book'][0]['author']"},
