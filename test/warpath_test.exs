@@ -42,7 +42,6 @@ defmodule WarpathTest do
       assert Engine.query(document, "$.*", @value_path) == {:ok, Enum.zip(values, paths)}
     end
 
-    @tag :skip
     test "resolve a wildcard property" do
       document = %{
         "store" => %{
