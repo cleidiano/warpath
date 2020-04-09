@@ -281,7 +281,6 @@ defmodule WarpathTest do
   end
 
   describe "query/3 handle slice" do
-    @tag :skip
     test "with only start index supplied" do
       list = [0, 1, 2, 3, 4, 5]
 
@@ -289,19 +288,16 @@ defmodule WarpathTest do
                {:ok, [{1, "$[1]"}, {2, "$[2]"}, {3, "$[3]"}, {4, "$[4]"}, {5, "$[5]"}]}
     end
 
-    @tag :skip
     test "with only negative start index supplied" do
       list = [0, 1, 2, 3, 4, 5]
       assert Engine.query(list, "$[-2:]", @value_path) == {:ok, [{4, "$[4]"}, {5, "$[5]"}]}
     end
 
-    @tag :skip
     test "with only end index supplied" do
       list = [0, 1, 2, 3, 4, 5]
       assert Engine.query(list, "$[:2]", @value_path) == {:ok, [{0, "$[0]"}, {1, "$[1]"}]}
     end
 
-    @tag :skip
     test "with only negative end index supplied" do
       list = [0, 1, 2, 3, 4, 5]
 
@@ -309,13 +305,11 @@ defmodule WarpathTest do
                {:ok, [{0, "$[0]"}, {1, "$[1]"}, {2, "$[2]"}, {3, "$[3]"}]}
     end
 
-    @tag :skip
     test "with negative start index and negative end index supplied" do
       list = [0, 1, 2, 3, 4, 5]
       assert Engine.query(list, "$[-3:-1]", @value_path) == {:ok, [{3, "$[3]"}, {4, "$[4]"}]}
     end
 
-    @tag :skip
     test "with step, start and end index supplied" do
       list = [0, 1, 2, 3, 4, 5, 6, 7]
 
