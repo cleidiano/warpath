@@ -29,7 +29,7 @@ defimpl ArrayIndexOperator, for: List do
       [] ->
         message =
           "The query should be resolved to scalar value " <>
-            "but the index #{index} is out of bounds for emum #{inspect(document)}."
+            "but the index #{inspect(index)} is out of bounds for emum #{inspect(document)}."
 
         raise Enum.OutOfBoundsError, message
     end

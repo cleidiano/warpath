@@ -7,7 +7,7 @@ defmodule Warpath.Element.Path do
           | {:identifier, String.t() | atom}
           | {:index_access, integer}
 
-  @type t :: [token, ...]
+  @type t :: [token, ...] | []
 
   @spec accumulate(token, t) :: t
   def accumulate(token, acc) when is_list(acc), do: [token | acc]

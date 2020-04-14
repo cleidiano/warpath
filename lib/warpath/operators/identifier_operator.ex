@@ -27,6 +27,7 @@ defimpl IdentifierOperator, for: List do
     {:dot, {:property, key}} = env.instruction
 
     Enum.flat_map(elements, fn %Element{value: document, path: path} ->
+      # IO.inspect({document, path}, label: :inside)
       if Map.has_key?(document, key),
         do: [IdentifierOperator.Map.evaluate(document, path, env)],
         else: []

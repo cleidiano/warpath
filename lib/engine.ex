@@ -55,6 +55,6 @@ defmodule Engine do
   defp translate({:array_indexes, _} = instr, previous),
     do: Env.new(ArrayIndexOperator, instr, previous)
 
-  defp translate({:filter, _} = instr, previous), do: Env.new(FilterOperator, instr, previous)
+  defp translate({:filter, instr}, previous), do: Env.new(FilterOperator, instr, previous)
   defp translate({:array_slice, _} = instr, previous), do: Env.new(SliceOperator, instr, previous)
 end

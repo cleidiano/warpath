@@ -60,7 +60,6 @@ defmodule WarpathTest do
   end
 
   describe "query/3 handle a scan expression" do
-    @tag :skip
     test "that use a property and is terminal", %{data: document} do
       prices = [
         {19.95, "$['store']['bicycle']['price']"},
@@ -73,7 +72,6 @@ defmodule WarpathTest do
       assert Engine.query(document, "$..price", @value_path) == {:ok, prices}
     end
 
-    @tag :skip
     test "that use a property and is on middle", %{data: document} do
       prices = [
         {8.95, "$['store']['book'][0]['price']"},
@@ -85,7 +83,6 @@ defmodule WarpathTest do
       assert Engine.query(document, "$.store..book[*].price", @value_path) == {:ok, prices}
     end
 
-    @tag :skip
     test "that use a array index access", %{data: document} do
       trace = "$['store']['book'][0]"
 
@@ -99,13 +96,11 @@ defmodule WarpathTest do
       assert Engine.query(document, "$..[0]", @value_path) == {:ok, [{book, trace}]}
     end
 
-    @tag :skip
     test "that use a wildcard as a scan operation", %{data: document} do
       expected = {:ok, Enum.zip(Oracle.scaned_elements(), Oracle.scaned_paths())}
       assert Engine.query(document, "$..*", @value_path) == expected
     end
 
-    @tag :skip
     test "that use a wildcard folowed by comparator filter", %{data: document} do
       values =
         Engine.query(
@@ -128,7 +123,6 @@ defmodule WarpathTest do
       assert values == {:ok, [expected, expected]}
     end
 
-    @tag :skip
     test "that use a wildcard folowed by contains filter", %{data: document} do
       values = Engine.query(document, "$..*.[?(@.isbn)]", @value_path)
 
@@ -152,7 +146,6 @@ defmodule WarpathTest do
       assert values == {:ok, books ++ books}
     end
 
-    @tag :skip
     test "that use a filter", %{data: document} do
       values = Engine.query(document, "$..[?(@.price > 22)]", @value_path)
 
@@ -172,7 +165,6 @@ defmodule WarpathTest do
   end
 
   describe "query/3 handle filter expression" do
-    @tag :skip
     test "that use a operator", %{data: document} do
       tolkien = %{
         "category" => "fiction",
@@ -189,7 +181,6 @@ defmodule WarpathTest do
              ) == {:ok, [{tolkien, "$['store']['book'][3]"}]}
     end
 
-    @tag :skip
     test "that use a contains operation", %{data: document} do
       books = [
         {%{
@@ -211,7 +202,6 @@ defmodule WarpathTest do
       assert Engine.query(document, "$.store.book[?(@.isbn)]", @value_path) == {:ok, books}
     end
 
-    @tag :skip
     test "that use a function" do
       data = %{"list" => [1.0, 2, 3, "string"], "integer" => 1}
 
@@ -319,14 +309,12 @@ defmodule WarpathTest do
   end
 
   describe "query/3 handle options" do
-    @tag :skip
     test "result_type: :path", %{data: document} do
       path = "$['store']['book'][0]"
 
       assert Engine.query(document, "$.store.book[0]", result_type: :path) == {:ok, path}
     end
 
-    @tag :skip
     test "default result_type is value", %{data: document} do
       book = %{
         "author" => "Nigel Rees",

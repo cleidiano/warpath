@@ -1,10 +1,12 @@
 alias Warpath.ExecutionEnv, as: Env
+alias Warpath.FilterElement, as: Filter
+alias Warpath.Element.Path
 
 defprotocol FilterOperator do
   @fallback_to_any true
 
   @type document :: map() | list()
-  @type relative_path :: Warpath.Element.Path.t()
+  @type relative_path :: Path.t()
   @type result :: Element.t() | [Element.t()]
 
   @spec evaluate(document, relative_path(), Env.t()) :: result()
@@ -12,11 +14,14 @@ defprotocol FilterOperator do
 end
 
 defimpl FilterOperator, for: [Map, List] do
-  alias Warpath.Filter
+  def evaluate(elements, [], %Env{instruction: filter_expression}) when is_list(elements) do
+    Filter.filter(elements, filter_expression)
+  end
 
   def evaluate(document, relative_path, %Env{instruction: filter_exp}) do
-    #TODO Handle this it's return legacy type
-    Filter.filter({document, relative_path}, filter_exp)
+    document
+    |> Element.new(relative_path)
+    |> Filter.filter(filter_exp)
   end
 end
 
