@@ -3,13 +3,27 @@ defmodule Engine do
   alias Warpath.Expression
   alias Warpath.Element.Path
 
-  def query(data, selector, opts \\ []) do
-    acc = Element.new(data, [])
+  def query(document, selector, opts \\ [])
+
+  def query(document, selector, opts) when is_binary(document) do
+    document
+    |> Jason.decode!()
+    |> query(selector, opts)
+  end
+
+  def query(data, selector, opts) do
+    start = Element.new(data, [])
 
     query_result =
       selector
       |> compile()
-      |> Enum.reduce(acc, &dispatch_reduce/2)
+      # |> IO.inspect(label: :execution_plan)
+      |> Enum.reduce(start, fn item, acc ->
+        # IO.inspect(item.operator)
+
+        dispatch_reduce(item, acc)
+        # |> IO.inspect(label: :output)
+      end)
       |> collect(opts[:result_type] || :value)
 
     {:ok, query_result}
@@ -20,7 +34,7 @@ defmodule Engine do
     query_result
   end
 
-  defp compile(selector) do
+  def compile(selector) do
     with {:ok, tokens} <- Expression.compile(selector) do
       tokens
       |> Enum.reduce([], fn token, acc ->
@@ -37,6 +51,7 @@ defmodule Engine do
 
   defp dispatch_reduce(%Env{operator: operator} = env, %Element{value: document, path: path}) do
     operator.evaluate(document, path, env)
+    # |> IO.inspect(label: :dispatch)
   end
 
   defp collect(elements, opt) when is_list(elements), do: Enum.map(elements, &collect(&1, opt))
@@ -57,4 +72,5 @@ defmodule Engine do
 
   defp translate({:filter, instr}, previous), do: Env.new(FilterOperator, instr, previous)
   defp translate({:array_slice, _} = instr, previous), do: Env.new(SliceOperator, instr, previous)
+  defp translate({:union, _} = instr, previous), do: Env.new(UnionOperator, instr, previous)
 end

@@ -23,11 +23,11 @@ end
 
 defimpl IdentifierOperator, for: List do
   # TODO Test this expression $.*.:atom
-  def evaluate(elements, [], %Env{previous_operator: %Env{operator: WildcardOperator}} = env) do
+  def evaluate(elements, [], %Env{previous_operator: %Env{operator: previous_operator}} = env)
+      when previous_operator in [WildcardOperator, FilterOperator, ArrayIndexOperator] do
     {:dot, {:property, key}} = env.instruction
 
     Enum.flat_map(elements, fn %Element{value: document, path: path} ->
-      # IO.inspect({document, path}, label: :inside)
       if Map.has_key?(document, key),
         do: [IdentifierOperator.Map.evaluate(document, path, env)],
         else: []

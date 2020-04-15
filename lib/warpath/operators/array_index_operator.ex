@@ -2,6 +2,8 @@ alias Warpath.ExecutionEnv, as: Env
 alias Warpath.Element.Path, as: ElementPath
 
 defprotocol ArrayIndexOperator do
+  @fallback_to_any true
+  
   @type document :: list()
 
   @type relative_path :: ElementPath.t()
@@ -51,5 +53,14 @@ defimpl ArrayIndexOperator, for: List do
       |> Enum.at(index)
       |> Element.new(item_path)
     end)
+  end
+end
+
+defimpl ArrayIndexOperator, for: Any do
+  require Logger
+
+  def evaluate(doc, _, _) do
+    Logger.debug("Ignoring #{inspect(doc)}")
+    []
   end
 end
