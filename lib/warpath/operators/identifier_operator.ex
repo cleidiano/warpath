@@ -22,9 +22,15 @@ defimpl IdentifierOperator, for: Map do
 end
 
 defimpl IdentifierOperator, for: List do
+  @previous_operators_allowed [
+    ArrayIndexOperator,
+    FilterOperator,
+    UnionOperator,
+    WildcardOperator
+  ]
   # TODO Test this expression $.*.:atom
   def evaluate(elements, [], %Env{previous_operator: %Env{operator: previous_operator}} = env)
-      when previous_operator in [WildcardOperator, FilterOperator, ArrayIndexOperator] do
+      when previous_operator in @previous_operators_allowed do
     {:dot, {:property, key}} = env.instruction
 
     Enum.flat_map(elements, fn %Element{value: document, path: path} ->

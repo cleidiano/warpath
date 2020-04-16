@@ -18,18 +18,20 @@ defmodule Warpath.Element.Path do
   @spec dotify(t) :: binary
   def dotify(paths), do: make_path(paths, :dotify)
 
-  defp make_path([h | _] = data, option) when is_tuple(h) do
-    join(data, option)
+  defp make_path([h | _] = tokens, option) when is_tuple(h) do
+    to_string(tokens, option)
   end
 
-  defp make_path([h | _] = data, option) when is_list(h) do
-    data
+  defp make_path([h | _] = tokens, option) when is_list(h) do
+    tokens
     |> Enum.map(&make_path(&1, option))
     |> List.flatten()
   end
 
-  defp join(data, opts) do
-    data
+  defp make_path([], _), do: []
+
+  defp to_string(tokens, opts) do
+    tokens
     |> Enum.reverse()
     |> Enum.map(&path(&1, opts))
     |> Enum.join()

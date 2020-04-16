@@ -3,7 +3,7 @@ alias Warpath.Element.Path, as: ElementPath
 
 defprotocol ArrayIndexOperator do
   @fallback_to_any true
-  
+
   @type document :: list()
 
   @type relative_path :: ElementPath.t()
@@ -20,6 +20,17 @@ end
 
 defimpl ArrayIndexOperator, for: List do
   alias Warpath.Element.Path
+
+  def evaluate(elements, [], %Env{
+        instruction: {:array_indexes, [index]},
+        previous_operator: %Env{operator: WildcardOperator}
+      }) do
+    elements
+    |> Stream.filter(&Element.value_list?/1)
+    |> Enum.flat_map(fn %Element{value: list, path: path} ->
+      value_for_indexes(list, path, [index])
+    end)
+  end
 
   def evaluate(document, path, %Env{instruction: {:array_indexes, [index]}}) do
     result = value_for_indexes(document, path, [index])
@@ -57,10 +68,5 @@ defimpl ArrayIndexOperator, for: List do
 end
 
 defimpl ArrayIndexOperator, for: Any do
-  require Logger
-
-  def evaluate(doc, _, _) do
-    Logger.debug("Ignoring #{inspect(doc)}")
-    []
-  end
+  def evaluate(_, _, _), do: []
 end
