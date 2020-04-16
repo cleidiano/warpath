@@ -27,13 +27,13 @@ defmodule RegrationSuiteTest do
 
       case {consensus_value, ordered} do
         {nil, _} ->
-          assert {:ok, _} = Engine.query(document, query_selector)
+          assert {:ok, _} = Warpath.query(document, query_selector)
 
         {consensus, false} when is_list(consensus) ->
-          assert Enum.sort(consensus) == Engine.query!(document, query_selector) |> Enum.sort()
+          assert Enum.sort(consensus) == Warpath.query!(document, query_selector) |> Enum.sort()
 
         {consensus, _} ->
-          assert consensus == Engine.query!(document, query_selector)
+          assert consensus == Warpath.query!(document, query_selector)
       end
     end
   end

@@ -28,7 +28,7 @@ defimpl IdentifierOperator, for: List do
     UnionOperator,
     WildcardOperator
   ]
-  # TODO Test this expression $.*.:atom
+
   def evaluate(elements, [], %Env{previous_operator: %Env{operator: previous_operator}} = env)
       when previous_operator in @previous_operators_allowed do
     {:dot, {:property, key}} = env.instruction

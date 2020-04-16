@@ -3,23 +3,12 @@ defmodule Warpath.Element.PathMarker do
 
   alias Warpath.Element.Path
 
-  @type path :: list(Path.token())
+  @type path :: Path.t()
   @type token :: Path.token()
-
-  @type elements :: {list | map, path} | Element.t() | [Element.t()]
+  @type elements :: Element.t() | [Element.t()]
 
   @spec stream(elements(), (token, path -> path)) :: Stream.t()
   def stream(element, path_fun \\ &Path.accumulate/2)
-
-  def stream({members, path}, path_fun) when is_list(members) do
-    members
-    |> Stream.with_index()
-    |> Stream.map(fn {member, index} -> {member, path_fun.({:index_access, index}, path)} end)
-  end
-
-  def stream({member, path}, path_fun) when is_function(path_fun, 2) and is_map(member) do
-    Stream.map(member, fn {k, v} -> {v, path_fun.({:property, k}, path)} end)
-  end
 
   def stream([%Element{} | _] = elements, path_fun) do
     elements

@@ -11,14 +11,14 @@ defmodule WarpathTest do
 
   describe "query/3" do
     test "evaluate root expression", %{data: document} do
-      assert Engine.query(document, "$", @value_path) == {:ok, {document, "$"}}
+      assert Warpath.query(document, "$", @value_path) == {:ok, {document, "$"}}
     end
 
     test "evaluate property expression", %{data: document} do
       path = "$['store']['bicycle']"
       value = %{"color" => "red", "price" => 19.95}
 
-      assert Engine.query(document, "$.store.bicycle", @value_path) == {:ok, {value, path}}
+      assert Warpath.query(document, "$.store.bicycle", @value_path) == {:ok, {value, path}}
     end
 
     test "evaluate atom expression" do
@@ -26,12 +26,12 @@ defmodule WarpathTest do
       path = "$['bicycle']"
       document = %{bicycle: value}
 
-      assert Engine.query(document, "$.:bicycle", @value_path) == {:ok, {value, path}}
-      assert Engine.query([bicycle: value], "$.:bicycle", @value_path) == {:ok, {value, path}}
+      assert Warpath.query(document, "$.:bicycle", @value_path) == {:ok, {value, path}}
+      assert Warpath.query([bicycle: value], "$.:bicycle", @value_path) == {:ok, {value, path}}
     end
 
     test "result nil for property expression that not exists", %{data: document} do
-      assert Engine.query(document, "$.dont_exist", @value_path) ==
+      assert Warpath.query(document, "$.dont_exist", @value_path) ==
                {:ok, {nil, "$['dont_exist']"}}
     end
 
@@ -39,7 +39,7 @@ defmodule WarpathTest do
       values = document |> Map.values()
       paths = ["$['expensive']", "$['store']"]
 
-      assert Engine.query(document, "$.*", @value_path) == {:ok, Enum.zip(values, paths)}
+      assert Warpath.query(document, "$.*", @value_path) == {:ok, Enum.zip(values, paths)}
     end
 
     test "resolve a wildcard property" do
@@ -50,7 +50,7 @@ defmodule WarpathTest do
         }
       }
 
-      assert Engine.query(document, "$.store.*.price", @value_path) ==
+      assert Warpath.query(document, "$.store.*.price", @value_path) ==
                {:ok,
                 [
                   {500, "$['store']['bicyle']['price']"},
@@ -69,7 +69,7 @@ defmodule WarpathTest do
         {22.99, "$['store']['book'][3]['price']"}
       ]
 
-      assert Engine.query(document, "$..price", @value_path) == {:ok, prices}
+      assert Warpath.query(document, "$..price", @value_path) == {:ok, prices}
     end
 
     test "that use a property and is on middle", %{data: document} do
@@ -80,7 +80,7 @@ defmodule WarpathTest do
         {22.99, "$['store']['book'][3]['price']"}
       ]
 
-      assert Engine.query(document, "$.store..book[*].price", @value_path) == {:ok, prices}
+      assert Warpath.query(document, "$.store..book[*].price", @value_path) == {:ok, prices}
     end
 
     test "that use a array index access", %{data: document} do
@@ -93,17 +93,17 @@ defmodule WarpathTest do
         "price" => 8.95
       }
 
-      assert Engine.query(document, "$..[0]", @value_path) == {:ok, [{book, trace}]}
+      assert Warpath.query(document, "$..[0]", @value_path) == {:ok, [{book, trace}]}
     end
 
     test "that use a wildcard as a scan operation", %{data: document} do
       expected = {:ok, Enum.zip(Oracle.scaned_elements(), Oracle.scaned_paths())}
-      assert Engine.query(document, "$..*", @value_path) == expected
+      assert Warpath.query(document, "$..*", @value_path) == expected
     end
 
     test "that use a wildcard folowed by comparator filter", %{data: document} do
       values =
-        Engine.query(
+        Warpath.query(
           document,
           "$..*.[?(is_float(@.price) and @.price > 22)]",
           @value_path
@@ -124,7 +124,7 @@ defmodule WarpathTest do
     end
 
     test "that use a wildcard folowed by contains filter", %{data: document} do
-      values = Engine.query(document, "$..*.[?(@.isbn)]", @value_path)
+      values = Warpath.query(document, "$..*.[?(@.isbn)]", @value_path)
 
       books = [
         {%{
@@ -147,7 +147,7 @@ defmodule WarpathTest do
     end
 
     test "that use a filter", %{data: document} do
-      values = Engine.query(document, "$..[?(@.price > 22)]", @value_path)
+      values = Warpath.query(document, "$..[?(@.price > 22)]", @value_path)
 
       expected = {
         %{
@@ -174,7 +174,7 @@ defmodule WarpathTest do
         "price" => 22.99
       }
 
-      assert Engine.query(
+      assert Warpath.query(
                document,
                "$.store.book[?(@.price > 22)]",
                @value_path
@@ -199,13 +199,13 @@ defmodule WarpathTest do
          }, "$['store']['book'][3]"}
       ]
 
-      assert Engine.query(document, "$.store.book[?(@.isbn)]", @value_path) == {:ok, books}
+      assert Warpath.query(document, "$.store.book[?(@.isbn)]", @value_path) == {:ok, books}
     end
 
     test "that use a function" do
       data = %{"list" => [1.0, 2, 3, "string"], "integer" => 1}
 
-      assert Engine.query(data, "$.list[?(is_integer(@))]") == {:ok, [2, 3]}
+      assert Warpath.query(data, "$.list[?(is_integer(@))]") == {:ok, [2, 3]}
     end
   end
 
@@ -220,7 +220,7 @@ defmodule WarpathTest do
         "price" => 8.95
       }
 
-      assert Engine.query(document, "$.store.book[0]", @value_path) == {:ok, {book, path}}
+      assert Warpath.query(document, "$.store.book[0]", @value_path) == {:ok, {book, path}}
     end
 
     test "index access with many indexes", %{data: document} do
@@ -246,7 +246,7 @@ defmodule WarpathTest do
         }
       ]
 
-      assert Engine.query(document, "$.store.book[1, 2]", @value_path) == {:ok, trace}
+      assert Warpath.query(document, "$.store.book[1, 2]", @value_path) == {:ok, trace}
     end
 
     test "wildcard expression", %{data: document} do
@@ -255,7 +255,7 @@ defmodule WarpathTest do
         |> Stream.with_index()
         |> Enum.map(fn {item, index} -> {item, "$['store']['book'][#{index}]"} end)
 
-      assert Engine.query(document, "$.store.book[*]", @value_path) == {:ok, expected}
+      assert Warpath.query(document, "$.store.book[*]", @value_path) == {:ok, expected}
     end
 
     test "wildcard expression with property after it", %{data: document} do
@@ -266,7 +266,7 @@ defmodule WarpathTest do
         {"J. R. R. Tolkien", "$['store']['book'][3]['author']"}
       ]
 
-      assert Engine.query(document, "$.store.book[*].author", @value_path) == {:ok, query_result}
+      assert Warpath.query(document, "$.store.book[*].author", @value_path) == {:ok, query_result}
     end
   end
 
@@ -274,36 +274,36 @@ defmodule WarpathTest do
     test "with only start index supplied" do
       list = [0, 1, 2, 3, 4, 5]
 
-      assert Engine.query(list, "$[1:]", @value_path) ==
+      assert Warpath.query(list, "$[1:]", @value_path) ==
                {:ok, [{1, "$[1]"}, {2, "$[2]"}, {3, "$[3]"}, {4, "$[4]"}, {5, "$[5]"}]}
     end
 
     test "with only negative start index supplied" do
       list = [0, 1, 2, 3, 4, 5]
-      assert Engine.query(list, "$[-2:]", @value_path) == {:ok, [{4, "$[4]"}, {5, "$[5]"}]}
+      assert Warpath.query(list, "$[-2:]", @value_path) == {:ok, [{4, "$[4]"}, {5, "$[5]"}]}
     end
 
     test "with only end index supplied" do
       list = [0, 1, 2, 3, 4, 5]
-      assert Engine.query(list, "$[:2]", @value_path) == {:ok, [{0, "$[0]"}, {1, "$[1]"}]}
+      assert Warpath.query(list, "$[:2]", @value_path) == {:ok, [{0, "$[0]"}, {1, "$[1]"}]}
     end
 
     test "with only negative end index supplied" do
       list = [0, 1, 2, 3, 4, 5]
 
-      assert Engine.query(list, "$[:-2]", @value_path) ==
+      assert Warpath.query(list, "$[:-2]", @value_path) ==
                {:ok, [{0, "$[0]"}, {1, "$[1]"}, {2, "$[2]"}, {3, "$[3]"}]}
     end
 
     test "with negative start index and negative end index supplied" do
       list = [0, 1, 2, 3, 4, 5]
-      assert Engine.query(list, "$[-3:-1]", @value_path) == {:ok, [{3, "$[3]"}, {4, "$[4]"}]}
+      assert Warpath.query(list, "$[-3:-1]", @value_path) == {:ok, [{3, "$[3]"}, {4, "$[4]"}]}
     end
 
     test "with step, start and end index supplied" do
       list = [0, 1, 2, 3, 4, 5, 6, 7]
 
-      assert Engine.query(list, "$[0:6:2]", @value_path) ==
+      assert Warpath.query(list, "$[0:6:2]", @value_path) ==
                {:ok, [{0, "$[0]"}, {2, "$[2]"}, {4, "$[4]"}]}
     end
   end
@@ -312,7 +312,7 @@ defmodule WarpathTest do
     test "result_type: :path", %{data: document} do
       path = "$['store']['book'][0]"
 
-      assert Engine.query(document, "$.store.book[0]", result_type: :path) == {:ok, path}
+      assert Warpath.query(document, "$.store.book[0]", result_type: :path) == {:ok, path}
     end
 
     test "default result_type is value", %{data: document} do
@@ -323,14 +323,14 @@ defmodule WarpathTest do
         "title" => "Sayings of the Century"
       }
 
-      assert Engine.query(document, "$.store.book[0]") == {:ok, book}
+      assert Warpath.query(document, "$.store.book[0]") == {:ok, book}
     end
   end
 
   describe "query/3 return error when" do
     @tag :skip
     test "trying to traverse a list using dot notation", %{data: document} do
-      {:error, %{message: message}} = Engine.query(document, "$.store.book.price")
+      {:error, %{message: message}} = Warpath.query(document, "$.store.book.price")
 
       assert message =~
                "You are trying to traverse a list using dot notation '$.store.book.price'"

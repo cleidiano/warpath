@@ -2,7 +2,7 @@ defmodule Warpath.FilterTest do
   use ExUnit.Case, async: true
 
   alias Warpath.Element.PathMarker
-  alias Warpath.Filter
+  alias Warpath.FilterElement, as: Filter
 
   setup_all do
     data = %{
@@ -37,16 +37,19 @@ defmodule Warpath.FilterTest do
     test "when the target member is a tuple of {map, path}", context do
       bicycle = context[:data]["store"]["bicycle"]
       path = [{:property, "bicycle"}, {:store, "store"}]
+      element = Element.new(bicycle, path)
 
-      assert [{bicycle, path}] == Filter.filter({bicycle, path}, {:>, [{:property, "price"}, 10]})
+      assert [element] ==
+               Filter.filter(element, {:>, [{:property, "price"}, 10]})
     end
 
     test "when the target member is tuple of {list, path}", context do
       path = [{:index_access, 1}]
       books = context[:data]["store"]["book"]
+      element = Element.new(List.last(books), path)
 
-      assert [{List.last(books), path}] ==
-               Filter.filter({books, []}, {:has_property?, {:property, "isbn"}})
+      assert [element] ==
+               Filter.filter(Element.new(books, []), {:has_property?, {:property, "isbn"}})
     end
 
     test "when the target member is a list of [{member, path}]", context do
@@ -54,11 +57,12 @@ defmodule Warpath.FilterTest do
       books = [%{"price" => 11} | context[:data]["store"]["book"]]
 
       elements =
-        {books, []}
+        books
+        |> Element.new([])
         |> PathMarker.stream()
         |> Enum.to_list()
 
-      assert [{%{"price" => 11}, path}] ==
+      assert [Element.new(%{"price" => 11}, path)] ==
                Filter.filter(elements, {:is_integer, {:property, "price"}})
     end
   end
@@ -67,7 +71,7 @@ defmodule Warpath.FilterTest do
     invalid_types = [10, "Test", {:some, 10}]
 
     for type <- invalid_types do
-      assert [] == Filter.filter({type, []}, {:has_property?, {:property, "any"}})
+      assert [] == Filter.filter(Element.new(type, []), {:has_property?, {:property, "any"}})
     end
   end
 end

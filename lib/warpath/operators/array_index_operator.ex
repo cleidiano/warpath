@@ -5,13 +5,9 @@ defprotocol ArrayIndexOperator do
   @fallback_to_any true
 
   @type document :: list()
-
   @type relative_path :: ElementPath.t()
-
   @type result :: Element.t() | [Element.t()]
-
   @type instruction :: {:array_indexes, list({:index, integer()})}
-
   @type env :: %Env{instruction: instruction()}
 
   @spec evaluate(document(), relative_path(), Env.t()) :: result()
