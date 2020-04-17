@@ -1,6 +1,8 @@
 alias Warpath.Element
 
 defmodule RootOperator do
+  @moduledoc false
+
   @token {:root, "$"}
 
   @type result :: Element.t()

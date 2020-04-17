@@ -28,10 +28,12 @@ defmodule Warpath.Element.PathMarker do
   end
 
   def stream(%Element{value: map, path: path}, path_fun) when is_map(map) do
-    map
-    |> Stream.map(fn {k, v} ->
-      key_path = path_fun.({:property, k}, path)
-      Element.new(v, key_path)
-    end)
+    Stream.map(
+      map,
+      fn {k, v} ->
+        key_path = path_fun.({:property, k}, path)
+        Element.new(v, key_path)
+      end
+    )
   end
 end

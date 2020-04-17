@@ -36,7 +36,7 @@ defmodule WarpathTest do
     end
 
     test "evaluate wildcard expression like $.*", %{data: document} do
-      values = document |> Map.values()
+      values = Map.values(document)
       paths = ["$['expensive']", "$['store']"]
 
       assert Warpath.query(document, "$.*", @value_path) == {:ok, Enum.zip(values, paths)}

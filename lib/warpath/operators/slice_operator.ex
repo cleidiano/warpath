@@ -28,7 +28,7 @@ defimpl SliceOperator, for: List do
     end
   end
 
-  defp do_slice(_elements, _slice_args, _empty_range? = true), do: []
+  defp do_slice(_elements, _slice_args, true), do: []
 
   defp do_slice(element, slice_args, false) do
     {step, range} = slice_config(element, slice_args)

@@ -12,22 +12,24 @@ end
 defimpl UnionOperator, for: Map do
   def evaluate(document, relative_path, %Env{instruction: {:union, properties}}) do
     properties
-    |> Enum.flat_map(fn {:dot, {:property, property}} = inst ->
-      if Map.has_key?(document, property) do
-        new_env = Env.new(IdentifierOperator, inst)
-        [IdentifierOperator.Map.evaluate(document, relative_path, new_env)]
-      else
-        []
-      end
+    |> Stream.filter(&has_property?(document, &1))
+    |> Enum.map(fn property_query ->
+      new_env = Env.new(property_query)
+      IdentifierOperator.Map.evaluate(document, relative_path, new_env)
     end)
   end
+
+  defp has_property?(map, {:dot, {:property, property}}),
+    do: Map.has_key?(map, property)
 end
 
 defimpl UnionOperator, for: List do
   def evaluate(elements, [], env) do
-    elements
-    |> Enum.flat_map(fn %Element{value: value, path: path} ->
-      UnionOperator.evaluate(value, path, env)
-    end)
+    Enum.flat_map(
+      elements,
+      fn %Element{value: value, path: path} ->
+        UnionOperator.evaluate(value, path, env)
+      end
+    )
   end
 end

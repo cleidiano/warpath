@@ -34,10 +34,11 @@ defimpl IdentifierOperator, for: List do
       when previous_operator in @previous_operators_allowed do
     {:dot, {:property, key}} = env.instruction
 
-    Enum.flat_map(elements, fn %Element{value: document, path: path} ->
-      if Map.has_key?(document, key),
-        do: [IdentifierOperator.Map.evaluate(document, path, env)],
-        else: []
+    elements
+    |> Stream.filter(&Element.value_map?/1)
+    |> Stream.filter(fn %Element{value: document} -> Map.has_key?(document, key) end)
+    |> Enum.map(fn %Element{value: document, path: path} ->
+      IdentifierOperator.Map.evaluate(document, path, env)
     end)
   end
 
@@ -45,10 +46,14 @@ defimpl IdentifierOperator, for: List do
     unless Keyword.keyword?(keyword) do
       {:dot, {:property, name} = token} = instruction
 
+      wrong_query =
+        token
+        |> ElementPath.accumulate(relative_path)
+        |> ElementPath.dotify()
+
       tips =
         "You are trying to traverse a list using dot " <>
-          "notation '#{ElementPath.accumulate(token, relative_path) |> ElementPath.dotify()}', " <>
-          "that it's not allowed for list type. " <>
+          "notation '#{wrong_query}', that it's not allowed for list type. " <>
           "You can use something like '#{ElementPath.dotify(relative_path)}[*].#{name}' instead."
 
       raise Warpath.UnsupportedOperationError, tips

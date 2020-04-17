@@ -103,9 +103,9 @@ defimpl DescendantOperator, for: [Map, List] do
   def evaluate(
         document,
         relative_path,
-        %Env{instruction: {:scan, {:filter, filter}}} = env
+        %Env{instruction: {:scan, {:filter, _} = filter}} = env
       ) do
-    filter_env = Env.new(FilterOperator, filter)
+    filter_env = Env.new(filter)
 
     document
     |> find_all_list(relative_path, env)
@@ -117,7 +117,7 @@ defimpl DescendantOperator, for: [Map, List] do
   def evaluate(document, path, %Env{instruction: {:scan, {:array_indexes, _} = indexes}} = env) do
     # Entry point called only once
 
-    indexes_env = Env.new(ArrayIndexOperator, indexes)
+    indexes_env = Env.new(indexes)
 
     document
     |> find_all_list(path, env)

@@ -30,7 +30,8 @@ defmodule RegrationSuiteTest do
           assert {:ok, _} = Warpath.query(document, query_selector)
 
         {consensus, false} when is_list(consensus) ->
-          assert Enum.sort(consensus) == Warpath.query!(document, query_selector) |> Enum.sort()
+          result = Warpath.query!(document, query_selector)
+          assert Enum.sort(consensus) == Enum.sort(result)
 
         {consensus, _} ->
           assert consensus == Warpath.query!(document, query_selector)

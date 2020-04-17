@@ -25,8 +25,7 @@ end
 
 defimpl WildcardOperator, for: List do
   def evaluate([%Element{} | _] = elements, [], env) do
-    elements
-    |> Enum.flat_map(fn %Element{value: value, path: path} ->
+    Enum.flat_map(elements, fn %Element{value: value, path: path} ->
       WildcardOperator.evaluate(value, path, env)
     end)
   end

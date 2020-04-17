@@ -15,11 +15,11 @@ defprotocol FilterOperator do
 end
 
 defimpl FilterOperator, for: [Map, List] do
-  def evaluate(elements, [], %Env{instruction: filter_expression}) when is_list(elements) do
-    Filter.filter(elements, filter_expression)
+  def evaluate(elements, [], %Env{instruction: {:filter, expression}}) when is_list(elements) do
+    Filter.filter(elements, expression)
   end
 
-  def evaluate(document, relative_path, %Env{instruction: filter_exp}) do
+  def evaluate(document, relative_path, %Env{instruction: {:filter, filter_exp}}) do
     document
     |> Element.new(relative_path)
     |> Filter.filter(filter_exp)

@@ -1,40 +1,38 @@
 defmodule Warpath.ExecutionEnv do
+  @moduledoc false
+
   alias Warpath.ExecutionEnv, as: Env
 
   @type t :: %__MODULE__{instruction: any()}
+  @type tokens :: [Warpath.Expression.token()]
 
   defstruct operator: nil, instruction: nil, previous_operator: nil
 
-  # TODO Resolver operator dado a instrução
-  def new(operator, instr, previous_operator \\ nil) do
+  def new(instr, previous_operator \\ nil) do
     %__MODULE__{
-      operator: operator,
+      operator: operator_for(instr),
       instruction: instr,
       previous_operator: previous_operator
     }
   end
 
-  @type tokens :: [Warpath.Expression.token()]
-
   @spec execution_plan(tokens) :: list(Env.t())
   def execution_plan(tokens) when is_list(tokens) do
     tokens
     |> Enum.reduce([], fn token, acc ->
-      env = translate(token, List.first(acc))
+      previous_operator = List.first(acc)
+      env = Env.new(token, previous_operator)
       [env | acc]
     end)
     |> Enum.reverse()
   end
 
-  defp translate({:root, _} = instr, nil), do: Env.new(RootOperator, instr)
-  defp translate({:dot, _} = instr, previous), do: Env.new(IdentifierOperator, instr, previous)
-  defp translate({:wildcard, _} = instr, previous), do: Env.new(WildcardOperator, instr, previous)
-  defp translate({:scan, _} = instr, previous), do: Env.new(DescendantOperator, instr, previous)
-
-  defp translate({:array_indexes, _} = instr, previous),
-    do: Env.new(ArrayIndexOperator, instr, previous)
-
-  defp translate({:filter, instr}, previous), do: Env.new(FilterOperator, instr, previous)
-  defp translate({:array_slice, _} = instr, previous), do: Env.new(SliceOperator, instr, previous)
-  defp translate({:union, _} = instr, previous), do: Env.new(UnionOperator, instr, previous)
+  defp operator_for({:root, _}), do: RootOperator
+  defp operator_for({:dot, _}), do: IdentifierOperator
+  defp operator_for({:wildcard, _}), do: WildcardOperator
+  defp operator_for({:scan, _}), do: DescendantOperator
+  defp operator_for({:array_indexes, _}), do: ArrayIndexOperator
+  defp operator_for({:filter, _}), do: FilterOperator
+  defp operator_for({:array_slice, _}), do: SliceOperator
+  defp operator_for({:union, _}), do: UnionOperator
 end

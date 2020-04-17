@@ -1,4 +1,6 @@
 defmodule Warpath.Element do
+  @moduledoc false
+
   alias __MODULE__
   alias Warpath.Element.Path
 

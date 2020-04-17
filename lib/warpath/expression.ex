@@ -35,7 +35,8 @@ defmodule Warpath.Expression do
       expression_tokens
     else
       {:error, error} ->
-        {:error, Exception.message(error) |> ExpressionError.exception()}
+        message = Exception.message(error)
+        {:error, ExpressionError.exception(message)}
     end
   end
 end
