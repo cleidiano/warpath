@@ -1,7 +1,7 @@
 alias Warpath.DescendantUtils, as: Utils
 alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
-alias Warpath.ExecutionEnv, as: Env
+alias Warpath.Execution.Env
 
 defprotocol DescendantOperator do
   @fallback_to_any true

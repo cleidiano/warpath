@@ -1,7 +1,8 @@
-alias Warpath.Element
-
 defmodule RootOperator do
   @moduledoc false
+
+  alias Warpath.Element
+  alias Warpath.Execution.Env
 
   @token {:root, "$"}
 

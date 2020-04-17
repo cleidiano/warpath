@@ -1,5 +1,5 @@
 alias Warpath.Element
-alias Warpath.ExecutionEnv, as: Env
+alias Warpath.Execution.Env
 
 defprotocol UnionOperator do
   @type result :: [Element.t()]

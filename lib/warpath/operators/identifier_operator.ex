@@ -1,6 +1,6 @@
 alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
-alias Warpath.ExecutionEnv, as: Env
+alias Warpath.Execution.Env
 
 defprotocol IdentifierOperator do
   @type document :: Element.t() | map | list

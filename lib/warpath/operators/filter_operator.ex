@@ -1,6 +1,6 @@
 alias Warpath.Element
 alias Warpath.Element.Path
-alias Warpath.ExecutionEnv, as: Env
+alias Warpath.Execution.Env
 alias Warpath.FilterElement, as: Filter
 
 defprotocol FilterOperator do
