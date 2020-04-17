@@ -1,4 +1,4 @@
-defmodule Warpath.FilterElement do
+defmodule Warpath.Filter do
   @moduledoc false
 
   alias Warpath.Element

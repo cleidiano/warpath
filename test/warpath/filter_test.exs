@@ -3,7 +3,7 @@ defmodule Warpath.FilterTest do
 
   alias Warpath.Element
   alias Warpath.Element.PathMarker
-  alias Warpath.FilterElement, as: Filter
+  alias Warpath.Filter
 
   setup_all do
     data = %{

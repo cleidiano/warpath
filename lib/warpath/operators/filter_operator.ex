@@ -1,7 +1,7 @@
 alias Warpath.Element
 alias Warpath.Element.Path
 alias Warpath.Execution.Env
-alias Warpath.FilterElement, as: Filter
+alias Warpath.Filter
 
 defprotocol FilterOperator do
   @fallback_to_any true
