@@ -1,6 +1,7 @@
-alias Warpath.ExecutionEnv, as: Env
+alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Element.PathMarker
+alias Warpath.ExecutionEnv, as: Env
 
 defprotocol WildcardOperator do
   @fallback_to_any true

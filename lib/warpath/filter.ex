@@ -1,6 +1,7 @@
 defmodule Warpath.FilterElement do
   @moduledoc false
 
+  alias Warpath.Element
   alias Warpath.Element.PathMarker
   alias Warpath.Expression
   alias Warpath.Filter.Predicate

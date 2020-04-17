@@ -1,6 +1,7 @@
 defmodule Warpath.Element.PathMarkerTest do
   use ExUnit.Case, async: true
 
+  alias Warpath.Element
   alias Warpath.Element.PathMarker
 
   test "should generate index token for each item on list " do

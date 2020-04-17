@@ -1,4 +1,5 @@
-defmodule Element do
+defmodule Warpath.Element do
+  alias __MODULE__
   alias Warpath.Element.Path
 
   @type t :: %Element{value: any, path: Path.t()}

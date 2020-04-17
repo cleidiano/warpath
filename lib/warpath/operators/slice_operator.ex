@@ -1,5 +1,6 @@
-alias Warpath.ExecutionEnv, as: Env
+alias Warpath.Element
 alias Warpath.Element.PathMarker
+alias Warpath.ExecutionEnv, as: Env
 
 defprotocol SliceOperator do
   @fallback_to_any true

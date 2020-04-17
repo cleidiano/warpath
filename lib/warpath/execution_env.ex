@@ -5,6 +5,7 @@ defmodule Warpath.ExecutionEnv do
 
   defstruct operator: nil, instruction: nil, previous_operator: nil
 
+  # TODO Resolver operator dado a instrução
   def new(operator, instr, previous_operator \\ nil) do
     %__MODULE__{
       operator: operator,

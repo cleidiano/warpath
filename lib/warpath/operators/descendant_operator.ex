@@ -1,6 +1,7 @@
-alias Warpath.ExecutionEnv, as: Env
+alias Warpath.DescendantUtils, as: Utils
+alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
-alias DescendantUtils, as: Utils
+alias Warpath.ExecutionEnv, as: Env
 
 defprotocol DescendantOperator do
   @fallback_to_any true
@@ -13,7 +14,9 @@ defprotocol DescendantOperator do
   def collect(document, relative_path, env)
 end
 
-defmodule DescendantUtils do
+defmodule Warpath.DescendantUtils do
+  @moduledoc false
+
   alias Warpath.Element.PathMarker
 
   defguardp is_dictionary(enum) when is_list(enum) or is_map(enum)

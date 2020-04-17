@@ -1,3 +1,4 @@
+alias Warpath.Element
 alias Warpath.ExecutionEnv, as: Env
 
 defprotocol UnionOperator do

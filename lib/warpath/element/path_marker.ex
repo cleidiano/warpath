@@ -1,6 +1,7 @@
 defmodule Warpath.Element.PathMarker do
   @moduledoc false
 
+  alias Warpath.Element
   alias Warpath.Element.Path
 
   @type path :: Path.t()

@@ -1,5 +1,6 @@
-alias Warpath.ExecutionEnv, as: Env
+alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
+alias Warpath.ExecutionEnv, as: Env
 
 defprotocol ArrayIndexOperator do
   @fallback_to_any true
@@ -15,8 +16,6 @@ defprotocol ArrayIndexOperator do
 end
 
 defimpl ArrayIndexOperator, for: List do
-  alias Warpath.Element.Path
-
   def evaluate(elements, [], %Env{
         instruction: {:array_indexes, [index]},
         previous_operator: %Env{operator: WildcardOperator}
@@ -54,7 +53,7 @@ defimpl ArrayIndexOperator, for: List do
     indexes
     |> Stream.reject(fn {:index_access, index} -> index > max_index end)
     |> Enum.map(fn {:index_access, index} = token ->
-      item_path = Path.accumulate(token, path)
+      item_path = ElementPath.accumulate(token, path)
 
       list
       |> Enum.at(index)

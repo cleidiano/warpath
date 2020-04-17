@@ -1,3 +1,4 @@
+alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
 alias Warpath.ExecutionEnv, as: Env
 

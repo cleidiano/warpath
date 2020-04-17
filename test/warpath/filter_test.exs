@@ -1,6 +1,7 @@
 defmodule Warpath.FilterTest do
   use ExUnit.Case, async: true
 
+  alias Warpath.Element
   alias Warpath.Element.PathMarker
   alias Warpath.FilterElement, as: Filter
 
