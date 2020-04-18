@@ -40,8 +40,7 @@ defmodule Warpath.FilterTest do
       path = [{:property, "bicycle"}, {:store, "store"}]
       element = Element.new(bicycle, path)
 
-      assert [element] ==
-               Filter.filter(element, {:>, [{:property, "price"}, 10]})
+      assert [element] == Filter.filter(element, {:>, [{:property, "price"}, 10]})
     end
 
     test "when the target member is tuple of {list, path}", context do
