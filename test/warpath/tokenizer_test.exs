@@ -147,17 +147,17 @@ defmodule Warpath.TokenizerTest do
   end
 
   test "Boolean Operators" do
-    assert_tokens 'and', [{:and_op, 1}]
-    assert_tokens '&&',  [{:and_op, 1}]
-    assert_tokens 'or',  [{:or_op, 1}]
-    assert_tokens '||',  [{:or_op, 1}]
-    assert_tokens 'not', [{:not_op, 1}]
-    assert_tokens 'in',  [{:in_op, 1}]
+    assert_tokens 'and', [{:and_op, 1, :and}]
+    assert_tokens '&&',  [{:and_op, 1, :'&&'}]
+    assert_tokens 'or',  [{:or_op, 1, :or}]
+    assert_tokens '||',  [{:or_op, 1, :'||'}]
+    assert_tokens 'not', [{:not_op, 1, :not}]
+    assert_tokens 'in',  [{:in_op, 1, :in}]
   end
 
   test "in expression" do
     assert_tokens ~c{in ['word one', other, :atom] }, [
-      { :in_op, 1 },
+      { :in_op, 1, :in },
       { :"[", 1 },
       { :quoted_word, 1, "word one" },
       { :",", 1 },

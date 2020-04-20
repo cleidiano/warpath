@@ -326,14 +326,4 @@ defmodule WarpathTest do
       assert Warpath.query(document, "$.store.book[0]") == {:ok, book}
     end
   end
-
-  describe "query/3 return error when" do
-    @tag :skip
-    test "trying to traverse a list using dot notation", %{data: document} do
-      {:error, %{message: message}} = Warpath.query(document, "$.store.book.price")
-
-      assert message =~
-               "You are trying to traverse a list using dot notation '$.store.book.price'"
-    end
-  end
 end

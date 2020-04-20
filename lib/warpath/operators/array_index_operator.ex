@@ -28,18 +28,12 @@ defimpl ArrayIndexOperator, for: List do
   end
 
   def evaluate(document, path, %Env{instruction: {:array_indexes, [index]}}) do
-    result = value_for_indexes(document, path, [index])
+    case value_for_indexes(document, path, [index]) do
+      [] ->
+        []
 
-    case result do
       [element] ->
         element
-
-      [] ->
-        message =
-          "The query should be resolved to scalar value " <>
-            "but the index #{inspect(index)} is out of bounds for emum #{inspect(document)}."
-
-        raise Enum.OutOfBoundsError, message
     end
   end
 

@@ -25,6 +25,7 @@ end
 defimpl IdentifierOperator, for: List do
   @previous_operators_allowed [
     ArrayIndexOperator,
+    DescendantOperator,
     FilterOperator,
     UnionOperator,
     WildcardOperator

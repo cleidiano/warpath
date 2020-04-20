@@ -12,8 +12,10 @@ This release is a complete new implementation strategy, it relay on elixir proto
 
 ### Fixed
 - Forbidden negative step on slice operation
+- Fix reserved words used as children key lookup, to allow expression like, `$.true`, `$.in`.
 
 ### Changed
+- Query with index that out off bounds, now will return empty list.
 
 
 ## [0.2.1] - 2020-04-05

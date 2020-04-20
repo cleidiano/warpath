@@ -1,33 +1,53 @@
 defmodule RegrationSuiteTest do
   use ExUnit.Case, async: true
+  alias Warpath
+
+  %{"queries" => errors} =
+    __DIR__
+    |> Path.join("/fixtures/json_comparision_regration_suite_errors.yaml")
+    |> YamlElixir.read_from_file!()
 
   %{"queries" => queries} =
     __DIR__
     |> Path.join("/fixtures/json_comparision_regration_suite.yaml")
     |> YamlElixir.read_from_file!()
 
-  for %{"id" => rule_id, "document" => doc, "selector" => selector} = rule <- queries do
-    tag =
-      rule
-      |> Map.get("warpath")
-      |> String.to_atom()
+  queries =
+    Enum.map(queries, fn query ->
+      label =
+        case Map.fetch(errors, query["id"]) do
+          {:ok, "error"} ->
+            :error
 
-    @rule rule
-    @tag tag
-    @consensus ["scalar-consensus", "consensus", "warpath_output"]
-    test rule_id <> " " <> selector do
-      consensus_value =
-        Enum.reduce_while(@consensus, nil, fn key, acc ->
-          if Map.has_key?(@rule, key), do: {:halt, Map.get(@rule, key)}, else: {:cont, acc}
-        end)
+          {:ok, ["raise", exception]} ->
+            {:raise, String.to_atom(exception)}
 
+          _ ->
+            :ok
+        end
+
+      Map.put(query, "test_type", label)
+    end)
+
+  for %{"id" => query_id, "document" => doc, "selector" => selector} = query <- queries do
+    @query query
+    test query_id <> " " <> selector do
       document = unquote(Macro.escape(doc))
       query_selector = unquote(selector)
-      ordered = Map.get(@rule, "ordered")
+      test_type = Map.get(@query, "test_type")
 
-      case {consensus_value, ordered} do
+      consensus_value =
+        Map.get_lazy(@query, "scalar-consensus", fn -> Map.get(@query, "consensus") end)
+
+      case {consensus_value, Map.get(@query, "ordered")} do
         {nil, _} ->
-          assert {:ok, _} = Warpath.query(document, query_selector)
+          case test_type do
+            {:raise, exception} ->
+              assert_raise exception, fn -> Warpath.query(document, query_selector) end
+
+            type ->
+              assert {^type, _} = Warpath.query(document, query_selector)
+          end
 
         {consensus, false} when is_list(consensus) ->
           result = Warpath.query!(document, query_selector)
