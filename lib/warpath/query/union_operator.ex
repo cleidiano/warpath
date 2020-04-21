@@ -5,7 +5,7 @@ alias Warpath.Query.IdentifierOperator
 
 defprotocol UnionOperator do
   @type result :: [Element.t()]
-  @type relative_path :: Warpath.Element.Path.t()
+  @type relative_path :: Element.Path.t()
 
   @spec evaluate(Element.t(), relative_path(), Env.t()) :: result()
   def evaluate(document, relative_path, env)

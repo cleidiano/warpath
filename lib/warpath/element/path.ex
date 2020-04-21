@@ -3,8 +3,7 @@ defmodule Warpath.Element.Path do
 
   @type token ::
           {:root, String.t()}
-          | {:property, String.t()}
-          | {:identifier, String.t() | atom}
+          | {:property, String.t() | atom()}
           | {:index_access, integer}
 
   @type t :: [token, ...] | []

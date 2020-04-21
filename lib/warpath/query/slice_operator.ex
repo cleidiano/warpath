@@ -6,7 +6,7 @@ alias Warpath.Query.SliceOperator
 defprotocol SliceOperator do
   @fallback_to_any true
 
-  @type relative_path :: Warpath.Element.Path.t()
+  @type relative_path :: Element.Path.t()
   @type result :: [Element.t()]
 
   @spec evaluate(list(), relative_path(), Env.t()) :: [Element.t()]
