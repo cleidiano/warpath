@@ -36,7 +36,7 @@ defmodule WarpathTest do
     end
 
     test "evaluate wildcard expression like $.*", %{data: document} do
-      values = document |> Map.values()
+      values = Map.values(document)
       paths = ["$['expensive']", "$['store']"]
 
       assert Warpath.query(document, "$.*", @value_path) == {:ok, Enum.zip(values, paths)}
@@ -324,15 +324,6 @@ defmodule WarpathTest do
       }
 
       assert Warpath.query(document, "$.store.book[0]") == {:ok, book}
-    end
-  end
-
-  describe "query/3 return error when" do
-    test "trying to traverse a list using dot notation", %{data: document} do
-      {:error, %{message: message}} = Warpath.query(document, "$.store.book.price")
-
-      assert message =~
-               "You are trying to traverse a list using dot notation '$.store.book.price'"
     end
   end
 end

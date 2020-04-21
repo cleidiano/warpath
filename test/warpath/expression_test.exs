@@ -355,4 +355,48 @@ defmodule Warpath.ExpressionTest do
       assert_compile "$..[*].name", expression
     end
   end
+
+  describe "parse reserved keyword" do
+    test "in as children lookup key" do
+      assert_compile "$.in", [
+        {:root, "$"},
+        {:dot, {:property, "in"}}
+      ]
+    end
+
+    test "true as children lookup key" do
+      assert_compile "$.true", [
+        {:root, "$"},
+        {:dot, {:property, "true"}}
+      ]
+    end
+
+    test "false as children lookup key" do
+      assert_compile "$.false", [
+        {:root, "$"},
+        {:dot, {:property, "false"}}
+      ]
+    end
+
+    test "not as children lookup key" do
+      assert_compile "$.not", [
+        {:root, "$"},
+        {:dot, {:property, "not"}}
+      ]
+    end
+
+    test "and as children lookup key" do
+      assert_compile "$.and", [
+        {:root, "$"},
+        {:dot, {:property, "and"}}
+      ]
+    end
+
+    test "or as children lookup key" do
+      assert_compile "$.or", [
+        {:root, "$"},
+        {:dot, {:property, "or"}}
+      ]
+    end
+  end
 end

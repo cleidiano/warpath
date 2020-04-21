@@ -1,6 +1,6 @@
 Nonterminals expression filter_exp boolean_exp predicate
 number item element elements indexes array_indexes array_slice slice_parts
-integer_arg union union_prop property wildcard
+integer_arg union union_prop property wildcard special_word
 .
 
 Terminals  
@@ -44,10 +44,18 @@ union           -> '[' union_prop ']'                           :   '$2'.
 union_prop      -> quoted_word                                  :   [{dot, property('$1')}].
 union_prop      -> union_prop ',' quoted_word                   :   '$1' ++ [{dot, property('$3')}].
 
+%%Special words allowed as children key
+special_word   -> in_op                                         :   '$1'.
+special_word   -> not_op                                        :   '$1'.
+special_word   -> and_op                                        :   '$1'.
+special_word   -> or_op                                         :   '$1'.
+special_word   -> boolean                                       :   '$1'.
+
 %%Property
 property        -> word                                         :   '$1'.
 property        -> quoted_word                                  :   '$1'.
 property        -> int                                          :   '$1'.
+property        -> special_word                                 :   convert_to_word('$1').
 
 %%Wildcard
 wildcard        -> '*'                                          :   {wildcard, '*'}.
@@ -129,6 +137,9 @@ index_access(Value) -> {index_access, Value}.
 
 property({_, _, Value}) when is_integer(Value) -> {property, integer_to_binary(Value)};
 property({_, _, Value}) -> {property, Value}.
+
+convert_to_word({_, Line, Value}) when is_atom(Value) ->
+	{word, Line, atom_to_binary(Value, utf8)}.
 
 % Unwrap whent it's only one key access.
 % Ex:

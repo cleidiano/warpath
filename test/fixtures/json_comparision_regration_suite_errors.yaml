@@ -1,0 +1,52 @@
+queries:
+  array_slice_with_negative_step_only: error
+  array_slice_with_negative_step: error
+  array_slice_with_step_0: error
+  bracket_notation_with_empty_path: error
+  bracket_notation_with_number_on_string:
+    - raise
+    - Elixir.Jason.DecodeError
+  bracket_notation_with_quoted_string_and_unescaped_single_quote: error
+  bracket_notation_with_two_literals_separated_by_dot_without_quotes: error
+  bracket_notation_with_two_literals_separated_by_dot: error
+  bracket_notation_without_quotes: error
+  dot_bracket_notation_without_quotes: error
+  dot_notation_with_number:
+    - raise
+    - Elixir.Warpath.UnsupportedOperationError
+  dot_notation_with_number_-1:
+    - raise
+    - Elixir.Warpath.UnsupportedOperationError
+  dot_notation_on_array:
+    - raise
+    - Elixir.Warpath.UnsupportedOperationError
+  dot_notation_on_array_with_containing_object_matching_key:
+    - raise
+    - Elixir.Warpath.UnsupportedOperationError
+  dot_notation_with_key_named_true: error
+  filter_expression_with_bracket_notation_with_number_on_object:
+    - raise
+    - Elixir.Warpath.UnsupportedOperationError
+  filter_expression_with_current_object: error
+  filter_expression_with_empty_expression: error
+  filter_expression_with_equals_array: error
+  filter_expression_with_equals_object: error
+  filter_expression_with_equals_with_root_reference: error
+  filter_expression_with_in_current_object: error
+  filter_expression_with_multiplication: error
+  filter_expression_with_negation_and_equals: error
+  filter_expression_with_regular_expression: error
+  filter_expression_with_single_equal: error
+  filter_expression_with_subfilter: error
+  filter_expression_without_value: error
+  recursive_descent_after_dot_notation: error
+  script_expression: error
+  union_with_filter: error
+  union_with_slice_and_number: error
+  union_with_wildcard_and_number: error
+  dot_notation_without_root: error
+  dot_notation_with_key_root_literal: error
+  dot_notation_with_empty_path: error
+  parens_notation: error
+  recursive_descent: error
+  

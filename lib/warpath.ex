@@ -162,17 +162,11 @@ defmodule Warpath do
       ...> Warpath.query(document, "$.integers[0, 1]", result_type: :value_path)
       {:ok, [{100, "$['integers'][0]"}, {200, "$['integers'][1]"}]}
   """
-
+  alias Warpath.Element
   alias Warpath.Element.Path
-  alias Warpath.Element.PathMarker
-  alias Warpath.EnumWalker
-  alias Warpath.ExecutionContext, as: Context
+  alias Warpath.Execution
+  alias Warpath.Execution.Env
   alias Warpath.Expression
-  alias Warpath.Filter
-  alias Warpath.Scanner
-  alias Warpath.UnsupportedOperationError
-
-  defguardp is_container(term) when is_list(term) or is_map(term)
 
   @doc """
   Query data for the given expression.
@@ -201,21 +195,27 @@ defmodule Warpath do
   @type document :: map | list | json
   @type opts :: [result_type: :value | :path | :value_path]
 
-  @spec query(document, String.t(), opts) :: any
-  def query(term, expression, opts \\ [])
+  @spec query(document, String.t(), opts) :: {:ok, any} | {:error, any}
+  def query(document, selector, opts \\ [])
 
-  def query(term, expression, opts) when is_binary(term) do
-    term
+  def query(document, selector, opts) when is_binary(document) do
+    document
     |> Jason.decode!()
-    |> query(expression, opts)
+    |> query(selector, opts)
   end
 
-  def query(term, expression, opts) when is_binary(expression) and is_list(opts) do
-    with {:ok, tokens} <- Expression.compile(expression),
-         {:ok, elements} <- do_query(term, tokens) do
-      {:ok, collect(elements, opts[:result_type])}
-    else
-      error ->
+  def query(data, selector, opts) do
+    case Expression.compile(selector) do
+      {:ok, tokens} ->
+        query_result =
+          tokens
+          |> Execution.execution_plan()
+          |> Enum.reduce(Element.new(data, []), &dispatch_reduce/2)
+          |> collect(opts[:result_type] || :value)
+
+        {:ok, query_result}
+
+      {:error, _} = error ->
         error
     end
   end
@@ -224,273 +224,24 @@ defmodule Warpath do
     The same as query/3, but rise exception if it fail.
   """
   @spec query!(document, String.t(), opts) :: any
-  def query!(term, expression, opts \\ []) do
-    case query(term, expression, opts) do
-      {:ok, result} -> result
-      {:error, exception} -> raise exception
-    end
+  def query!(data, selector, opts \\ []) do
+    {:ok, query_result} = query(data, selector, opts)
+    query_result
   end
 
-  defp do_query(document, tokens) when is_list(tokens) do
-    # TODO Move this to Expression.compile
-    linked_context =
-      tokens
-      |> Stream.with_index()
-      |> Enum.map(fn {token, index} ->
-        if index === 0 do
-          Context.new(token)
-        else
-          previous = Enum.at(tokens, index - 1)
-          Context.new(token, previous)
-        end
-      end)
-
-    last_token = length(tokens) - 1
-
-    terms =
-      linked_context
-      |> Stream.with_index()
-      |> Enum.reduce(
-        _acc = {document, []},
-        _transformer = fn {context, index}, acc ->
-          result = transform(acc, context)
-
-          case {index, Context.current_token(context)} do
-            {^last_token, {:wildcard, _}} ->
-              List.flatten(result)
-
-            _ ->
-              result
-          end
-        end
-      )
-
-    {:ok, terms}
-  rescue
-    e in UnsupportedOperationError -> {:error, e}
-    e in Enum.OutOfBoundsError -> {:error, e}
+  defp dispatch_reduce(%Env{operator: operator} = env, elements) when is_list(elements) do
+    operator.evaluate(elements, [], env)
   end
 
-  @typep member :: any()
-  @typep members :: [member, ...]
-  @typep element :: {member | members, Path.token()}
-  @typep context :: Context.t()
-
-  @spec transform(element, context) :: element | [element, ...]
-  defp transform({member, path}, %Context{current_token: {:root, _}} = context) do
-    path =
-      context
-      |> Context.current_token()
-      |> Path.accumulate(path)
-
-    {member, path}
-  end
-
-  defp transform({members, path} = element, %Context{current_token: {:dot, property}} = context)
-       when is_list(members) do
-    if Keyword.keyword?(members) do
-      access(element, Context.current_token(context))
-    else
-      {:property, name} = property
-
-      tips =
-        "You are trying to traverse a list using dot " <>
-          "notation '#{Path.accumulate(property, path) |> Path.dotify()}', " <>
-          "that it's not allowed for list type. " <>
-          "You can use something like '#{Path.dotify(path)}[*].#{name}' instead."
-
-      raise UnsupportedOperationError, tips
-    end
-  end
-
-  defp transform({member, _} = element, %Context{current_token: {:dot, _}} = context)
-       when is_map(member) do
-    access(element, Context.current_token(context))
-  end
-
-  defp transform({member, _} = element, %Context{current_token: {:union, _}} = context)
-       when is_map(member) do
-    {:union, tokens} = Context.current_token(context)
-
-    tokens
-    |> Enum.reduce([], fn dot_property_token, acc ->
-      case access(element, dot_property_token, :not_found) do
-        {:not_found, _} -> acc
-        result -> [result | acc]
-      end
-    end)
-    |> Enum.reverse()
-  end
-
-  defp transform({_, _} = element, %Context{current_token: {:array_indexes, _}} = context) do
-    index_token = Context.current_token(context)
-    {_, indexes} = index_token
-    should_unwrapp? = length(indexes) == 1
-
-    if should_unwrapp? do
-      value_for_index_unwrapped(element, context)
-    else
-      value_for_indexes(element, index_token)
-    end
-  end
-
-  defp transform({members, _} = element, %Context{current_token: {:wildcard, :*}})
-       when is_container(members) do
-    element
-    |> PathMarker.stream()
-    |> Enum.to_list()
-  end
-
-  defp transform(element, %Context{current_token: {:filter, filter_expression}}) do
-    Filter.filter(element, filter_expression)
-  end
-
-  defp transform(element, %Context{current_token: {:scan, {tag, _} = target}})
-       when tag in [:property, :wildcard] do
-    Scanner.scan(element, target, &Path.accumulate/2)
-  end
-
-  defp transform(element, %Context{current_token: {:scan, {:filter, _} = filter}} = context) do
-    self_included = [element]
-    sub_context = Context.put_current_token(context, filter)
-
-    self_included
-    |> search_for_lists()
-    |> Enum.flat_map(&transform(&1, sub_context))
-  end
-
-  defp transform(element, %Context{current_token: {:scan, {:array_indexes, _} = indexes}}) do
-    self_included = [element]
-
-    self_included
-    |> search_for_lists()
-    |> Enum.flat_map(&value_for_indexes(&1, indexes))
-  end
-
-  defp transform({members, _} = element, %Context{current_token: {:array_slice, slice}}) do
-    case members do
-      data when is_list(data) ->
-        {start_index, end_index, step, range} = create_slice_range(members, slice)
-
-        if start_index != end_index do
-          element
-          |> PathMarker.stream()
-          |> Stream.with_index()
-          |> Enum.slice(range)
-          |> Stream.reject(fn {_, index} -> rem(index, step) != 0 end)
-          |> Enum.map(fn {member_path, _} -> member_path end)
-        else
-          []
-        end
-
-      _ ->
-        []
-    end
-  end
-
-  defp transform(members, context) when is_list(members) do
-    previous_token = Context.previous_token(context)
-
-    members
-    |> List.flatten()
-    |> Enum.reduce([], fn element, acc ->
-      case {previous_token, transform(element, context)} do
-        {{:wildcard, _}, {nil, _path}} ->
-          acc
-
-        {_, result} ->
-          [result | acc]
-      end
-    end)
-    |> Enum.reverse()
-  end
-
-  defp transform({_member, path}, %Context{current_token: token}) do
-    raise UnsupportedOperationError,
-          "token=#{inspect(token)}, path=#{inspect(path)}"
-  end
-
-  defp value_for_index_unwrapped({members, _} = element, context) do
-    current_token = Context.current_token(context)
-    {:array_indexes, [{_label, index}]} = current_token
-
-    outofbounds? = index > Enum.count(members) - 1
-
-    case {outofbounds?, Context.previous_token(context)} do
-      {false, _} ->
-        [head | []] = value_for_indexes(element, current_token)
-        head
-
-      {true, {:wildcard, _}} ->
-        {nil, :out_of_bounds}
-
-      {true, _} ->
-        message =
-          "The query should be resolved to scalar value " <>
-            "but the index #{index} is out of bounds for emum #{inspect(members)}."
-
-        raise Enum.OutOfBoundsError, message
-    end
-  end
-
-  defp value_for_indexes({members, path}, {:array_indexes, indexes}) do
-    max_index = Enum.count(members) - 1
-
-    indexes
-    |> Enum.reject(fn {:index_access, index} -> index > max_index end)
-    |> Enum.map(fn {:index_access, index} = token ->
-      {Enum.at(members, index), Path.accumulate(token, path)}
-    end)
-  end
-
-  defp search_for_lists(enumerable) do
-    enumerable
-    |> EnumWalker.reduce_while([], container_reducer())
-    |> Stream.filter(fn {member, _} -> is_list(member) end)
-  end
-
-  defp access({member, path}, {:dot, {:property, key} = token}, default \\ nil) do
-    {Access.get(member, key, default), Path.accumulate(token, path)}
-  end
-
-  defp create_slice_range(elements, slice_ops) do
-    start_index = slice_start_index(elements, slice_ops)
-    end_index = slice_end_index(elements, slice_ops)
-    step = slice_step(slice_ops)
-
-    {start_index, end_index, step, Range.new(start_index, end_index - 1)}
-  end
-
-  defp slice_step(slice), do: Keyword.get(slice, :step, 1)
-
-  defp slice_start_index(elements, slice) do
-    start = Keyword.get(slice, :start_index, 0)
-
-    if start < 0, do: max(-length(elements), start), else: start
-  end
-
-  defp slice_end_index(element, slice) do
-    Keyword.get_lazy(slice, :end_index, fn -> length(element) end)
-  end
-
-  defguardp has_itens(container)
-            when (is_list(container) and container != []) or
-                   (is_map(container) and map_size(container) > 0)
-
-  defp container_reducer do
-    fn {container, _} = element, acc ->
-      case container do
-        container when has_itens(container) ->
-          {:walk, [element | acc]}
-
-        _ ->
-          {:skip, [element | acc]}
-      end
-    end
+  defp dispatch_reduce(%Env{operator: operator} = env, %Element{value: document, path: path}) do
+    operator.evaluate(document, path, env)
   end
 
   defp collect(elements, opt) when is_list(elements), do: Enum.map(elements, &collect(&1, opt))
-  defp collect({member, path}, :value_path), do: {member, Path.bracketify(path)}
-  defp collect({_, path}, :path), do: Path.bracketify(path)
-  defp collect({member, _}, _), do: member
+
+  defp collect(%Element{value: member, path: path}, :value_path),
+    do: {member, Path.bracketify(path)}
+
+  defp collect(%Element{path: path}, :path), do: Path.bracketify(path)
+  defp collect(%Element{value: member}, _), do: member
 end

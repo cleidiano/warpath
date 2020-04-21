@@ -6,13 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased][unreleased]
+This release is a complete new implementation strategy, it relay on elixir protocol to promote extensibility and simplify maintainability.
 
 ### Added
 
 ### Fixed
 - Forbidden negative step on slice operation
+- Fix reserved words used as children key lookup, to allow expression like, `$.true`, `$.in`.
 
 ### Changed
+- Query with index that out off bounds, now will return empty list.
 
 
 ## [0.2.1] - 2020-04-05

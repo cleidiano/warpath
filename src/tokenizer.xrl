@@ -83,13 +83,12 @@ NotOp                  = not
 InOp                   = in
 
 
-
 Rules.
 
-{OrOp}                  : {token, {or_op,           TokenLine}}.
-{AndOp}                 : {token, {and_op,          TokenLine}}.
-{NotOp}                 : {token, {not_op,          TokenLine}}.
-{InOp}                  : {token, {in_op,           TokenLine}}.
+{OrOp}                  : {token, {or_op,           TokenLine, list_to_atom(TokenChars)}}.
+{AndOp}                 : {token, {and_op,          TokenLine, list_to_atom(TokenChars)}}.
+{NotOp}                 : {token, {not_op,          TokenLine, list_to_atom(TokenChars)}}.
+{InOp}                  : {token, {in_op,           TokenLine, list_to_atom(TokenChars)}}.
 {Boolean}               : {token, {boolean,         TokenLine, list_to_atom(TokenChars)}}.
 {Atom}                  : {token, {word,            TokenLine, to_atom(TokenChars)}}.
 
