@@ -1,6 +1,12 @@
 alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Execution.Env
+alias Warpath.Query.ArrayIndexOperator
+alias Warpath.Query.DescendantOperator
+alias Warpath.Query.FilterOperator
+alias Warpath.Query.IdentifierOperator
+alias Warpath.Query.UnionOperator
+alias Warpath.Query.WildcardOperator
 
 defprotocol IdentifierOperator do
   @type document :: Element.t() | map | list

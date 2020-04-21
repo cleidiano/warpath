@@ -1,6 +1,8 @@
 alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Execution.Env
+alias Warpath.Query.ArrayIndexOperator
+alias Warpath.Query.WildcardOperator
 
 defprotocol ArrayIndexOperator do
   @fallback_to_any true

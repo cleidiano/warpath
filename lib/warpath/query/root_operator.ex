@@ -1,4 +1,4 @@
-defmodule RootOperator do
+defmodule Warpath.Query.RootOperator do
   @moduledoc false
 
   alias Warpath.Element

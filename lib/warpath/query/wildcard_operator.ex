@@ -2,6 +2,7 @@ alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Element.PathMarker
 alias Warpath.Execution.Env
+alias Warpath.Query.WildcardOperator
 
 defprotocol WildcardOperator do
   @fallback_to_any true

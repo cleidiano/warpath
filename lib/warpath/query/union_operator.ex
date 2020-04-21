@@ -1,5 +1,7 @@
 alias Warpath.Element
 alias Warpath.Execution.Env
+alias Warpath.Query.UnionOperator
+alias Warpath.Query.IdentifierOperator
 
 defprotocol UnionOperator do
   @type result :: [Element.t()]

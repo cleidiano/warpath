@@ -1,6 +1,7 @@
 alias Warpath.Element
 alias Warpath.Element.PathMarker
 alias Warpath.Execution.Env
+alias Warpath.Query.SliceOperator
 
 defprotocol SliceOperator do
   @fallback_to_any true
