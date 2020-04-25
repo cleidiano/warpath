@@ -1,8 +1,15 @@
 defmodule Warpath.Compiler.Parser do
   use ExUnit.Case, async: true
 
+  @root_expression {:root, "$"}
+
   def assert_parse(tokens, output, type \\ :ok) do
     assert :warpath_parser.parse(tokens) == {type, output}
+  end
+
+  def assert_parse_error(tokens, error_message) do
+    assert {:error, {1, :warpath_parser, message}} = :warpath_parser.parse(tokens)
+    assert List.to_string(message) == error_message
   end
 
   defp tokenize!(string) do
@@ -17,8 +24,6 @@ defmodule Warpath.Compiler.Parser do
         raise inspect(errors)
     end
   end
-
-  @root_expression {:root, "$"}
 
   test "root expression" do
     assert_parse tokenize!("$"), [@root_expression]
@@ -37,13 +42,7 @@ defmodule Warpath.Compiler.Parser do
 
   test "wildcard" do
     assert_parse tokenize!("$.*"), [@root_expression, {:wildcard, :*}]
-
-    {:error, {_, :warpath_parser, message}} =
-      "*"
-      |> tokenize!()
-      |> :warpath_parser.parse()
-
-    assert List.to_string(message) == ~S(syntax error before: <<"*">>)
+    assert_parse_error tokenize!("*"), ~S(syntax error before: <<"*">>)
   end
 
   describe "slice" do
@@ -112,12 +111,12 @@ defmodule Warpath.Compiler.Parser do
     end
 
     test "with to many arguments" do
-      error =
-        {1, :warpath_parser,
-         'to many params found for slice operation, the valid syntax is [start_index:end_index:step]'}
+      error_message =
+        "to many params found for slice operation," <>
+          " the valid syntax is [start_index:end_index:step]"
 
-      assert_parse tokenize!("$[::1:]"), error, :error
-      assert_parse tokenize!("$.[::1:]"), error, :error
+      assert_parse_error tokenize!("$[::1:]"), error_message
+      assert_parse_error tokenize!("$.[::1:]"), error_message
     end
   end
 
@@ -161,12 +160,7 @@ defmodule Warpath.Compiler.Parser do
     end
 
     test "error when using unquoted expression" do
-      {_, {_Line, _Module, message}} =
-        "$[a, b]"
-        |> tokenize!()
-        |> :warpath_parser.parse()
-
-      assert List.to_string(message) == ~S(syntax error before: <<"a">>)
+      assert_parse_error tokenize!("$[a, b]"), ~S(syntax error before: <<"a">>)
     end
   end
 
@@ -191,12 +185,8 @@ defmodule Warpath.Compiler.Parser do
     end
 
     test "quoted forbidden on dot child expression" do
-      {_, {_Line, _Module, message}} =
-        ~S($."quoted word")
-        |> tokenize!()
-        |> :warpath_parser.parse()
-
-      assert List.to_string(message) == ~S(syntax error before: <<"quoted word">>)
+      assert_parse_error tokenize!(~S($."quoted word")),
+                         ~S(syntax error before: <<"quoted word">>)
     end
   end
 
@@ -229,6 +219,9 @@ defmodule Warpath.Compiler.Parser do
 
       assert_parse tokenize!("$[?( @.identifier < 2)]"), filter_expression
       assert_parse tokenize!("$.[?( @.identifier < 2)]"), filter_expression
+
+      assert_parse_error tokenize!("$[?( @identifier < 3)]"),
+                         ~S(syntax error before: <<"identifier">>)
     end
 
     test "atom_identifier lookup in criteria on comparison expression" do
@@ -251,6 +244,25 @@ defmodule Warpath.Compiler.Parser do
       assert_parse tokenize!("$.[?( @[0] < 2)]"), filter_expression
     end
 
+    test "has children predicate as a criteria expression" do
+      filter_expression = [
+        @root_expression,
+        {:filter, {:has_property?, {:property, "children"}}}
+      ]
+
+      assert_parse tokenize!("$[?( @['children'] )]"), filter_expression
+      assert_parse tokenize!("$[?( @.['children'] )]"), filter_expression
+
+      assert_parse tokenize!("$.[?( @['children'] )]"), filter_expression
+      assert_parse tokenize!("$.[?( @.['children'] )]"), filter_expression
+
+      assert_parse tokenize!("$[?( @.children )]"), filter_expression
+      assert_parse tokenize!("$.[?( @.children )]"), filter_expression
+
+      assert_parse_error tokenize!("$[?( @identifier )]"),
+                         ~S(syntax error before: <<"identifier">>)
+    end
+
     test "bracket notation identifier lookup in criteria on comparison expression" do
       filter_expression = [
         @root_expression,
@@ -262,21 +274,13 @@ defmodule Warpath.Compiler.Parser do
     end
 
     test "union identifier expression lookup should raise syntax error" do
-      {:error, {_, _, message}} =
-        "$[?( @['one','two'] > 0)]"
-        |> tokenize!()
-        |> :warpath_parser.parse()
-
-      assert List.to_string(message) == "union expression not supported in filter expression"
+      tokens = tokenize!("$[?( @['one','two'] > 0)]")
+      assert_parse_error tokens, "union expression not supported in filter expression"
     end
 
     test "union index expression lookup should raise syntax error" do
-      {:error, {_, _, message}} =
-        "$[?( @[1, 2] > 0)]"
-        |> tokenize!()
-        |> :warpath_parser.parse()
-
-      assert List.to_string(message) == "union expression not supported in filter expression"
+      tokens = tokenize!("$[?( @[1, 2] > 0)]")
+      assert_parse_error tokens, "union expression not supported in filter expression"
     end
 
     test "safe whitelist funcion call as criteria" do
@@ -303,12 +307,43 @@ defmodule Warpath.Compiler.Parser do
     end
 
     test "forbidden function call as criteria raise syntax error" do
-      {:error, {_line, _module, message}} =
-        "$[?( unmaped_fun(@.children) )]"
-        |> tokenize!()
-        |> :warpath_parser.parse()
+      tokens = tokenize!("$[?( unmaped_fun(@.children) )]")
+      assert_parse_error tokens, "forbidden function 'unmaped_fun'"
+    end
 
-      assert List.to_string(message) == "forbidden function 'unmaped_fun'"
+    test "and operator" do
+      assert_parse tokenize!("$[?(true and true)]"), [
+        @root_expression,
+        {:filter, {:and, [true, true]}}
+      ]
+    end
+
+    test "or operator" do
+      assert_parse tokenize!("$[?(true or true)]"), [
+        @root_expression,
+        {:filter, {:or, [true, true]}}
+      ]
+    end
+
+    test "or operator precedence" do
+      assert_parse tokenize!("$[?(true and true or false)]"), [
+        @root_expression,
+        {:filter, {:or, [{:and, [true, true]}, false]}}
+      ]
+    end
+
+    test "not operator" do
+      assert_parse tokenize!("$[?(not true)]"), [
+        @root_expression,
+        {:filter, {:not, true}}
+      ]
+    end
+
+    test "parenthesis precedence defined" do
+      assert_parse tokenize!("$[?(true and (true or false))]"), [
+        @root_expression,
+        {:filter, {:and, [true, {:or, [true, false]}]}}
+      ]
     end
   end
 end
