@@ -4,7 +4,7 @@ integer_arg union union_prop property wildcard special_word
 .
 
 Terminals  
-'$' word quoted_word int float negative_float negative_int '..'
+'$' word quoted_word int float '..'
 boolean or_op and_op not_op in_op comparator
 '.' '[' ']' '?' '(' ')' ',' ':' '*' '@'
 .
@@ -72,7 +72,6 @@ slice_parts     -> slice_parts ':'                              :   '$1' ++ [col
 slice_parts     -> slice_parts integer_arg                      :   '$1' ++ ['$2'].
 
 integer_arg     -> int                                          :   extract_value('$1').
-integer_arg     -> negative_int                                 :   extract_value('$1').
 
 %%Filter
 filter_exp      -> '[' '?' '(' boolean_exp ')' ']'              :   {filter, '$4'}.
@@ -105,8 +104,6 @@ element         -> element ',' item                             :   '$1' ++ ['$3
 
 number          -> int                                          :   extract_value('$1').
 number          -> float                                        :   extract_value('$1').
-number          -> negative_float                               :   extract_value('$1').
-number          -> negative_int                                 :   extract_value('$1').
 
 Erlang code.
 
