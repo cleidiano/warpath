@@ -1,48 +1,17 @@
 Nonterminals grammar query_expression expression
-children_expression
-identifier_expression
-identifier_query
-array_index_expression
-array_index_query
-array_slice_expression
-array_slice_query
-index_elements 
-index_element
-slice_elements
-slice_fragment
-filter_expression
-filter_query
-filter
-predicate
-criteria
-comparision_exp
-item_exp
-item_exp_lookup
-item_resolver
-boolean_exp
-function_call
-
-has_children_expression
-has_children_query
-
-union_expression
-union_query
-union_elements
-union_element
-union
-wildcard_expression
-wildcard_query
-
-colon_separator
-boolean_literal
-int_literal
-float_literal
+children_expression identifier_expression identifier_query array_index_expression array_index_query
+array_slice_expression array_slice_query colon_separator index indexes slice_fragment slice_fragments
+filter_expression filter_query filter boolean_exp boolean_literal comparision_exp current_node_op element elements
+float_literal function_call has_children_expression has_children_query identifier_literal in_expression int_literal
+item item_lookup item_resolver predicate
+union_expression union_query union union_element union_elements
+wildcard_expression wildcard_query
 .
 
-Terminals '$' int float '[' ']' ',' '.' '*' ':' '(' ')' '?' '@'
-identifier quoted_identifier atom_identifier
-boolean comparator
-and_op or_op not_op
+Terminals '$' '[' ']' ',' '.' '*' ':' '(' ')' '?' '@'
+identifier quoted_identifier atom_identifier boolean comparator
+and_op or_op not_op in_op
+int float 
 .
 
 Rootsymbol grammar.
@@ -74,22 +43,22 @@ identifier_query -> '.' atom_identifier : '$2'.
 % Array index operations
 array_index_expression -> array_index_query : build_array('$1').
 
-array_index_query -> index_elements : '$1'.
-array_index_query -> '.' index_elements : '$2'.
+array_index_query -> indexes : '$1'.
+array_index_query -> '.' indexes : '$2'.
 
-index_elements -> '[' index_element ']' : reverse('$2').
-index_element -> int : [ '$1' ].
-index_element -> index_element ',' int : [ '$3' | '$1' ] .
+indexes -> '[' index ']' : reverse('$2').
+index -> int : [ '$1' ].
+index -> index ',' int : [ '$3' | '$1' ] .
 
 % Slice operations
 colon_separator -> ':' : '$1'.
 
 array_slice_expression -> array_slice_query : build_slice('$1').
 
-array_slice_query -> slice_elements : '$1'.
-array_slice_query -> '.' slice_elements : '$2'.
+array_slice_query -> slice_fragments : '$1'.
+array_slice_query -> '.' slice_fragments : '$2'.
 
-slice_elements -> '[' slice_fragment  ']' : reverse('$2').
+slice_fragments -> '[' slice_fragment  ']' : reverse('$2').
 slice_fragment -> colon_separator : ['$1'].
 slice_fragment -> int colon_separator : ['$2', '$1'].
 slice_fragment -> slice_fragment colon_separator : ['$2' | '$1'].
@@ -99,13 +68,17 @@ slice_fragment -> slice_fragment int : ['$2' | '$1'].
 int_literal -> int : value_of('$1').
 float_literal -> float : value_of('$1').
 boolean_literal -> boolean : value_of('$1').
+current_node_op -> '@' : current_node.
+
+identifier_literal -> identifier : get_identifier_literal('$1').
+identifier_literal -> atom_identifier : get_identifier_literal('$1').
+identifier_literal -> quoted_identifier : get_identifier_literal('$1').
 
 filter_expression -> filter_query : build_filter('$1').
 filter_query -> filter : '$1'.
 filter_query -> '.' filter : '$2'.
 
-filter -> '[' '?' '(' criteria ')' ']' : '$4'.
-criteria -> boolean_exp : '$1'.
+filter -> '[' '?' '(' boolean_exp ')' ']' : '$4'.
 
 boolean_exp -> predicate : '$1'.
 boolean_exp -> boolean_literal : '$1'.
@@ -117,16 +90,19 @@ boolean_exp -> '(' boolean_exp ')' : '$2'.
 predicate -> function_call : '$1'.
 predicate -> comparision_exp : '$1'.
 predicate -> has_children_expression : '$1'.
+predicate -> in_expression : '$1'.
 
-function_call -> identifier '(' item_exp ')' : build_function_call('$1', '$3').
-comparision_exp -> item_exp comparator item_exp : build_comparision('$2', '$1', '$3').
+function_call -> identifier '(' item ')' : build_function_call('$1', '$3').
+comparision_exp -> item comparator item : build_comparision('$2', '$1', '$3').
 
-item_exp -> int_literal : '$1'.
-item_exp -> float_literal : '$1'.
-item_exp -> boolean_literal : '$1'.
-item_exp -> item_exp_lookup : '$1'.
+item -> int_literal : '$1'.
+item -> float_literal : '$1'.
+item -> boolean_literal : '$1'.
+item -> identifier_literal : '$1'.
+item -> current_node_op : '$1'.
+item -> item_lookup : '$1'.
 
-item_exp_lookup -> '@' item_resolver : build_item_lookup('$1', '$2').
+item_lookup -> '@' item_resolver : build_item_lookup('$1', '$2').
 item_resolver -> union_expression : '$1'.
 item_resolver -> identifier_expression : '$1'.
 item_resolver -> array_index_expression : '$1'.
@@ -135,9 +111,13 @@ has_children_expression -> '@' has_children_query : build_has_children_lookup('$
 has_children_query -> union_expression : '$1'.
 has_children_query -> identifier_expression : '$1'.
 
+in_expression -> item in_op elements : {in, ['$1', '$3']}. 
+elements -> '[' element ']' : reverse('$2').
+element -> item : ['$1'].
+element -> element ',' item : ['$3' | '$1'].
+
 % Union operations
 union_expression -> union_query : build_union_lookup('$1').
-
 union_query -> union : '$1'.
 union_query -> '.' union : '$2'.
 
@@ -204,9 +184,9 @@ token_for(ColonCount, {int, Line, Int}) ->
 build_union_lookup([Identifier]) -> Identifier;
 build_union_lookup(Identifiers) -> {union, Identifiers}.
 
-build_identifier_lookup(Token) -> {dot, identifier_lookup(Token)}.
-identifier_lookup({_Token, _Line, Value}) when is_integer(Value) -> {property, integer_to_binary(Value)};
-identifier_lookup({_Token, _Line, Value}) -> {property, Value}.
+build_identifier_lookup(Token) -> {dot, {property, get_identifier_literal(Token)}}.
+get_identifier_literal({_Token, _Line, Value}) when is_integer(Value) -> integer_to_binary(Value);
+get_identifier_literal({_Token, _Line, Value}) -> Value.
 
 build_filter(FilterExpression) -> {filter, FilterExpression}.
 

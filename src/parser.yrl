@@ -95,7 +95,7 @@ item            -> '@' '.' property                             :   property('$3
 item            -> '@' '[' quoted_word ']'                      :   property('$3').
 item            -> '@' '[' int ']'                              :   index_access(extract_value('$3')).
 item            -> '@'                                          :   current_node.
-item            -> word                                         :   extract_value('$1').
+% item            -> word                                         :   extract_value('$1').
 item            -> quoted_word                                  :   extract_value('$1').
 
 elements        -> '[' element ']'                              :   '$2'.

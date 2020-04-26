@@ -339,6 +339,37 @@ defmodule Warpath.Compiler.Parser do
       ]
     end
 
+    test "in operator in criteria with literals in list" do
+      assert_parse tokenize!("$[?(@.name in ['Warpath', 0, :warpath, 1.1])]"), [
+        @root_expression,
+        {:filter, {:in, [{:property, "name"}, ["Warpath", 0, :warpath, 1.1]]}}
+      ]
+    end
+
+    test "in operator in criteria with item lookup on list" do
+      assert_parse tokenize!("$[?(@.name in [@.transformer, @.autobot])]"), [
+        @root_expression,
+        {:filter,
+         {:in,
+          [
+            {:property, "name"},
+            [{:property, "transformer"}, {:property, "autobot"}]
+          ]}}
+      ]
+    end
+
+    test "current children in criteria on comparision expression" do
+      assert_parse tokenize!("$[?(@ == 10)]"), [
+        @root_expression,
+        {:filter, {:==, [:current_node, 10]}}
+      ]
+
+      assert_parse tokenize!("$[?(10 == @)]"), [
+        @root_expression,
+        {:filter, {:==, [10, :current_node]}}
+      ]
+    end
+
     test "parenthesis precedence defined" do
       assert_parse tokenize!("$[?(true and (true or false))]"), [
         @root_expression,
