@@ -5,7 +5,7 @@ filter_expression filter_query filter boolean_exp boolean_literal comparision_ex
 float_literal function_call has_children_expression has_children_query identifier_literal in_expression int_literal
 item item_lookup item_resolver predicate
 union_expression union_query union union_element union_elements
-wildcard_expression wildcard_query
+wildcard_expression wildcard_query bracket_wildcard
 .
 
 Terminals '$' '[' ']' ',' '.' '*' ':' '(' ')' '?' '@'
@@ -130,8 +130,12 @@ union_element -> quoted_identifier : build_identifier_lookup('$1').
 
 % Wildcard operations
 wildcard_expression -> wildcard_query : build_wildcard('$1').
-wildcard_query -> '.' '*' : '$2'.
 
+wildcard_query -> '.' '*' : '$2'.
+wildcard_query -> bracket_wildcard : '$1'.
+wildcard_query -> '.' bracket_wildcard : '$2'.
+
+bracket_wildcard -> '[' '*' ']' : '$2'.
 
 Erlang code.
 
@@ -151,7 +155,7 @@ build_wildcard(Token) -> {wildcard, token_of(Token)}.
 
 build_slice(Tokens) -> 
 	Slice = compute_slice(_Line = start, _ColonCount = 0, _Acc = [], Tokens),
-    {slice, reverse(Slice)}.
+    {array_slice, reverse(Slice)}.
 
 compute_slice(_, ColonCount, Acc, [{':', Line, _} | Rest]) ->
     compute_slice(Line, ColonCount + 1, Acc, Rest);

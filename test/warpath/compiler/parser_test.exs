@@ -45,11 +45,11 @@ defmodule Warpath.Compiler.Parser do
     assert_parse_error tokenize!("*"), ~S(syntax error before: <<"*">>)
   end
 
-  describe "slice" do
+  describe "array slice," do
     test "with only one colon supplied" do
       expression = [
         @root_expression,
-        {:slice, []}
+        {:array_slice, []}
       ]
 
       assert_parse tokenize!("$[:]"), expression
@@ -59,7 +59,7 @@ defmodule Warpath.Compiler.Parser do
     test "with two colon supplied without indexes" do
       expression = [
         @root_expression,
-        {:slice, []}
+        {:array_slice, []}
       ]
 
       assert_parse tokenize!("$[::]"), expression
@@ -69,7 +69,7 @@ defmodule Warpath.Compiler.Parser do
     test "with only start index supplied" do
       expression = [
         @root_expression,
-        {:slice, [start_index: 1]}
+        {:array_slice, [start_index: 1]}
       ]
 
       assert_parse tokenize!("$[1:]"), expression
@@ -79,7 +79,7 @@ defmodule Warpath.Compiler.Parser do
     test "with start and end_index supplied" do
       expression = [
         @root_expression,
-        {:slice, [start_index: 1, end_index: 3]}
+        {:array_slice, [start_index: 1, end_index: 3]}
       ]
 
       assert_parse tokenize!("$[1:3]"), expression
@@ -89,7 +89,7 @@ defmodule Warpath.Compiler.Parser do
     test "with start end_index and step supplied" do
       expression = [
         @root_expression,
-        {:slice, [start_index: 1, end_index: 3, step: 2]}
+        {:array_slice, [start_index: 1, end_index: 3, step: 2]}
       ]
 
       assert_parse tokenize!("$[1:3:2]"), expression
