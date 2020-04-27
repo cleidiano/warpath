@@ -57,6 +57,14 @@ defmodule WarpathTest do
                   {100_000, "$['store']['car']['price']"}
                 ]}
     end
+
+    test "pass a compiled path expression", %{data: document} do
+      path = "$['store']['bicycle']"
+      value = %{"color" => "red", "price" => 19.95}
+      {:ok, expression} = Warpath.Expression.compile(path)
+
+      assert Warpath.query(document, expression, @value_path) == {:ok, {value, path}}
+    end
   end
 
   describe "query/3 handle a scan expression" do

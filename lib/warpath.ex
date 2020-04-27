@@ -195,7 +195,7 @@ defmodule Warpath do
   @type document :: map | list | json
   @type opts :: [result_type: :value | :path | :value_path]
 
-  @spec query(document, String.t(), opts) :: {:ok, any} | {:error, any}
+  @spec query(document, String.t() | Expression.t(), opts) :: {:ok, any} | {:error, any}
   def query(document, selector, opts \\ [])
 
   def query(document, selector, opts) when is_binary(document) do
@@ -204,26 +204,30 @@ defmodule Warpath do
     |> query(selector, opts)
   end
 
-  def query(data, selector, opts) do
+  def query(data, selector, opts) when is_binary(selector) do
     case Expression.compile(selector) do
       {:ok, tokens} ->
-        query_result =
-          tokens
-          |> Execution.execution_plan()
-          |> Enum.reduce(Element.new(data, []), &dispatch_reduce/2)
-          |> collect(opts[:result_type] || :value)
-
-        {:ok, query_result}
+        query(data, tokens, opts)
 
       {:error, _} = error ->
         error
     end
   end
 
+  def query(data, expression, opts) when is_list(expression) do
+    query_result =
+      expression
+      |> Execution.execution_plan()
+      |> Enum.reduce(Element.new(data, []), &dispatch_reduce/2)
+      |> collect(opts[:result_type] || :value)
+
+    {:ok, query_result}
+  end
+
   @doc """
     The same as query/3, but rise exception if it fail.
   """
-  @spec query!(document, String.t(), opts) :: any
+  @spec query!(document, String.t() | Expression.t(), opts) :: any
   def query!(data, selector, opts \\ []) do
     {:ok, query_result} = query(data, selector, opts)
     query_result

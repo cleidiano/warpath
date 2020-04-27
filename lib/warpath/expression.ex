@@ -27,6 +27,7 @@ defmodule Warpath.Expression do
   @type filter :: {:filter, has_property | {operator | fun, term}}
   @type scan :: {:scan, property | wildcard | filter | array_indexes}
   @type token :: root | dot_access | wildcard | array_indexes | filter | scan
+  @type t :: list(token)
 
   @spec compile(String.t()) :: {:ok, [token, ...]} | {:error, ExpressionError.t()}
   def compile(expression) when is_binary(expression) do
