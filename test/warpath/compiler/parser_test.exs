@@ -275,10 +275,10 @@ defmodule Warpath.Compiler.Parser do
 
     test "union identifier expression lookup should raise syntax error" do
       tokens = tokenize!("$[?( @['one','two'] > 0)]")
-      assert_parse_error tokens, "union expression not supported in filter expression"
+      assert_parse_error tokens, ~S(syntax error before: <<",">>)
     end
 
-    test "union index expression lookup should raise syntax error" do
+    test "union index expression lookup should raise not supported error" do
       tokens = tokenize!("$[?( @[1, 2] > 0)]")
       assert_parse_error tokens, "union expression not supported in filter expression"
     end
@@ -308,7 +308,12 @@ defmodule Warpath.Compiler.Parser do
 
     test "forbidden function call as criteria raise syntax error" do
       tokens = tokenize!("$[?( unmaped_fun(@.children) )]")
-      assert_parse_error tokens, "forbidden function 'unmaped_fun'"
+
+      assert_parse_error tokens,
+                         "forbidden function 'unmaped_fun', " <>
+                           "it's only allowed to call whitelist functions: " <>
+                           "[is_atom, is_binary, is_boolean, is_float, is_integer, " <>
+                           "is_list, is_map, is_nil, is_number, is_tuple]"
     end
 
     test "and operator" do

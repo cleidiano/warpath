@@ -1,9 +1,10 @@
 Nonterminals grammar query_expression expression
-children_expression identifier_expression identifier_query array_index_expression array_index_query
+children_expression identifier_expression identifier_query bracket_notation_identifier dot_notation_identifier
+array_index_expression array_index_query
 array_slice_expression array_slice_query colon_separator index indexes slice_fragment slice_fragments
 filter_expression filter_query filter boolean_exp boolean_literal comparision_exp current_node_op element elements
 float_literal function_call has_children_expression has_children_query identifier_literal in_expression int_literal
-item item_lookup item_resolver predicate
+item children_item item_resolver predicate
 union_expression union_query union union_element union_elements
 wildcard_expression wildcard_query bracket_wildcard
 .
@@ -16,8 +17,8 @@ int float
 
 Rootsymbol grammar.
 
-Left        100 or_op.
-Left        150 and_op.
+Left 100 or_op.
+Left 150 and_op.
 
 % Query expression are in reverse order
 grammar -> query_expression : reverse('$1').
@@ -37,8 +38,14 @@ children_expression -> wildcard_expression : '$1'.
 
 % Identifier operations
 identifier_expression -> identifier_query : build_identifier_lookup('$1').
-identifier_query -> '.' identifier : '$2'.
-identifier_query -> '.' atom_identifier : '$2'.
+identifier_query -> dot_notation_identifier : '$1'.
+identifier_query -> bracket_notation_identifier : '$1'.
+identifier_query -> '.' bracket_notation_identifier : '$2'.
+
+dot_notation_identifier -> '.' identifier : '$2'.
+dot_notation_identifier -> '.' atom_identifier : '$2'.
+bracket_notation_identifier -> '[' atom_identifier ']': '$2'.
+bracket_notation_identifier -> '[' quoted_identifier ']': '$2'.
 
 % Array index operations
 array_index_expression -> array_index_query : build_array('$1').
@@ -47,8 +54,8 @@ array_index_query -> indexes : '$1'.
 array_index_query -> '.' indexes : '$2'.
 
 indexes -> '[' index ']' : reverse('$2').
-index -> int : [ '$1' ].
-index -> index ',' int : [ '$3' | '$1' ] .
+index -> int : ['$1'].
+index -> index ',' int : ['$3' | '$1'] .
 
 % Slice operations
 colon_separator -> ':' : '$1'.
@@ -65,15 +72,6 @@ slice_fragment -> slice_fragment colon_separator : ['$2' | '$1'].
 slice_fragment -> slice_fragment int : ['$2' | '$1'].
 
 % Filter expression
-int_literal -> int : value_of('$1').
-float_literal -> float : value_of('$1').
-boolean_literal -> boolean : value_of('$1').
-current_node_op -> '@' : current_node.
-
-identifier_literal -> identifier : get_identifier_literal('$1').
-identifier_literal -> atom_identifier : get_identifier_literal('$1').
-identifier_literal -> quoted_identifier : get_identifier_literal('$1').
-
 filter_expression -> filter_query : build_filter('$1').
 filter_query -> filter : '$1'.
 filter_query -> '.' filter : '$2'.
@@ -87,34 +85,42 @@ boolean_exp -> boolean_exp or_op boolean_exp : {'or', ['$1', '$3']}.
 boolean_exp -> not_op boolean_exp : {'not', '$2'}.
 boolean_exp -> '(' boolean_exp ')' : '$2'.
 
-predicate -> function_call : '$1'.
-predicate -> comparision_exp : '$1'.
 predicate -> has_children_expression : '$1'.
+predicate -> function_call : '$1'.
 predicate -> in_expression : '$1'.
+predicate -> comparision_exp : '$1'.
+
+has_children_expression -> '@' has_children_query : build_has_children_lookup('$1', '$2').
+has_children_query -> identifier_expression : '$1'.
 
 function_call -> identifier '(' item ')' : build_function_call('$1', '$3').
-comparision_exp -> item comparator item : build_comparision('$2', '$1', '$3').
 
 item -> int_literal : '$1'.
 item -> float_literal : '$1'.
 item -> boolean_literal : '$1'.
 item -> identifier_literal : '$1'.
 item -> current_node_op : '$1'.
-item -> item_lookup : '$1'.
+item -> children_item : '$1'.
 
-item_lookup -> '@' item_resolver : build_item_lookup('$1', '$2').
-item_resolver -> union_expression : '$1'.
+children_item -> '@' item_resolver : build_children_item('$1', '$2').
 item_resolver -> identifier_expression : '$1'.
 item_resolver -> array_index_expression : '$1'.
 
-has_children_expression -> '@' has_children_query : build_has_children_lookup('$1', '$2').
-has_children_query -> union_expression : '$1'.
-has_children_query -> identifier_expression : '$1'.
+comparision_exp -> item comparator item : build_comparision('$2', '$1', '$3').
 
 in_expression -> item in_op elements : {in, ['$1', '$3']}. 
 elements -> '[' element ']' : reverse('$2').
 element -> item : ['$1'].
 element -> element ',' item : ['$3' | '$1'].
+
+int_literal -> int : value_of('$1').
+float_literal -> float : value_of('$1').
+boolean_literal -> boolean : value_of('$1').
+current_node_op -> '@' : current_node.
+
+identifier_literal -> identifier : identifier_value('$1').
+identifier_literal -> atom_identifier : identifier_value('$1').
+identifier_literal -> quoted_identifier : identifier_value('$1').
 
 % Union operations
 union_expression -> union_query : build_union_lookup('$1').
@@ -122,8 +128,8 @@ union_query -> union : '$1'.
 union_query -> '.' union : '$2'.
 
 union -> '[' union_elements ']' : reverse('$2').
-union_elements -> union_element : [ '$1' ].
-union_elements -> union_elements ',' union_element : [ '$3' | '$1' ].
+union_elements -> union_element ',' union_element  : ['$3', '$1'].
+union_elements -> union_elements ',' union_element : ['$3' | '$1'].
 
 union_element -> atom_identifier : build_identifier_lookup('$1').
 union_element -> quoted_identifier : build_identifier_lookup('$1').
@@ -188,46 +194,52 @@ token_for(ColonCount, {int, Line, Int}) ->
 build_union_lookup([Identifier]) -> Identifier;
 build_union_lookup(Identifiers) -> {union, Identifiers}.
 
-build_identifier_lookup(Token) -> {dot, {property, get_identifier_literal(Token)}}.
-get_identifier_literal({_Token, _Line, Value}) when is_integer(Value) -> integer_to_binary(Value);
-get_identifier_literal({_Token, _Line, Value}) -> Value.
+build_identifier_lookup(Token) -> {dot, {property, identifier_value(Token)}}.
+identifier_value({_Token, _Line, Value}) when is_integer(Value) -> integer_to_binary(Value);
+identifier_value({_Token, _Line, Value}) -> Value.
 
 build_filter(FilterExpression) -> {filter, FilterExpression}.
 
 build_comparision(Operator, Left, Right) -> {value_of(Operator), [Left, Right]}.
 
-build_item_lookup(_AtOperator, {dot, Identifier}) -> Identifier;
-build_item_lookup(_AtOperator,  {array_indexes, [IndexAccess]}) -> IndexAccess;
-build_item_lookup(AtOperator,  Token) -> error_union_not_allowed(AtOperator, Token).
+build_children_item(_AtOperator, {dot, Identifier}) -> Identifier;
+build_children_item(_AtOperator, {array_indexes, [IndexAccess]}) -> IndexAccess;
+build_children_item(AtOperator, Token) -> error_union_not_allowed(AtOperator, Token).
 
-build_has_children_lookup(_AtOperator, {dot, Identifier}) -> {'has_property?', Identifier};
-build_has_children_lookup(AtOperator, UnionToken) -> error_union_not_allowed(AtOperator, UnionToken) .
+build_has_children_lookup(_AtOperator, {dot, Identifier}) -> {'has_property?', Identifier}.
 
-build_function_call({identifier, Line, Identifier}, Arguments) ->
-    case safe_function_call(Identifier) of
+build_function_call({identifier, _, Identifier} = Token, Arguments) ->
+    Fun = binary_to_list(Identifier),
+    case safe_function_call(Fun) of
         true -> {?utf8_to_atom(Identifier), Arguments};
-		false -> return_error(Line, ["forbidden function '", Identifier, "'"])
+		false -> error_forbidden_function(Token)
     end.
 
-safe_function_call(Function) -> 
-    case binary_to_list(Function) of
-		 "is_atom" -> true;
-		 "is_binary" -> true;
-		 "is_boolean" -> true;
-		 "is_float" -> true;
-		 "is_integer" -> true;
-		 "is_list" -> true;
-		 "is_map" -> true;
-		 "is_nil" -> true;
-		 "is_number" -> true;
-		 "is_tuple" -> true;
-		 _Forbidden -> false
-    end.
+safe_function_call(Function) when is_list(Function) -> lists:member(Function, whitelist_functions()).
+whitelist_functions() -> [
+    "is_atom",
+    "is_binary",
+    "is_boolean",
+    "is_float",
+    "is_integer",
+    "is_list",
+    "is_map",
+    "is_nil",
+    "is_number",
+    "is_tuple"
+].
 
 value_of({_Token, _Line, Value}) -> Value.
 token_of({Token, _Line, _Value}) -> Token.
 % label_and_value_of({Token, _Line, Value}) -> {Token, Value}.
 
 %%Errors
-error_union_not_allowed({_, Line, _}, {Tag, [_ | _]}) when Tag == union; Tag == array_indexes ->
+error_forbidden_function({identifier, Line, Identifier}) ->
+    return_error(Line, io_lib:format(
+        "forbidden function '~s', it's only allowed to call whitelist functions: [~s]",
+        [Identifier, string:join(whitelist_functions(), ", ")]
+    )
+).
+
+error_union_not_allowed({_, Line, _}, {array_indexes, Indexes}) when length(Indexes) > 1 ->
     return_error(Line, "union expression not supported in filter expression").
