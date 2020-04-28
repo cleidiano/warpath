@@ -1,12 +1,13 @@
 Nonterminals grammar query_expression expression
 children_expression identifier_expression identifier_query bracket_notation_identifier dot_notation_identifier
 array_index_expression array_index_query
-array_slice_expression array_slice_query colon_separator index indexes slice_fragment slice_fragments
+array_slice_expression array_slice_query index indexes slice_fragment slice_fragments
 filter_expression filter_query filter boolean_exp boolean_literal comparision_exp current_node_op element elements
 float_literal function_call has_children_expression has_children_query identifier_literal in_expression int_literal
 item children_item item_resolver predicate
 union_expression union_query union union_element union_elements
 wildcard_expression wildcard_query bracket_wildcard
+root_op dot_op at_op colon_op
 .
 
 Terminals '$' '[' ']' ',' '.' '*' ':' '(' ')' '?' '@'
@@ -23,7 +24,7 @@ Left 150 and_op.
 % Query expression are in reverse order
 grammar -> query_expression : reverse('$1').
 
-query_expression -> '$' : [ build_root() ].
+query_expression -> root_op : [ build_root() ].
 query_expression -> query_expression expression : ['$2' | '$1'].
 
 expression -> children_expression : '$1'.
@@ -40,10 +41,10 @@ children_expression -> wildcard_expression : '$1'.
 identifier_expression -> identifier_query : build_identifier_lookup('$1').
 identifier_query -> dot_notation_identifier : '$1'.
 identifier_query -> bracket_notation_identifier : '$1'.
-identifier_query -> '.' bracket_notation_identifier : '$2'.
+identifier_query -> dot_op bracket_notation_identifier : '$2'.
 
-dot_notation_identifier -> '.' identifier : '$2'.
-dot_notation_identifier -> '.' atom_identifier : '$2'.
+dot_notation_identifier -> dot_op identifier : '$2'.
+dot_notation_identifier -> dot_op atom_identifier : '$2'.
 bracket_notation_identifier -> '[' atom_identifier ']': '$2'.
 bracket_notation_identifier -> '[' quoted_identifier ']': '$2'.
 
@@ -51,30 +52,28 @@ bracket_notation_identifier -> '[' quoted_identifier ']': '$2'.
 array_index_expression -> array_index_query : build_array('$1').
 
 array_index_query -> indexes : '$1'.
-array_index_query -> '.' indexes : '$2'.
+array_index_query -> dot_op indexes : '$2'.
 
 indexes -> '[' index ']' : reverse('$2').
 index -> int : ['$1'].
 index -> index ',' int : ['$3' | '$1'] .
 
 % Slice operations
-colon_separator -> ':' : '$1'.
-
 array_slice_expression -> array_slice_query : build_slice('$1').
 
 array_slice_query -> slice_fragments : '$1'.
-array_slice_query -> '.' slice_fragments : '$2'.
+array_slice_query -> dot_op slice_fragments : '$2'.
 
 slice_fragments -> '[' slice_fragment  ']' : reverse('$2').
-slice_fragment -> colon_separator : ['$1'].
-slice_fragment -> int colon_separator : ['$2', '$1'].
-slice_fragment -> slice_fragment colon_separator : ['$2' | '$1'].
+slice_fragment -> colon_op : ['$1'].
+slice_fragment -> int colon_op : ['$2', '$1'].
+slice_fragment -> slice_fragment colon_op : ['$2' | '$1'].
 slice_fragment -> slice_fragment int : ['$2' | '$1'].
 
 % Filter expression
 filter_expression -> filter_query : build_filter('$1').
 filter_query -> filter : '$1'.
-filter_query -> '.' filter : '$2'.
+filter_query -> dot_op filter : '$2'.
 
 filter -> '[' '?' '(' boolean_exp ')' ']' : '$4'.
 
@@ -90,7 +89,7 @@ predicate -> function_call : '$1'.
 predicate -> in_expression : '$1'.
 predicate -> comparision_exp : '$1'.
 
-has_children_expression -> '@' has_children_query : build_has_children_lookup('$1', '$2').
+has_children_expression -> at_op has_children_query : build_has_children_lookup('$1', '$2').
 has_children_query -> identifier_expression : '$1'.
 
 function_call -> identifier '(' item ')' : build_function_call('$1', '$3').
@@ -102,7 +101,7 @@ item -> identifier_literal : '$1'.
 item -> current_node_op : '$1'.
 item -> children_item : '$1'.
 
-children_item -> '@' item_resolver : build_children_item('$1', '$2').
+children_item -> at_op item_resolver : build_children_item('$1', '$2').
 item_resolver -> identifier_expression : '$1'.
 item_resolver -> array_index_expression : '$1'.
 
@@ -116,7 +115,7 @@ element -> element ',' item : ['$3' | '$1'].
 int_literal -> int : value_of('$1').
 float_literal -> float : value_of('$1').
 boolean_literal -> boolean : value_of('$1').
-current_node_op -> '@' : current_node.
+current_node_op -> at_op : current_node.
 
 identifier_literal -> identifier : identifier_value('$1').
 identifier_literal -> atom_identifier : identifier_value('$1').
@@ -125,7 +124,7 @@ identifier_literal -> quoted_identifier : identifier_value('$1').
 % Union operations
 union_expression -> union_query : build_union_lookup('$1').
 union_query -> union : '$1'.
-union_query -> '.' union : '$2'.
+union_query -> dot_op union : '$2'.
 
 union -> '[' union_elements ']' : reverse('$2').
 union_elements -> union_element ',' union_element  : ['$3', '$1'].
@@ -137,11 +136,17 @@ union_element -> quoted_identifier : build_identifier_lookup('$1').
 % Wildcard operations
 wildcard_expression -> wildcard_query : build_wildcard('$1').
 
-wildcard_query -> '.' '*' : '$2'.
+wildcard_query -> dot_op '*' : '$2'.
 wildcard_query -> bracket_wildcard : '$1'.
-wildcard_query -> '.' bracket_wildcard : '$2'.
+wildcard_query -> dot_op bracket_wildcard : '$2'.
 
 bracket_wildcard -> '[' '*' ']' : '$2'.
+
+%Operators
+at_op -> '@' : '$1'.
+dot_op -> '.' : '$1'.
+root_op -> '$' : '$1'.
+colon_op -> ':' : '$1'.
 
 Erlang code.
 
