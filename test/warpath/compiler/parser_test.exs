@@ -219,7 +219,9 @@ defmodule Warpath.Compiler.Parser do
 
       assert_parse tokenize!("$[?( @.identifier < 2)]"), filter_expression
       assert_parse tokenize!("$.[?( @.identifier < 2)]"), filter_expression
+    end
 
+    test "at operator must be followed by a dot operator on lookup criteria" do
       assert_parse_error tokenize!("$[?( @identifier < 3)]"),
                          ~S(syntax error before: <<"identifier">>)
     end
@@ -280,7 +282,7 @@ defmodule Warpath.Compiler.Parser do
 
     test "union index expression lookup should raise not supported error" do
       tokens = tokenize!("$[?( @[1, 2] > 0)]")
-      assert_parse_error tokens, "union expression not supported in filter expression"
+      assert_parse_error tokens, "union index expression not supported in filter expression"
     end
 
     test "safe whitelist funcion call as criteria" do
@@ -380,6 +382,75 @@ defmodule Warpath.Compiler.Parser do
         @root_expression,
         {:filter, {:and, [true, {:or, [true, false]}]}}
       ]
+    end
+  end
+
+  describe "descendant" do
+    test "followed by a dot operator should raise syntax error" do
+      error_message =
+        "Operator dot ('.') is not allowed after descendant operator ('..'),\n" <>
+        "it must be contracted in a operator (..),\n" <>
+        "For example: instead of '$...name' you must write '$..name', that is the right syntax!"
+
+      assert_parse_error tokenize!("$...child"), error_message
+    end
+
+    test "string identifier lookup" do
+      filter_expression = [
+        @root_expression,
+        {:scan, {:property, "identifier"}}
+      ]
+
+      assert_parse tokenize!("$..identifier"), filter_expression
+      assert_parse tokenize!("$..['identifier']"), filter_expression
+      assert_parse tokenize!(~S($..["identifier"])), filter_expression
+    end
+
+    test "atom identifier lookup" do
+      filter_expression = [
+        @root_expression,
+        {:scan, {:property, :identifier}}
+      ]
+
+      assert_parse tokenize!("$..:identifier"), filter_expression
+      assert_parse tokenize!("$..[:identifier]"), filter_expression
+
+      assert_parse tokenize!("$..:'identifier'"), filter_expression
+      assert_parse tokenize!("$..[:'identifier']"), filter_expression
+      assert_parse tokenize!(~S($..:"identifier")), filter_expression
+      assert_parse tokenize!(~S($..[:"identifier"])), filter_expression
+    end
+
+    test "filter lookup" do
+      filter_expression = [
+        @root_expression,
+        {:scan, {:filter, {:<, [{:property, "identifier"}, 2]}}}
+      ]
+
+      assert_parse tokenize!("$..[?( @.identifier < 2)]"), filter_expression
+    end
+
+    test "union index expression lookup should raise not supported error" do
+      tokens = tokenize!("$..[1, 2]")
+      assert_parse_error tokens, "union index expression not supported in descendant expression"
+    end
+
+    test "list with index lookup" do
+      tokens = tokenize!("$..[1]")
+
+      assert_parse tokens, [
+        @root_expression,
+        {:scan, {:array_indexes, [index_access: 1]}}
+      ]
+    end
+
+    test "wildcard lookup" do
+      expression = [
+        @root_expression,
+        {:scan, {:wildcard, :*}}
+      ]
+
+      assert_parse tokenize!("$..*"), expression
     end
   end
 end
