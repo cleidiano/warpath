@@ -4,7 +4,7 @@ defmodule Warpath.TokenizerTest do
   alias Warpath.{Tokenizer, TokenizerError}
 
   def assert_tokens(input, tokens) do
-    case :tokenizer.string(input) do
+    case :warpath_tokenizer.string(input) do
       {:ok, output, _} ->
         assert output == tokens
 
@@ -30,18 +30,18 @@ defmodule Warpath.TokenizerTest do
   end
 
   test "Punctuator" do
-    assert_tokens '$',  [{ :"$", 1 }]
-    assert_tokens '[',  [{ :"[", 1 }]
-    assert_tokens ']',  [{ :"]", 1 }]
-    assert_tokens '(',  [{ :"(", 1 }]
-    assert_tokens ')',  [{ :")", 1 }]
-    assert_tokens '?',  [{ :"?", 1 }]
-    assert_tokens ':',  [{ :":", 1 }]
-    assert_tokens ',',  [{ :",", 1 }]
-    assert_tokens '.',  [{ :., 1 }]
-    assert_tokens '*',  [{ :*, 1 }]
-    assert_tokens '@',  [{ :@, 1 }]
-    assert_tokens '..', [{ :.., 1 }]
+    assert_tokens '$',  [{ :"$", 1, "$"}]
+    assert_tokens '[',  [{ :"[", 1, "["}]
+    assert_tokens ']',  [{ :"]", 1, "]"}]
+    assert_tokens '(',  [{ :"(", 1, "("}]
+    assert_tokens ')',  [{ :")", 1, ")"}]
+    assert_tokens '?',  [{ :"?", 1, "?"}]
+    assert_tokens ':',  [{ :":", 1, ":"}]
+    assert_tokens ',',  [{ :",", 1, ","}]
+    assert_tokens '.',  [{ :., 1, "."}]
+    assert_tokens '*',  [{ :*, 1, "*"}]
+    assert_tokens '@',  [{ :@, 1, "@"}]
+    assert_tokens '..', [{ :.., 1, ".."}]
   end
 
   test "Comparator" do
@@ -80,70 +80,70 @@ defmodule Warpath.TokenizerTest do
   end
 
   test "Identifier" do
-    assert_tokens '""',             [{ :quoted_word, 1, "" }]
-    assert_tokens '"a"',            [{ :quoted_word, 1, "a" }]
-    assert_tokens '"\u000f"',       [{ :quoted_word, 1, "\u000f"  }]
-    assert_tokens '"\t"',           [{ :quoted_word, 1, "\t"  }]
-    assert_tokens '"\\""',          [{ :quoted_word, 1, "\\\""  }]
-    assert_tokens '"a\\n"',         [{ :quoted_word, 1, "a\\n"  }]
+    assert_tokens '""',             [{ :quoted_identifier, 1, "" }]
+    assert_tokens '"a"',            [{ :quoted_identifier, 1, "a" }]
+    assert_tokens '"\u000f"',       [{ :quoted_identifier, 1, "\u000f"  }]
+    assert_tokens '"\t"',           [{ :quoted_identifier, 1, "\t"  }]
+    assert_tokens '"\\""',          [{ :quoted_identifier, 1, "\\\""  }]
+    assert_tokens '"a\\n"',         [{ :quoted_identifier, 1, "a\\n"  }]
 
-    assert_tokens ~c{''},           [{ :quoted_word, 1, "" }]
-    assert_tokens ~c{'a'},          [{ :quoted_word, 1, "a" }]
-    assert_tokens ~c{'\u000f'},     [{ :quoted_word, 1, "\u000f"  }]
-    assert_tokens ~c{'\t'},         [{ :quoted_word, 1, "\t"  }]
-    assert_tokens ~c{'\\''},        [{ :quoted_word, 1, "\\\'"  }]
-    assert_tokens ~c{'a\\n'},       [{ :quoted_word, 1, "a\\n"  }]
+    assert_tokens ~c{''},           [{ :quoted_identifier, 1, "" }]
+    assert_tokens ~c{'a'},          [{ :quoted_identifier, 1, "a" }]
+    assert_tokens ~c{'\u000f'},     [{ :quoted_identifier, 1, "\u000f"  }]
+    assert_tokens ~c{'\t'},         [{ :quoted_identifier, 1, "\t"  }]
+    assert_tokens ~c{'\\''},        [{ :quoted_identifier, 1, "\\\'"  }]
+    assert_tokens ~c{'a\\n'},       [{ :quoted_identifier, 1, "a\\n"  }]
 
-    assert_tokens ~c{'a b'},        [{ :quoted_word, 1, "a b" }]
-    assert_tokens ~c{"a b"},        [{ :quoted_word, 1, "a b" }]
-    assert_tokens ~c{"'"},          [{ :quoted_word, 1, "'" }]
-    assert_tokens ~c{'"'},          [{ :quoted_word, 1, "\"" }]
+    assert_tokens ~c{'a b'},        [{ :quoted_identifier, 1, "a b" }]
+    assert_tokens ~c{"a b"},        [{ :quoted_identifier, 1, "a b" }]
+    assert_tokens ~c{"'"},          [{ :quoted_identifier, 1, "'" }]
+    assert_tokens ~c{'"'},          [{ :quoted_identifier, 1, "\"" }]
 
-    assert_tokens 'identifier',     [{ :word, 1, "identifier" }]
-    assert_tokens '_',              [{ :word, 1, "_" }]
-    assert_tokens 'a',              [{ :word, 1, "a" }]
-    assert_tokens 'Z',              [{ :word, 1, "Z" }]
-    assert_tokens 'bar',            [{ :word, 1, "bar" }]
-    assert_tokens 'Bar',            [{ :word, 1, "Bar" }]
-    assert_tokens '_bar',           [{ :word, 1, "_bar" }]
-    assert_tokens 'bar0',           [{ :word, 1, "bar0" }]
-    assert_tokens 'bar-bar',        [{ :word, 1, "bar-bar" }]
-    assert_tokens '_xu_Da_QX_2',    [{ :word, 1, "_xu_Da_QX_2" }]
-    assert_tokens '#',              [{ :word, 1, "#" }]
-    assert_tokens '🌢',              [{ :word, 1, "🌢" }]
+    assert_tokens 'identifier',     [{ :identifier, 1, "identifier" }]
+    assert_tokens '_',              [{ :identifier, 1, "_" }]
+    assert_tokens 'a',              [{ :identifier, 1, "a" }]
+    assert_tokens 'Z',              [{ :identifier, 1, "Z" }]
+    assert_tokens 'bar',            [{ :identifier, 1, "bar" }]
+    assert_tokens 'Bar',            [{ :identifier, 1, "Bar" }]
+    assert_tokens '_bar',           [{ :identifier, 1, "_bar" }]
+    assert_tokens 'bar0',           [{ :identifier, 1, "bar0" }]
+    assert_tokens 'bar-bar',        [{ :identifier, 1, "bar-bar" }]
+    assert_tokens '_xu_Da_QX_2',    [{ :identifier, 1, "_xu_Da_QX_2" }]
+    assert_tokens '#',              [{ :identifier, 1, "#" }]
+    assert_tokens '🌢',              [{ :identifier, 1, "🌢" }]
   end
 
   test "Atom" do
-    assert_tokens ':""',             [{ :word, 1, :""}]
-    assert_tokens ':"\u000f"',       [{ :word, 1, :"\u000f" }]
-    assert_tokens ':"\t"',           [{ :word, 1, :"\t" }]
-    assert_tokens ':"\\""',          [{ :word, 1, :"\\\"" }]
-    assert_tokens ':"a\\n"',         [{ :word, 1, :"a\\n" }]
+    assert_tokens ':""',             [{ :atom_identifier, 1, :""}]
+    assert_tokens ':"\u000f"',       [{ :atom_identifier, 1, :"\u000f" }]
+    assert_tokens ':"\t"',           [{ :atom_identifier, 1, :"\t" }]
+    assert_tokens ':"\\""',          [{ :atom_identifier, 1, :"\\\"" }]
+    assert_tokens ':"a\\n"',         [{ :atom_identifier, 1, :"a\\n" }]
 
-    assert_tokens ~c{:''},           [{ :word, 1, :""}]
-    assert_tokens ~c{:'\u000f'},     [{ :word, 1, :"\u000f" }]
-    assert_tokens ~c{:'\t'},         [{ :word, 1, :"\t" }]
-    assert_tokens ~c{:'\\''},        [{ :word, 1, :"\\\'" }]
-    assert_tokens ~c{:'a\\n'},       [{ :word, 1, :"a\\n" }]
+    assert_tokens ~c{:''},           [{ :atom_identifier, 1, :""}]
+    assert_tokens ~c{:'\u000f'},     [{ :atom_identifier, 1, :"\u000f" }]
+    assert_tokens ~c{:'\t'},         [{ :atom_identifier, 1, :"\t" }]
+    assert_tokens ~c{:'\\''},        [{ :atom_identifier, 1, :"\\\'" }]
+    assert_tokens ~c{:'a\\n'},       [{ :atom_identifier, 1, :"a\\n" }]
 
-    assert_tokens ~c{:'a b'},        [{ :word, 1, :"a b" }]
-    assert_tokens ~c{:'a-b'},        [{ :word, 1, :"a-b" }]
-    assert_tokens ~c{:"a b"},        [{ :word, 1, :"a b" }]
-    assert_tokens ~c{:"a-b"},        [{ :word, 1, :"a-b" }]
-    assert_tokens ~c{:"'"},          [{ :word, 1, :"'" }]
-    assert_tokens ~c{:'"'},          [{ :word, 1, :"\"" }]
-    assert_tokens ~c{:'#'},          [{ :word, 1, :"#" }]
-    assert_tokens ~c{:'🌢'},          [{ :word, 1, :"🌢" }]
+    assert_tokens ~c{:'a b'},        [{ :atom_identifier, 1, :"a b" }]
+    assert_tokens ~c{:'a-b'},        [{ :atom_identifier, 1, :"a-b" }]
+    assert_tokens ~c{:"a b"},        [{ :atom_identifier, 1, :"a b" }]
+    assert_tokens ~c{:"a-b"},        [{ :atom_identifier, 1, :"a-b" }]
+    assert_tokens ~c{:"'"},          [{ :atom_identifier, 1, :"'" }]
+    assert_tokens ~c{:'"'},          [{ :atom_identifier, 1, :"\"" }]
+    assert_tokens ~c{:'#'},          [{ :atom_identifier, 1, :"#" }]
+    assert_tokens ~c{:'🌢'},          [{ :atom_identifier, 1, :"🌢" }]
 
-    assert_tokens ':identifier',     [{ :word, 1, :identifier }]
-    assert_tokens ':_',              [{ :word, 1, :_ }]
-    assert_tokens ':a',              [{ :word, 1, :a }]
-    assert_tokens ':Z',              [{ :word, 1, :Z }]
-    assert_tokens ':bar',            [{ :word, 1, :bar }]
-    assert_tokens ':Bar',            [{ :word, 1, :Bar }]
-    assert_tokens ':_bar',           [{ :word, 1, :_bar }]
-    assert_tokens ':bar0',           [{ :word, 1, :bar0 }]
-    assert_tokens ':_xu_Da_QX_2',    [{ :word, 1, :_xu_Da_QX_2 }]
+    assert_tokens ':identifier',     [{ :atom_identifier, 1, :identifier }]
+    assert_tokens ':_',              [{ :atom_identifier, 1, :_ }]
+    assert_tokens ':a',              [{ :atom_identifier, 1, :a }]
+    assert_tokens ':Z',              [{ :atom_identifier, 1, :Z }]
+    assert_tokens ':bar',            [{ :atom_identifier, 1, :bar }]
+    assert_tokens ':Bar',            [{ :atom_identifier, 1, :Bar }]
+    assert_tokens ':_bar',           [{ :atom_identifier, 1, :_bar }]
+    assert_tokens ':bar0',           [{ :atom_identifier, 1, :bar0 }]
+    assert_tokens ':_xu_Da_QX_2',    [{ :atom_identifier, 1, :_xu_Da_QX_2 }]
   end
 
   test "Boolean Operators" do
@@ -156,15 +156,8 @@ defmodule Warpath.TokenizerTest do
   end
 
   test "in expression" do
-    assert_tokens ~c{in ['word one', other, :atom] }, [
-      { :in_op, 1, :in },
-      { :"[", 1 },
-      { :quoted_word, 1, "word one" },
-      { :",", 1 },
-      { :word, 1, "other" },
-      { :",", 1 },
-      { :word, 1, :atom },
-      { :"]", 1 }
+    assert_tokens 'in', [
+      { :in_op, 1, :in }
     ]
   end
 

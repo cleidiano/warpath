@@ -389,8 +389,8 @@ defmodule Warpath.Compiler.Parser do
     test "followed by a dot operator should raise syntax error" do
       error_message =
         "Operator dot ('.') is not allowed after descendant operator ('..'),\n" <>
-        "it must be contracted in a operator (..),\n" <>
-        "For example: instead of '$...name' you must write '$..name', that is the right syntax!"
+          "it must be contracted in a operator (..),\n" <>
+          "For example: instead of '$...name' you must write '$..name', that is the right syntax!"
 
       assert_parse_error tokenize!("$...child"), error_message
     end
