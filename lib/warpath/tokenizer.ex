@@ -6,7 +6,7 @@ defmodule Warpath.Tokenizer do
   def tokenize(term) when is_binary(term) do
     term
     |> String.to_charlist()
-    |> :tokenizer.string()
+    |> :warpath_tokenizer.string()
     |> case do
       {:ok, tokens, _lines} ->
         {:ok, tokens}

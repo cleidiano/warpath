@@ -118,7 +118,7 @@ defmodule Warpath.ExpressionTest do
     end
 
     test "when step argument supplied are less then 1" do
-      message = "Parser error: Invalid token on line 1, slice step can't be negative"
+      message = "Parser error: Invalid token on line 1, slice step should be greater than zero."
 
       assert_compile "$[:1:-1]", %ExpressionError{message: message}, :error
       assert_compile "$[::-1]", %ExpressionError{message: message}, :error
@@ -260,7 +260,10 @@ defmodule Warpath.ExpressionTest do
     end
 
     test "that is a invalid function call" do
-      message = "Parser error: Invalid token on line 1, 'function_name'"
+      message =
+        "Parser error: Invalid token on line 1, forbidden function 'function_name', " <>
+          "it's only allowed to call whitelist functions: " <>
+          "[is_atom, is_binary, is_boolean, is_float, is_integer, is_list, is_map, is_nil, is_number, is_tuple]"
 
       assert_compile "$[?(function_name(@.any))]", %ExpressionError{message: message}, :error
     end

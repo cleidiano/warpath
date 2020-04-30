@@ -5,7 +5,7 @@ defmodule Warpath.Parser do
 
   def parse(tokens) when is_list(tokens) do
     tokens
-    |> :parser.parse()
+    |> :warpath_parser.parse()
     |> case do
       {:ok, _} = expression_tokens ->
         expression_tokens

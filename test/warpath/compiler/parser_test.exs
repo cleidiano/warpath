@@ -451,6 +451,7 @@ defmodule Warpath.Compiler.Parser do
       ]
 
       assert_parse tokenize!("$..*"), expression
+      assert_parse tokenize!("$..[*]"), expression
     end
   end
 end

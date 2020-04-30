@@ -1,5 +1,5 @@
 Nonterminals grammar query_expression expression
-children_expression identifier_expression identifier_query bracket_notation_identifier dot_notation_identifier
+children_expression identifier_expression identifier_query bracket_notation_identifier dot_notation_identifier special_identifier
 array_index_expression array_index_query
 array_slice_expression array_slice_query index indexes slice_fragment slice_fragments
 filter_expression filter_query filter boolean_exp comparision_exp current_node_op element elements
@@ -48,8 +48,18 @@ identifier_query -> dot_op bracket_notation_identifier : '$2'.
 
 dot_notation_identifier -> dot_op identifier : '$2'.
 dot_notation_identifier -> dot_op atom_identifier : '$2'.
+dot_notation_identifier -> dot_op special_identifier : convert_to_identifier('$2').
+
 bracket_notation_identifier -> open_bracket atom_identifier close_bracket: '$2'.
 bracket_notation_identifier -> open_bracket quoted_identifier close_bracket: '$2'.
+
+%%Special case allowed in dot notation operator and descendant operator
+special_identifier -> in_op : '$1'.
+special_identifier -> not_op : '$1'.
+special_identifier -> and_op : '$1'.
+special_identifier -> or_op : '$1'.
+special_identifier -> boolean : '$1'.
+special_identifier -> int : '$1'.
 
 % Array index expression
 array_index_expression -> array_index_query : build_array('$1').
@@ -150,15 +160,16 @@ descendant_expression -> descendant_op descendant_query : build_descendant_looku
 
 descendant_query -> filter_expression : '$1'.
 descendant_query -> array_index_expression : '$1'.
-descendant_query -> descendant_wildcard_expression : '$1'.
+descendant_query -> descendant_wildcard_expression : build_wildcard('$1').
 descendant_query -> descendant_identifier_expression : build_identifier_lookup('$1').
 
-descendant_wildcard_expression -> wildcard_op : build_wildcard('$1').
+descendant_wildcard_expression -> wildcard_op : '$1'.
 descendant_wildcard_expression -> bracket_wildcard : '$1'.
 
 descendant_identifier_expression -> identifier : '$1'.
 descendant_identifier_expression -> atom_identifier : '$1'.
 descendant_identifier_expression -> bracket_notation_identifier : '$1'.
+descendant_identifier_expression -> special_identifier : convert_to_identifier('$1').
 
 %Operators
 at_op -> '@' : '$1'.
@@ -196,8 +207,9 @@ build_slice(Tokens) ->
 compute_slice(_, ColonCount, Acc, [{':', Line, _} | Rest]) ->
     compute_slice(Line, ColonCount + 1, Acc, Rest);
 
-compute_slice(_, ColonCount, Acc, [Index | []]) ->
-    [token_for(ColonCount, Index) | Acc];
+compute_slice(Line, ColonCount, Acc, [Index | []]) ->
+    Tokens = [token_for(ColonCount, Index) | Acc],
+    compute_slice(Line, ColonCount, Tokens, []);
 
 compute_slice(_, ColonCount, Acc, [{_, Line, _} = Index | Rest]) ->
     Tokens = [token_for(ColonCount, Index) | Acc],
@@ -205,20 +217,17 @@ compute_slice(_, ColonCount, Acc, [{_, Line, _} = Index | Rest]) ->
 
 compute_slice(Line, ColonCount, Acc, []) -> 
     case ColonCount of
-        Count when Count > 2  -> 
-          ErrorMessage =
-            "to many params found for slice operation, "
-            "the valid syntax is [start_index:end_index:step]",
-            return_error(Line, ErrorMessage);
+        Count when Count > 2  -> error_slice_with_many_params(Line);
         _ -> Acc
     end.
 
 token_for(ColonCount, {int, Line, Int}) ->
     case ColonCount of
-      2 when Int < 1 -> return_error(Line, "slice step should be greater than zero.");
+      2 when Int < 1 -> error_slice_step_less_then_one(Line);
       0 -> {start_index, Int};
       1 -> {end_index, Int};
-      2 -> {step, Int}
+      2 -> {step, Int};
+      _ -> {unknown, unknown}
     end.
 
 build_union_lookup([Identifier]) -> Identifier;
@@ -227,6 +236,10 @@ build_union_lookup(Identifiers) -> {union, Identifiers}.
 build_identifier_lookup(Token) -> {dot, {property, identifier_value(Token)}}.
 identifier_value({_Token, _Line, Value}) when is_integer(Value) -> integer_to_binary(Value);
 identifier_value({_Token, _Line, Value}) -> Value.
+
+convert_to_identifier({_, Line, V}) when is_atom(V) -> to_identifier(Line, atom_to_binary(V, utf8));
+convert_to_identifier({_, Line, V}) when is_integer(V) -> to_identifier(Line, integer_to_binary(V)).
+to_identifier(Line, Value) -> {identifier, Line, Value}.
 
 build_filter(FilterExpression) -> {filter, FilterExpression}.
 
@@ -271,6 +284,15 @@ token_of({Token, _Line, _Value}) -> Token.
 % label_and_value_of({Token, _Line, Value}) -> {Token, Value}.
 
 %%Errors
+error_slice_step_less_then_one(Line) ->
+    return_error(Line, "slice step should be greater than zero.").
+
+error_slice_with_many_params(Line) ->
+    return_error(Line,
+    "to many params found for slice operation, "
+    "the valid syntax is [start_index:end_index:step]"
+).
+
 error_forbidden_function({identifier, Line, Identifier}) ->
     return_error(Line, io_lib:format(
         "forbidden function '~s', it's only allowed to call whitelist functions: [~s]",
