@@ -3,29 +3,33 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
 
     container:
-     image: elixir:${{ matrix.elixir }}-slim
-    
-    name: Elixir ${{ matrix.elixir }}
-    
+      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.erlang }}-ubuntu-${{ matrix.ubuntu }}
+
+    name: Elixir ${{ matrix.elixir }} / Erlang ${{ matrix.erlang }} and Ubuntu ${{matrix.ubuntu}}
+
     strategy:
-      matrix: 
-        elixir: [1.10.0, 1.9, 1.8, 1.7, 1.6]
+      fail-fast: false
+      matrix:
+        elixir: ["1.10.3", "1.9.4", "1.8.2", "1.7.4", "1.6.6"]
+        erlang: ["21.3.8"]
+        ubuntu: ["bionic-20200219"]
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Install Dependencies
-      run: |
-        mix local.rebar --force
-        mix local.hex --force
-        mix deps.get
-    
-    - name: Check format
-      run: mix format --check-formatted
-        
-    - name: Run Tests
-      run: mix test
+      - uses: actions/checkout@v1.0.0
+      - name: Install dependencies
+        run: |-
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
+
+      - name: Check format
+        if: (!startsWith(matrix.elixir, '1.6') && !startsWith(matrix.elixir, '1.7'))
+        run: mix format --check-formatted
+
+      - name: Run tests
+        run: |-
+          mix test --cover
