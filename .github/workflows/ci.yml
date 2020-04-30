@@ -27,7 +27,7 @@ jobs:
           mix deps.get
 
       - name: Check format
-        if: contains(["1.7.4", "1.6.6"], ${{matrix.elixir}}) == false
+        if: (startsWith(matrix.elixir, '1.6') || startsWith(matrix.elixir, '1.7')) == false
         run: mix format --check-formatted
 
       - name: Run tests
