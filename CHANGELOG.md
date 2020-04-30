@@ -15,7 +15,8 @@ This release is a complete new implementation strategy, it relay on elixir proto
 - Fix reserved words used as children key lookup, to allow expression like, `$.true`, `$.in`.
 
 ### Changed
-- Query with index that out off bounds, now will return empty list.
+- Query with index that out off bounds, now will return empty list,
+  Ex. `Warpath.query(["a", "b", "c"], "$.[4]") => {:ok, []}`
 
 
 ## [0.2.1] - 2020-04-05
@@ -25,6 +26,7 @@ This release is a complete new implementation strategy, it relay on elixir proto
 ### Fixed
 - Fix regression with wildcard followed by a outbound index query.
      Ex. `Warpath.query([["a"], ["b", "c"]], "$.*[1]") => {:ok, ["c"]}`
+- Don't allow quoted identifier using dot notation.
 
 ### Changed
 
