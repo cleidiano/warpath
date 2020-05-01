@@ -230,11 +230,9 @@ token_for(ColonCount, {int, Line, Int}) ->
       _ -> {unknown, unknown}
     end.
 
-build_union_lookup([Identifier]) -> Identifier;
 build_union_lookup(Identifiers) -> {union, Identifiers}.
 
 build_identifier_lookup(Token) -> {dot, {property, identifier_value(Token)}}.
-identifier_value({_Token, _Line, Value}) when is_integer(Value) -> integer_to_binary(Value);
 identifier_value({_Token, _Line, Value}) -> Value.
 
 convert_to_identifier({_, Line, V}) when is_atom(V) -> to_identifier(Line, atom_to_binary(V, utf8));
@@ -302,7 +300,7 @@ error_forbidden_function({identifier, Line, Identifier}) ->
 
 error_dot_op_after_descendant_op({_, Line, _}) ->
     return_error(Line, io_lib:format("~s", [
-            "Operator dot ('.') is not allowed after descendant operator ('..'),\n"
+            "operator dot ('.') is not allowed after descendant operator ('..'),\n"
             "it must be contracted in a operator (..),\n"
             "For example: instead of '$...name' you must write '$..name', that is the right syntax!"
         ]

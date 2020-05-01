@@ -1,7 +1,7 @@
-defmodule Warpath.Tokenizer do
+defmodule Warpath.Expression.Tokenizer do
   @moduledoc false
 
-  alias Warpath.TokenizerError
+  alias Warpath.Expression.TokenizerError
 
   def tokenize(term) when is_binary(term) do
     term

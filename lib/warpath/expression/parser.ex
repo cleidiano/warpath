@@ -1,7 +1,7 @@
-defmodule Warpath.Parser do
+defmodule Warpath.Expression.Parser do
   @moduledoc false
 
-  alias Warpath.ParserError
+  alias Warpath.Expression.ParserError
 
   def parse(tokens) when is_list(tokens) do
     tokens

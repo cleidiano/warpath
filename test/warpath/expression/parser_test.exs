@@ -1,28 +1,20 @@
-defmodule Warpath.Compiler.Parser do
+defmodule Warpath.Expression.ParserTest do
   use ExUnit.Case, async: true
 
+  alias Warpath.Expression.Parser
+  alias Warpath.Expression.ParserError
+
+  import Warpath.Expression.Tokenizer
+
   @root_expression {:root, "$"}
+  @error_message_prefix "Parser error: Invalid token on line 1,"
 
   def assert_parse(tokens, output, type \\ :ok) do
-    assert :warpath_parser.parse(tokens) == {type, output}
+    assert Parser.parse(tokens) == {type, output}
   end
 
   def assert_parse_error(tokens, error_message) do
-    assert {:error, {1, :warpath_parser, message}} = :warpath_parser.parse(tokens)
-    assert List.to_string(message) == error_message
-  end
-
-  defp tokenize!(string) do
-    string
-    |> String.to_charlist()
-    |> :warpath_tokenizer.string()
-    |> case do
-      {:ok, tokens, _} ->
-        tokens
-
-      errors ->
-        raise inspect(errors)
-    end
+    assert {:error, %ParserError{message: error_message}} == Parser.parse(tokens)
   end
 
   test "root expression" do
@@ -42,7 +34,7 @@ defmodule Warpath.Compiler.Parser do
 
   test "wildcard" do
     assert_parse tokenize!("$.*"), [@root_expression, {:wildcard, :*}]
-    assert_parse_error tokenize!("*"), ~S(syntax error before: <<"*">>)
+    assert_parse_error tokenize!("*"), ~s(#{@error_message_prefix} syntax error before: <<"*">>)
   end
 
   describe "array slice," do
@@ -97,26 +89,27 @@ defmodule Warpath.Compiler.Parser do
     end
 
     test "with negative step" do
-      error = {1, :warpath_parser, 'slice step should be greater than zero.'}
+      error_message = "#{@error_message_prefix} slice step should be greater than zero."
 
-      assert_parse tokenize!("$[::-2]"), error, :error
-      assert_parse tokenize!("$.[::-2]"), error, :error
+      assert_parse_error tokenize!("$[::-2]"), error_message
+      assert_parse_error tokenize!("$.[::-2]"), error_message
     end
 
     test "with step zero" do
-      error = {1, :warpath_parser, 'slice step should be greater than zero.'}
+      error_message = "#{@error_message_prefix} slice step should be greater than zero."
 
-      assert_parse tokenize!("$[::0]"), error, :error
-      assert_parse tokenize!("$.[::0]"), error, :error
+      assert_parse_error tokenize!("$[::0]"), error_message
+      assert_parse_error tokenize!("$.[::0]"), error_message
     end
 
     test "with to many arguments" do
       error_message =
-        "to many params found for slice operation," <>
+        "#{@error_message_prefix} to many params found for slice operation," <>
           " the valid syntax is [start_index:end_index:step]"
 
       assert_parse_error tokenize!("$[::1:]"), error_message
       assert_parse_error tokenize!("$.[::1:]"), error_message
+      assert_parse_error tokenize!("$.[::1:1]"), error_message
     end
   end
 
@@ -160,7 +153,8 @@ defmodule Warpath.Compiler.Parser do
     end
 
     test "error when using unquoted expression" do
-      assert_parse_error tokenize!("$[a, b]"), ~S(syntax error before: <<"a">>)
+      assert_parse_error tokenize!("$[a, b]"),
+                         ~s(#{@error_message_prefix} syntax error before: <<"a">>)
     end
   end
 
@@ -186,7 +180,72 @@ defmodule Warpath.Compiler.Parser do
 
     test "quoted forbidden on dot child expression" do
       assert_parse_error tokenize!(~S($."quoted word")),
-                         ~S(syntax error before: <<"quoted word">>)
+                         ~s(#{@error_message_prefix} syntax error before: <<"quoted word">>)
+    end
+  end
+
+  describe "special identifier" do
+    test "integer" do
+      expression_result = [
+        @root_expression,
+        {:dot, {:property, "2"}}
+      ]
+
+      assert_parse tokenize!("$.2"), expression_result
+    end
+
+    test "in" do
+      expression_result = [
+        @root_expression,
+        {:dot, {:property, "in"}}
+      ]
+
+      assert_parse tokenize!("$.in"), expression_result
+    end
+
+    test "or" do
+      expression_result = [
+        @root_expression,
+        {:dot, {:property, "or"}}
+      ]
+
+      assert_parse tokenize!("$.or"), expression_result
+    end
+
+    test "not" do
+      expression_result = [
+        @root_expression,
+        {:dot, {:property, "not"}}
+      ]
+
+      assert_parse tokenize!("$.not"), expression_result
+    end
+
+    test "and" do
+      expression_result = [
+        @root_expression,
+        {:dot, {:property, "and"}}
+      ]
+
+      assert_parse tokenize!("$.and"), expression_result
+    end
+
+    test "true" do
+      expression_result = [
+        @root_expression,
+        {:dot, {:property, "true"}}
+      ]
+
+      assert_parse tokenize!("$.true"), expression_result
+    end
+
+    test "false" do
+      expression_result = [
+        @root_expression,
+        {:dot, {:property, "false"}}
+      ]
+
+      assert_parse tokenize!("$.false"), expression_result
     end
   end
 
@@ -223,7 +282,7 @@ defmodule Warpath.Compiler.Parser do
 
     test "at operator must be followed by a dot operator on lookup criteria" do
       assert_parse_error tokenize!("$[?( @identifier < 3)]"),
-                         ~S(syntax error before: <<"identifier">>)
+                         ~s(#{@error_message_prefix} syntax error before: <<"identifier">>)
     end
 
     test "atom_identifier lookup in criteria on comparison expression" do
@@ -262,7 +321,7 @@ defmodule Warpath.Compiler.Parser do
       assert_parse tokenize!("$.[?( @.children )]"), filter_expression
 
       assert_parse_error tokenize!("$[?( @identifier )]"),
-                         ~S(syntax error before: <<"identifier">>)
+                         ~s(#{@error_message_prefix} syntax error before: <<"identifier">>)
     end
 
     test "bracket notation identifier lookup in criteria on comparison expression" do
@@ -277,12 +336,14 @@ defmodule Warpath.Compiler.Parser do
 
     test "union identifier expression lookup should raise syntax error" do
       tokens = tokenize!("$[?( @['one','two'] > 0)]")
-      assert_parse_error tokens, ~S(syntax error before: <<",">>)
+      assert_parse_error tokens, ~s(#{@error_message_prefix} syntax error before: <<",">>)
     end
 
     test "union index expression lookup should raise not supported error" do
       tokens = tokenize!("$[?( @[1, 2] > 0)]")
-      assert_parse_error tokens, "union index expression not supported in filter expression"
+      message = "union index expression not supported in filter expression"
+
+      assert_parse_error tokens, "#{@error_message_prefix} #{message}"
     end
 
     test "safe whitelist funcion call as criteria" do
@@ -312,7 +373,7 @@ defmodule Warpath.Compiler.Parser do
       tokens = tokenize!("$[?( unmaped_fun(@.children) )]")
 
       assert_parse_error tokens,
-                         "forbidden function 'unmaped_fun', " <>
+                         "#{@error_message_prefix} forbidden function 'unmaped_fun', " <>
                            "it's only allowed to call whitelist functions: " <>
                            "[is_atom, is_binary, is_boolean, is_float, is_integer, " <>
                            "is_list, is_map, is_nil, is_number, is_tuple]"
@@ -388,7 +449,7 @@ defmodule Warpath.Compiler.Parser do
   describe "descendant" do
     test "followed by a dot operator should raise syntax error" do
       error_message =
-        "Operator dot ('.') is not allowed after descendant operator ('..'),\n" <>
+        "#{@error_message_prefix} operator dot ('.') is not allowed after descendant operator ('..'),\n" <>
           "it must be contracted in a operator (..),\n" <>
           "For example: instead of '$...name' you must write '$..name', that is the right syntax!"
 
@@ -432,7 +493,9 @@ defmodule Warpath.Compiler.Parser do
 
     test "union index expression lookup should raise not supported error" do
       tokens = tokenize!("$..[1, 2]")
-      assert_parse_error tokens, "union index expression not supported in descendant expression"
+      message = "union index expression not supported in descendant expression"
+
+      assert_parse_error tokens, "#{@error_message_prefix} #{message}"
     end
 
     test "list with index lookup" do
@@ -452,6 +515,16 @@ defmodule Warpath.Compiler.Parser do
 
       assert_parse tokenize!("$..*"), expression
       assert_parse tokenize!("$..[*]"), expression
+    end
+  end
+
+  describe "parse!/1" do
+    test "raise when parser fail" do
+      assert_raise ParserError, fn -> Parser.parse!([{:unknown, 1, "unknown"}]) end
+    end
+
+    test "sucsessfull parse" do
+      assert [{:root, "$"}] == Parser.parse!([{:"$", 1, "$"}])
     end
   end
 end

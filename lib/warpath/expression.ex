@@ -1,8 +1,8 @@
 defmodule Warpath.Expression do
   @moduledoc false
   alias Warpath.ExpressionError
-  alias Warpath.Parser
-  alias Warpath.Tokenizer
+  alias Warpath.Expression.Parser
+  alias Warpath.Expression.Tokenizer
 
   @type root :: {:root, String.t()}
   @type property :: {:property, String.t()}
