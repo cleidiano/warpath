@@ -5,8 +5,6 @@
       ["test/warpath/tokenizer_test.exs"],
   locals_without_parens: [
     assert_tokens: 2,
-    assert_compile: 2,
-    assert_compile: 3,
     assert_parse: 2,
     assert_parse: 3,
     assert_parse_error: 2

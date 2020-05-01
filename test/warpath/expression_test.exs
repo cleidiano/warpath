@@ -4,10 +4,6 @@ defmodule Warpath.ExpressionTest do
   alias Warpath.Expression
   alias Warpath.ExpressionError
 
-  def assert_compile(query, output, type \\ :ok) do
-    assert Expression.compile(query) == {type, output}
-  end
-
   describe "expression" do
     test "when tokenizer fail" do
       error = %ExpressionError{message: ~S(Invalid syntax on line 1, {:illegal, '"'})}
