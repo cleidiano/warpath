@@ -1,12 +1,12 @@
-defmodule Warpath.Tokenizer do
+defmodule Warpath.Expression.Tokenizer do
   @moduledoc false
 
-  alias Warpath.TokenizerError
+  alias Warpath.Expression.TokenizerError
 
   def tokenize(term) when is_binary(term) do
     term
     |> String.to_charlist()
-    |> :tokenizer.string()
+    |> :warpath_tokenizer.string()
     |> case do
       {:ok, tokens, _lines} ->
         {:ok, tokens}

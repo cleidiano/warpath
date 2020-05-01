@@ -85,19 +85,19 @@ InOp                   = in
 
 Rules.
 
-{OrOp}                  : {token, {or_op,           TokenLine, list_to_atom(TokenChars)}}.
-{AndOp}                 : {token, {and_op,          TokenLine, list_to_atom(TokenChars)}}.
-{NotOp}                 : {token, {not_op,          TokenLine, list_to_atom(TokenChars)}}.
-{InOp}                  : {token, {in_op,           TokenLine, list_to_atom(TokenChars)}}.
-{Boolean}               : {token, {boolean,         TokenLine, list_to_atom(TokenChars)}}.
-{Atom}                  : {token, {word,            TokenLine, to_atom(TokenChars)}}.
+{OrOp}                  : {token, {or_op,             TokenLine, list_to_atom(TokenChars)}}.
+{AndOp}                 : {token, {and_op,            TokenLine, list_to_atom(TokenChars)}}.
+{NotOp}                 : {token, {not_op,            TokenLine, list_to_atom(TokenChars)}}.
+{InOp}                  : {token, {in_op,             TokenLine, list_to_atom(TokenChars)}}.
+{Boolean}               : {token, {boolean,           TokenLine, list_to_atom(TokenChars)}}.
+{Atom}                  : {token, {atom_identifier,   TokenLine, to_atom(TokenChars)}}.
 
-{Punctuator}            : {token, {list_to_atom(TokenChars), TokenLine}}.
-{Comparator}            : {token, {comparator,      TokenLine, list_to_atom(TokenChars)}}.
-{FloatValue}            : {token, {float,           TokenLine, list_to_float(TokenChars)}}.
-{IntValue}              : {token, {int,             TokenLine, list_to_integer(TokenChars)}}.
-{Identifier}            : {token, {word,            TokenLine, unicode:characters_to_binary(TokenChars)}}.
-{QuotedIdentifier}      : {token, {quoted_word,     TokenLine, quoted_word_to_binary(TokenChars)}}.
+{Punctuator}            : {token, {list_to_atom(TokenChars), TokenLine, list_to_binary(TokenChars)}}.
+{Comparator}            : {token, {comparator,        TokenLine, list_to_atom(TokenChars)}}.
+{FloatValue}            : {token, {float,             TokenLine, list_to_float(TokenChars)}}.
+{IntValue}              : {token, {int,               TokenLine, list_to_integer(TokenChars)}}.
+{Identifier}            : {token, {identifier,        TokenLine, unicode:characters_to_binary(TokenChars)}}.
+{QuotedIdentifier}      : {token, {quoted_identifier, TokenLine, quoted_word_to_binary(TokenChars)}}.
 {Ignored}+              : skip_token.
 
 

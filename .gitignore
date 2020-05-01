@@ -23,6 +23,4 @@ erl_crash.dump
 warpath-*.tar
 
 **.elixir_ls
-src/tokenizer.erl
-src/parser.erl
-
+src/*.erl
