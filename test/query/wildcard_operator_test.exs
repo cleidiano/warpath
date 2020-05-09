@@ -2,11 +2,9 @@ defmodule Warpath.Query.WildcardOperatorTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Warpath.Query.WildcardOperator
-  alias Warpath.Execution.Env
   alias Warpath.Element
-
-  import StreamData
+  alias Warpath.Execution.Env
+  alias Warpath.Query.WildcardOperator
 
   defp env do
     Env.new({:wildcard, :*})

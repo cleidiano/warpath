@@ -1,14 +1,15 @@
 defmodule Warpath.Execution.Env do
-  alias Warpath.Query.RootOperator
-  alias Warpath.Query.IdentifierOperator
-  alias Warpath.Query.WildcardOperator
-  alias Warpath.Query.DescendantOperator
+  @moduledoc false
+
   alias Warpath.Query.ArrayIndexOperator
+  alias Warpath.Query.DescendantOperator
   alias Warpath.Query.FilterOperator
+  alias Warpath.Query.IdentifierOperator
+  alias Warpath.Query.RootOperator
   alias Warpath.Query.SliceOperator
   alias Warpath.Query.UnionOperator
+  alias Warpath.Query.WildcardOperator
 
-  @moduledoc false
   @type operator :: module()
   @type instruction :: Warpath.Expression.token()
 
