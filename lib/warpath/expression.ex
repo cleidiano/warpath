@@ -6,14 +6,31 @@ defmodule Warpath.Expression do
   alias Warpath.ExpressionError
 
   @type root :: {:root, String.t()}
-  @type property :: {:property, String.t()}
-  @type has_property :: {:has_property?, property}
+
+  @type property :: {:property, String.t() | atom()}
+
   @type dot_access :: {:dot, property}
-  @type index_access :: {:index_access, integer}
-  @type array_indexes :: {:array_indexes, [index_access, ...]}
+
+  @type has_property :: {:has_property?, property}
+
+  @type index :: integer()
+
+  @type array_indexes :: {:array_indexes, [{:index_access, index}, ...]}
+
+  @type array_slice ::
+          {:array_slice,
+           [
+             {:start_index, index},
+             {:end_index, index},
+             {:step, index}
+           ]}
+
   @type wildcard :: {:wildcard, :*}
-  @type union :: {:union, [dot_access(), ...]}
-  @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!== | :and | :or | :in
+
+  @type union :: {:union, [dot_access, ...]}
+
+  @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!== | :not | :and | :or | :in
+
   @type fun ::
           :is_atom
           | :is_binary
@@ -27,10 +44,20 @@ defmodule Warpath.Expression do
           | :is_tuple
 
   @type filter :: {:filter, has_property | {operator | fun, term}}
-  @type scan :: {:scan, property | wildcard | filter | array_indexes}
-  @type token :: root | dot_access | wildcard | array_indexes | filter | scan | union()
 
-  @spec compile(String.t()) :: {:ok, [token, ...]} | {:error, ExpressionError.t()}
+  @type scan :: {:scan, property | wildcard | filter | array_indexes}
+
+  @type token ::
+          root()
+          | array_indexes()
+          | array_slice()
+          | dot_access()
+          | filter()
+          | scan()
+          | union()
+          | wildcard()
+
+  @spec compile(String.t()) :: {:ok, nonempty_list(token)} | {:error, ExpressionError.t()}
   def compile(expression) when is_binary(expression) do
     with {:ok, tokens} <- Tokenizer.tokenize(expression),
          {:ok, _} = expression_tokens <- Parser.parse(tokens) do
