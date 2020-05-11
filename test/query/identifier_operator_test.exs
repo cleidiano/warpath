@@ -5,7 +5,6 @@ defmodule Warpath.Query.IdentifierOperatorTest do
   alias Warpath.Element
   alias Warpath.Execution.Env
   alias Warpath.Query.IdentifierOperator
-  alias Warpath.Query.IdentifierOperator
   alias Warpath.Query.RootOperator
   alias Warpath.Query.SliceOperator
   alias Warpath.UnsupportedOperationError
