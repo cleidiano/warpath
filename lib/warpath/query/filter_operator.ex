@@ -1,7 +1,8 @@
 alias Warpath.Element
 alias Warpath.Element.Path
+alias Warpath.Element.PathMarker
 alias Warpath.Execution.Env
-alias Warpath.Filter
+alias Warpath.Filter.Predicate
 alias Warpath.Query.FilterOperator
 
 defprotocol FilterOperator do
@@ -15,15 +16,29 @@ defprotocol FilterOperator do
   def evaluate(document, relative_path, env)
 end
 
-defimpl FilterOperator, for: [Map, List] do
-  def evaluate(elements, [], %Env{instruction: {:filter, expression}}) when is_list(elements) do
-    Filter.filter(elements, expression)
+defimpl FilterOperator, for: List do
+  def evaluate([%Element{} | _] = elements, [], %Env{} = env) do
+    Enum.flat_map(
+      elements,
+      fn %Element{value: value, path: path} ->
+        FilterOperator.evaluate(value, path, env)
+      end
+    )
   end
 
-  def evaluate(document, relative_path, %Env{instruction: {:filter, filter_exp}}) do
+  def evaluate(document, relative_path, %Env{instruction: {:filter, filter_expression}}) do
     document
     |> Element.new(relative_path)
-    |> Filter.filter(filter_exp)
+    |> PathMarker.stream()
+    |> Enum.filter(fn %Element{value: value} -> Predicate.eval(filter_expression, value) end)
+  end
+end
+
+defimpl FilterOperator, for: Map do
+  def evaluate(document, relative_path, %Env{instruction: {:filter, filter_expression}}) do
+    if Predicate.eval(filter_expression, document),
+      do: [Element.new(document, relative_path)],
+      else: []
   end
 end
 
