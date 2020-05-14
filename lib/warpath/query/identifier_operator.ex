@@ -42,15 +42,14 @@ defimpl IdentifierOperator, for: List do
     {:dot, {:property, key}} = env.instruction
 
     elements
-    |> Stream.filter(&Element.value_map?/1)
-    |> Stream.filter(fn %Element{value: document} -> Map.has_key?(document, key) end)
+    |> Stream.filter(&accessible_with_key?(&1, key))
     |> Enum.map(fn %Element{value: document, path: path} ->
       IdentifierOperator.Map.evaluate(document, path, env)
     end)
   end
 
-  def evaluate(keyword, relative_path, %Env{instruction: instruction} = env) do
-    unless Keyword.keyword?(keyword) do
+  def evaluate(elements, relative_path, %Env{instruction: instruction} = env) do
+    unless Keyword.keyword?(elements) do
       {:dot, {:property, name} = token} = instruction
 
       wrong_query =
@@ -66,12 +65,17 @@ defimpl IdentifierOperator, for: List do
       raise Warpath.UnsupportedOperationError, tips
     end
 
-    IdentifierOperator.Map.evaluate(keyword, relative_path, env)
+    case elements do
+      [] -> []
+      keyword -> IdentifierOperator.Map.evaluate(keyword, relative_path, env)
+    end
   end
-end
 
-defimpl IdentifierOperator, for: Element do
-  def evaluate(%Element{value: value, path: path}, _empty, env) do
-    IdentifierOperator.evaluate(value, path, env)
-  end
+  defp accessible_with_key?(%Element{value: map}, key) when is_map(map),
+    do: Map.has_key?(map, key)
+
+  defp accessible_with_key?(%Element{value: keywords}, key) when is_list(keywords),
+    do: Keyword.keyword?(keywords) and Keyword.has_key?(keywords, key)
+
+  defp accessible_with_key?(_, _), do: false
 end
