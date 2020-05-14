@@ -32,7 +32,7 @@ defmodule Warpath.MixProject do
       {:credo, "~> 1.4.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:yaml_elixir, "~> 2.4", only: :test},
-      {:stream_data, "~> 0.1", only: :test}
+      {:stream_data, "~> 0.1", only: [:test, :dev]}
     ]
   end
 
