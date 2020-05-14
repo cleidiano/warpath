@@ -1,8 +1,9 @@
 defmodule Warpath.Expression do
   @moduledoc false
-  alias Warpath.ExpressionError
+
   alias Warpath.Expression.Parser
   alias Warpath.Expression.Tokenizer
+  alias Warpath.ExpressionError
 
   @type root :: {:root, String.t()}
   @type property :: {:property, String.t()}
@@ -11,6 +12,7 @@ defmodule Warpath.Expression do
   @type index_access :: {:index_access, integer}
   @type array_indexes :: {:array_indexes, [index_access, ...]}
   @type wildcard :: {:wildcard, :*}
+  @type union :: {:union, [dot_access(), ...]}
   @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!== | :and | :or | :in
   @type fun ::
           :is_atom
@@ -26,7 +28,7 @@ defmodule Warpath.Expression do
 
   @type filter :: {:filter, has_property | {operator | fun, term}}
   @type scan :: {:scan, property | wildcard | filter | array_indexes}
-  @type token :: root | dot_access | wildcard | array_indexes | filter | scan
+  @type token :: root | dot_access | wildcard | array_indexes | filter | scan | union()
 
   @spec compile(String.t()) :: {:ok, [token, ...]} | {:error, ExpressionError.t()}
   def compile(expression) when is_binary(expression) do

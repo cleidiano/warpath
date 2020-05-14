@@ -1,6 +1,7 @@
 alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Execution.Env
+alias Warpath.Query.Accessible
 alias Warpath.Query.ArrayIndexOperator
 alias Warpath.Query.DescendantOperator
 alias Warpath.Query.FilterOperator
@@ -71,11 +72,5 @@ defimpl IdentifierOperator, for: List do
     end
   end
 
-  defp accessible_with_key?(%Element{value: map}, key) when is_map(map),
-    do: Map.has_key?(map, key)
-
-  defp accessible_with_key?(%Element{value: keywords}, key) when is_list(keywords),
-    do: Keyword.keyword?(keywords) and Keyword.has_key?(keywords, key)
-
-  defp accessible_with_key?(_, _), do: false
+  defp accessible_with_key?(%Element{value: value}, key), do: Accessible.has_key?(value, key)
 end

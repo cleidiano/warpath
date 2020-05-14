@@ -1,10 +1,10 @@
 defmodule Warpath.Expression.ParserTest do
   use ExUnit.Case, async: true
 
+  import Warpath.Expression.Tokenizer
+
   alias Warpath.Expression.Parser
   alias Warpath.Expression.ParserError
-
-  import Warpath.Expression.Tokenizer
 
   @root_expression {:root, "$"}
   @error_message_prefix "Parser error: Invalid token on line 1,"

@@ -2,13 +2,14 @@ defmodule Warpath.Query.IdentifierOperatorTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Warpath.Query.IdentifierOperator
-  alias Warpath.Execution.Env
   alias Warpath.Element
+  alias Warpath.Execution.Env
+  alias Warpath.Query.IdentifierOperator
+  alias Warpath.Query.IdentifierOperator
+  alias Warpath.Query.RootOperator
+  alias Warpath.Query.SliceOperator
+  alias Warpath.UnsupportedOperationError
 
-  import StreamData
-
-  @length_config [min_length: 1, max_length: 10]
   @relative_path [{:root, "$"}]
 
   defp env_evaluation_for(propery_name, previous \\ nil) do
@@ -17,7 +18,7 @@ defmodule Warpath.Query.IdentifierOperatorTest do
 
   describe "IdentifierOperator.Map" do
     property "evaluate a existent property always create a element" do
-      check all map <- map_of(term(), term(), @length_config),
+      check all map <- map_of(term(), term(), min_length: 1),
                 {key, value} = Enum.random(map) do
         element = Element.new(value, [{:property, key} | @relative_path])
 
@@ -29,7 +30,7 @@ defmodule Warpath.Query.IdentifierOperatorTest do
     property "evaluate a non existent property always create a element with value nil" do
       unique = make_ref()
 
-      check all map <- map_of(term(), term(), @length_config) do
+      check all map <- map_of(term(), term(), min_length: 1) do
         element = Element.new(nil, [{:property, unique} | @relative_path])
 
         assert IdentifierOperator.evaluate(map, @relative_path, env_evaluation_for(unique)) ==
@@ -37,7 +38,7 @@ defmodule Warpath.Query.IdentifierOperatorTest do
       end
     end
 
-    test "evaluate a selector on empty map" do
+    test "evaluate a property on empty map" do
       result = IdentifierOperator.evaluate(%{}, @relative_path, env_evaluation_for("any"))
 
       assert result == Element.new(nil, [{:property, "any"} | @relative_path])
@@ -46,7 +47,12 @@ defmodule Warpath.Query.IdentifierOperatorTest do
 
   describe "IdentifierOperator.List" do
     property "evaluate a keyword as document dispatch to Map" do
-      check all keyword <- list_of({atom(:alphanumeric), term()}, @length_config),
+      check all keyword <-
+                  uniq_list_of(
+                    {atom(:alphanumeric), term()},
+                    min_length: 1,
+                    uniq_fun: fn {key, _value} -> key end
+                  ),
                 {key, value} = Enum.random(keyword) do
         element = Element.new(value, [{:property, key} | @relative_path])
         result = IdentifierOperator.evaluate(keyword, @relative_path, env_evaluation_for(key))
@@ -97,6 +103,26 @@ defmodule Warpath.Query.IdentifierOperatorTest do
       assert IdentifierOperator.evaluate(elements_with_keyword_list, [], env) == expected
     end
 
+    property "traverse is only allowed with previous operator that is on whitelist" do
+      blacklist_operator = [
+        IdentifierOperator,
+        RootOperator,
+        SliceOperator
+      ]
+
+      element_generator = StreamData.map(term(), fn value -> Element.new(value, []) end)
+
+      check all elements <- list_of(element_generator, min_length: 1),
+                previous_operator <- member_of(blacklist_operator),
+                property_name <- string(:printable) do
+        env = env_evaluation_for(property_name, previous_operator)
+
+        assert_raise UnsupportedOperationError, fn ->
+          IdentifierOperator.evaluate(elements, [], env)
+        end
+      end
+    end
+
     test "evaluate a empty list always result in empty list" do
       assert IdentifierOperator.evaluate([], @relative_path, env_evaluation_for(:any)) == []
     end
@@ -107,7 +133,7 @@ defmodule Warpath.Query.IdentifierOperatorTest do
           "that it's not allowed for list type. " <>
           "You can use something like '[*].a_property_name' instead."
 
-      assert_raise Warpath.UnsupportedOperationError, tips, fn ->
+      assert_raise UnsupportedOperationError, tips, fn ->
         IdentifierOperator.evaluate(["abc"], [], env_evaluation_for("a_property_name"))
       end
     end
