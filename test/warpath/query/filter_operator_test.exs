@@ -65,7 +65,7 @@ defmodule Warpath.Query.FilterOperatorTest do
 
   property "can collect elements that match filter criteria" do
     keys = one_of([string(:printable), atom(:alphanumeric)])
-    map_generator = map_of(keys, term(), min_length: 1)
+    map_generator = map_of(keys, term(), length: 1..3)
     element = map(map_generator, &Element.new(&1, @relative_path))
 
     check all elements <- list_of(element, length: 1..10),
