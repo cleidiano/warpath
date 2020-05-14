@@ -7,8 +7,8 @@ defmodule Warpath.Query.RootOperator do
   @token {:root, "$"}
 
   @type result :: Element.t()
-  @type root_path :: []
+  @type root_path :: [{:root, String.t()}]
 
-  @spec evaluate(Element.t(), [root_path()], Env.t()) :: result()
-  def evaluate(document, _root_path, _env), do: Element.new(document, [@token])
+  @spec evaluate(Element.t(), [], Env.t()) :: result()
+  def evaluate(document, [], _env), do: Element.new(document, [@token])
 end
