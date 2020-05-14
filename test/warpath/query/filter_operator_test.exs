@@ -68,7 +68,7 @@ defmodule Warpath.Query.FilterOperatorTest do
     map_generator = map_of(keys, term(), min_length: 1)
     element = map(map_generator, &Element.new(&1, @relative_path))
 
-    check all elements <- list_of(element, min_length: 1),
+    check all elements <- list_of(element, length: 1..10),
               %Element{value: value} = Enum.random(elements),
               {key, _} = Enum.random(value) do
       result =
