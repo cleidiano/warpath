@@ -6,18 +6,10 @@ defmodule Warpath.Element.PathMarker do
 
   @type path :: Path.t()
   @type token :: Path.token()
-  @type elements :: Element.t() | [Element.t()]
+  @type elements :: Element.t()
 
   @spec stream(elements(), (token, path -> path)) :: Stream.t()
   def stream(element, path_fun \\ &Path.accumulate/2)
-
-  def stream([%Element{} | _] = elements, path_fun) do
-    elements
-    |> Stream.with_index()
-    |> Stream.map(fn {%Element{value: value, path: path}, index} ->
-      Element.new(value, path_fun.({:index_access, index}, path))
-    end)
-  end
 
   def stream(%Element{value: list, path: path}, path_fun) when is_list(list) do
     list
