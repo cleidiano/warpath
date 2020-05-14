@@ -2,7 +2,6 @@ alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Execution.Env
 alias Warpath.Query.ArrayIndexOperator
-alias Warpath.Query.WildcardOperator
 
 defprotocol ArrayIndexOperator do
   @fallback_to_any true
@@ -18,14 +17,11 @@ defprotocol ArrayIndexOperator do
 end
 
 defimpl ArrayIndexOperator, for: List do
-  def evaluate(elements, [], %Env{
-        instruction: {:array_indexes, [index]},
-        previous_operator: %Env{operator: WildcardOperator}
-      }) do
+  def evaluate([%Element{} | _] = elements, [], %Env{instruction: {:array_indexes, indexes}}) do
     elements
     |> Stream.filter(&Element.value_list?/1)
     |> Enum.flat_map(fn %Element{value: list, path: path} ->
-      value_for_indexes(list, path, [index])
+      value_for_indexes(list, path, indexes)
     end)
   end
 
