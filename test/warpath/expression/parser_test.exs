@@ -405,6 +405,11 @@ defmodule Warpath.Expression.ParserTest do
         @root_expression,
         {:filter, {:not, true}}
       ]
+
+      assert_parse tokenize!("$[?(not false and true)]"), [
+        @root_expression,
+        {:filter, {:and, [{:not, false}, true]}}
+      ]
     end
 
     test "in operator in criteria with literals in list" do
