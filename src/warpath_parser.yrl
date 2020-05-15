@@ -22,7 +22,8 @@ Rootsymbol grammar.
 
 Left 100 or_op.
 Left 150 and_op.
-Left 200 dot_op.
+Left 200 not_op.
+Left 300 dot_op.
 
 % Query expression are in reverse order
 grammar -> query_expression : reverse('$1').
