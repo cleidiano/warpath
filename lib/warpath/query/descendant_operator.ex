@@ -1,6 +1,4 @@
-alias Warpath.DescendantUtils, as: Utils
 alias Warpath.Element
-alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Execution.Env
 alias Warpath.Query.ArrayIndexOperator
 alias Warpath.Query.DescendantOperator
@@ -12,75 +10,76 @@ defprotocol DescendantOperator do
   @type document :: list() | map()
   @type result :: Element.t() | [Element.t()]
 
-  @spec evaluate(document(), ElementPath.t(), Env.t()) :: result()
+  @spec evaluate(document(), Element.Path.t(), Env.t()) :: result()
   def evaluate(document, relative_path, env)
-  def collect(document, relative_path, env)
 end
 
-defmodule Warpath.DescendantUtils do
-  @moduledoc false
-
+defimpl DescendantOperator, for: [Map, List] do
   alias Warpath.Element.PathMarker
 
-  defguardp is_dictionary(enum) when is_list(enum) or is_map(enum)
-
-  def property_scan(document, relative_path, %Env{instruction: instruction} = env) do
-    {:scan, {:property, _} = token} = instruction
-    extract_all(document, relative_path, env, &accept_key?(&1, token))
-  end
-
-  def wildcard_scan(document, relative_path, env) do
-    extract_all(document, relative_path, env, fn _ -> true end)
-  end
-
-  def filter_scan(
+  def evaluate(
         document,
         relative_path,
-        %Env{instruction: {:scan, {:filter, _} = filter}} = env
+        %Env{
+          instruction: {:scan, {:array_indexes, [{:index_access, index}]}},
+          metadata: %{descendant_started: true}
+        } = env
       ) do
-    filter_env = Env.new(filter)
-
-    extract_all(
+    collect_by(
       document,
       relative_path,
       env,
-      fn %Element{value: value, path: path} ->
+      _acceptor = &list_with_index?(&1, index)
+    )
+  end
+
+  def evaluate(document, path, %Env{instruction: {:scan, {:array_indexes, _}}} = env) do
+    with {:scan, {:array_indexes, [index_access: index]} = index_expr} <- Env.instruction(env),
+         indexes_env <- Env.new(index_expr),
+         metadata <- %{descendant_started: true},
+         env_started <- %{env | metadata: metadata},
+         doc <- wrap_if_needed(document) do
+      doc
+      |> collect_by(path, env_started, _acceptor = &list_with_index?(&1, index))
+      |> Enum.map(fn %Element{value: list, path: list_path} ->
+        ArrayIndexOperator.evaluate(list, list_path, indexes_env)
+      end)
+    end
+  end
+
+  def evaluate(
+        document,
+        relative_path,
+        %Env{instruction: {:scan, {:property, _} = token}} = env
+      ) do
+    collect_by(document, relative_path, env, _acceptor = &accept_key?(&1, token))
+  end
+
+  def evaluate(document, relative_path, %Env{instruction: {:scan, {:wildcard, _}}} = env) do
+    collect_by(document, relative_path, env, _acceptor = fn _ -> true end)
+  end
+
+  def evaluate(document, relative_path, %Env{instruction: {:scan, {:filter, _} = filter}} = env) do
+    # filter_scan(document, relative_path, env)
+
+    filter_env = Env.new(filter)
+
+    collect_by(
+      document,
+      relative_path,
+      env,
+      _acceptor = fn %Element{value: value, path: path} ->
         # List will be traversed by descedant algorithm
         not is_list(value) and FilterOperator.evaluate(value, path, filter_env) != []
       end
     )
   end
 
-  def search_for_list(
-        document,
-        relative_path,
-        %Env{instruction: {:scan, {_, [{:index_access, index}]}}} = env
-      ) do
-    extract_all(
-      document,
-      relative_path,
-      env,
-      &list_with_index?(&1, index),
-      &DescendantOperator.collect/3
-    )
-  end
+  defp wrap_if_needed(document) when is_list(document), do: [document]
+  defp wrap_if_needed(document), do: document
 
-  def search_for_list(
-        document,
-        relative_path,
-        %Env{instruction: {:scan, {:filter, _}}} = env
-      ) do
-    extract_all(
-      document,
-      relative_path,
-      env,
-      &list_with_index?(&1, 0),
-      &DescendantOperator.collect/3
-    )
-  end
-
-  defp extract_all(data, relative_path, env, acceptor, walker \\ &DescendantOperator.evaluate/3)
-       when is_dictionary(data) do
+  def collect_by(data, relative_path, env, acceptor, walker \\ &DescendantOperator.evaluate/3)
+      when is_list(data) or is_map(data) do
     members =
       data
       |> Element.new(relative_path)
@@ -88,7 +87,9 @@ defmodule Warpath.DescendantUtils do
 
     children =
       members
-      |> Task.async_stream(fn %Element{value: value, path: path} -> walker.(value, path, env) end)
+      |> Task.async_stream(fn %Element{value: value, path: path} ->
+        walker.(value, path, env)
+      end)
       |> Stream.flat_map(fn {:ok, enum} -> enum end)
 
     members
@@ -109,53 +110,11 @@ defmodule Warpath.DescendantUtils do
 
   defp list_with_index?(_, _), do: false
 
+  # Property search
   defp accept_key?(%Element{value: _, path: path}, token_key), do: match?([^token_key | _], path)
   defp accept_key?(_, _), do: false
 end
 
-defimpl DescendantOperator, for: [Map, List] do
-  def evaluate(document, relative_path, %Env{instruction: {:scan, {:property, _}}} = env) do
-    Utils.property_scan(document, relative_path, env)
-  end
-
-  def evaluate(document, relative_path, %Env{instruction: {:scan, {:wildcard, _}}} = env) do
-    Utils.wildcard_scan(document, relative_path, env)
-  end
-
-  def evaluate(document, relative_path, %Env{instruction: {:scan, {:filter, _}}} = env) do
-    Utils.filter_scan(document, relative_path, env)
-  end
-
-  def evaluate(document, path, %Env{instruction: {:scan, {:array_indexes, _} = indexes}} = env) do
-    # Entry point called only once
-
-    indexes_env = Env.new(indexes)
-
-    document
-    |> find_all_list(path, env)
-    |> Enum.map(fn %Element{value: list, path: list_path} ->
-      ArrayIndexOperator.evaluate(list, list_path, indexes_env)
-    end)
-  end
-
-  def collect(document, relative_path, env) do
-    Utils.search_for_list(document, relative_path, env)
-  end
-
-  defp find_all_list(document, relative_path, env) do
-    document =
-      if is_list(document) do
-        # Self include list by wrap it
-        [document]
-      else
-        document
-      end
-
-    Utils.search_for_list(document, relative_path, env)
-  end
-end
-
 defimpl DescendantOperator, for: Any do
   def evaluate(_data, _relative_path, _), do: []
-  def collect(_data, _relative_path, _), do: []
 end
