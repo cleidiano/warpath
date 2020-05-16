@@ -147,7 +147,8 @@ defmodule WarpathTest do
     end
 
     test "that use a filter", %{data: document} do
-      values = Warpath.query(document, "$..[?(@.price > 22)]", @value_path)
+      values =
+        Warpath.query(document, "$..[?(not is_nil(@.price) and @.price > 22)]", @value_path)
 
       expected = {
         %{

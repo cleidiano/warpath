@@ -8,7 +8,7 @@ defmodule Warpath.Query.RootOperatorTest do
 
   @relative_path [{:root, "$"}]
 
-  defp env_for_root() do
+  defp env_for_root do
     Env.new({:root, "$"})
   end
 

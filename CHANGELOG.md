@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 This release is a complete new implementation strategy, it relay on elixir protocol to promote extensibility and simplify maintainability.
 
 ### Added
+- Recursive descendant with filter were applying filter over list only, support for map were added.
+  Ex. Given this input:
+  ```elixir
+          %{
+          "id" => 2,
+          "more" => [
+               %{"id" => 2},
+               %{"more" => %{"id" => 2}},
+               %{"id" => %{"id" => 2}},
+               [%{"id" => 2}]
+          ]
+          }}
+     ```
+     Given this query selector `$..[?(@.id==2)]`
+     - version 0.2.1 -> `[%{"id" => 2}, %{"id" => 2}]`
+     - version 0.3.0 -> `[%{"id" => 2}, %{"id" => 2}, %{"id" => 2}, %{"id" => 2}]`
 
 ### Fixed
 - Forbidden negative step on slice operation

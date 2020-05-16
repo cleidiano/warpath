@@ -33,6 +33,24 @@ defmodule Warpath.DescendantUtils do
     extract_all(document, relative_path, env, fn _ -> true end)
   end
 
+  def filter_scan(
+        document,
+        relative_path,
+        %Env{instruction: {:scan, {:filter, _} = filter}} = env
+      ) do
+    filter_env = Env.new(filter)
+
+    extract_all(
+      document,
+      relative_path,
+      env,
+      fn %Element{value: value, path: path} ->
+        # List will be traversed by descedant algorithm
+        not is_list(value) and FilterOperator.evaluate(value, path, filter_env) != []
+      end
+    )
+  end
+
   def search_for_list(
         document,
         relative_path,
@@ -89,7 +107,8 @@ defmodule Warpath.DescendantUtils do
     computed_index >= 0 and computed_index <= count
   end
 
-  defp list_with_index?(_d, _), do: false
+  defp list_with_index?(_, _), do: false
+
   defp accept_key?(%Element{value: _, path: path}, token_key), do: match?([^token_key | _], path)
   defp accept_key?(_, _), do: false
 end
@@ -103,18 +122,8 @@ defimpl DescendantOperator, for: [Map, List] do
     Utils.wildcard_scan(document, relative_path, env)
   end
 
-  def evaluate(
-        document,
-        relative_path,
-        %Env{instruction: {:scan, {:filter, _} = filter}} = env
-      ) do
-    filter_env = Env.new(filter)
-
-    document
-    |> find_all_list(relative_path, env)
-    |> Enum.flat_map(fn %Element{value: value, path: path} ->
-      FilterOperator.evaluate(value, path, filter_env)
-    end)
+  def evaluate(document, relative_path, %Env{instruction: {:scan, {:filter, _}}} = env) do
+    Utils.filter_scan(document, relative_path, env)
   end
 
   def evaluate(document, path, %Env{instruction: {:scan, {:array_indexes, _} = indexes}} = env) do
