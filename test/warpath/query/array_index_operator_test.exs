@@ -28,10 +28,18 @@ defmodule Warpath.Query.ArrayIndexOperatorTest do
     end
   end
 
-  property "out of bound indexes are never evaluated" do
+  property "postive out of bound index are never evaluated" do
     check all terms <- list_of(term(), min_length: 1),
               count = length(terms) do
       env = env_for_array_index([count, count + 1])
+      assert ArrayIndexOperator.evaluate(terms, @relative_path, env) == []
+    end
+  end
+
+  property "negative out of bound index are never evaluated" do
+    check all terms <- list_of(term(), min_length: 1),
+              count = length(terms) do
+      env = env_for_array_index([-(count + 1), -(count + 2)])
       assert ArrayIndexOperator.evaluate(terms, @relative_path, env) == []
     end
   end
@@ -71,6 +79,21 @@ defmodule Warpath.Query.ArrayIndexOperatorTest do
     env = env_for_array_index([0, 1])
 
     check all terms <- list_of(term(), length: 2) do
+      result = ArrayIndexOperator.evaluate(terms, [], env)
+
+      [first, second | _] = terms
+
+      assert result == [
+               Element.new(first, [{:index_access, 0}]),
+               Element.new(second, [{:index_access, 1}])
+             ]
+    end
+  end
+
+  property "can evaluate negative index" do
+    check all terms <- list_of(term(), length: 2),
+              count = length(terms) do
+      env = env_for_array_index([-count, -(count - 1)])
       result = ArrayIndexOperator.evaluate(terms, [], env)
 
       [first, second | _] = terms
