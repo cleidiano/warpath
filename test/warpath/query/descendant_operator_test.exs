@@ -121,6 +121,18 @@ defmodule Warpath.Query.DescendantOperatorTest do
              ]
     end
 
+    test "scan a existent one using negative index", %{document: document} do
+      env = env_for({:array_indexes, index_access: -1})
+
+      assert DescendantOperator.evaluate(document, [], env) == [
+               Element.new(%{"key" => %{"key" => "russian dolls"}},
+                 index_access: 1,
+                 property: "array",
+                 property: "object"
+               )
+             ]
+    end
+
     @tag :skip
     test "scan more than one index", %{document: document} do
       env = env_for({:array_indexes, index_access: 0, index_access: 1})
