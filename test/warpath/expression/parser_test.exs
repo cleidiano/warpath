@@ -496,11 +496,13 @@ defmodule Warpath.Expression.ParserTest do
       assert_parse tokenize!("$..[?( @.identifier < 2)]"), filter_expression
     end
 
-    test "union index expression lookup should raise not supported error" do
+    test "union index expression lookup" do
       tokens = tokenize!("$..[1, 2]")
-      message = "union index expression not supported in descendant expression"
 
-      assert_parse_error tokens, "#{@error_message_prefix} #{message}"
+      assert_parse tokens, [
+        @root_expression,
+        {:scan, {:array_indexes, [index_access: 1, index_access: 2]}}
+      ]
     end
 
     test "list with index lookup" do
