@@ -1,6 +1,6 @@
 alias Warpath.Element
 alias Warpath.Execution.Env
-alias Warpath.Query.ArrayIndexOperator
+alias Warpath.Query.IndexOperator
 alias Warpath.Query.DescendantOperator
 alias Warpath.Query.FilterOperator
 
@@ -21,7 +21,7 @@ defimpl DescendantOperator, for: [Map, List] do
         document,
         relative_path,
         %Env{
-          instruction: {:scan, {:array_indexes, indexes}},
+          instruction: {:scan, {:indexes, indexes}},
           metadata: %{descendant_started: true}
         } = env
       ) do
@@ -31,7 +31,7 @@ defimpl DescendantOperator, for: [Map, List] do
   def evaluate(
         document,
         path,
-        %Env{instruction: {:scan, {:array_indexes, indexes} = index_expr}} = env
+        %Env{instruction: {:scan, {:indexes, indexes} = index_expr}} = env
       ) do
     indexes_env = Env.new(index_expr)
     env_started = %{env | metadata: Map.put(env.metadata, :descendant_started, true)}
@@ -40,7 +40,7 @@ defimpl DescendantOperator, for: [Map, List] do
     |> wrap_if_needed()
     |> collect_by(path, env_started, _acceptor = &at_least_one?(&1, indexes))
     |> Enum.flat_map(fn %Element{value: list, path: list_path} ->
-      case ArrayIndexOperator.evaluate(list, list_path, indexes_env) do
+      case IndexOperator.evaluate(list, list_path, indexes_env) do
         %Element{} = element -> [element]
         result -> result
       end

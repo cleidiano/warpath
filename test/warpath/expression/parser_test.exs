@@ -22,8 +22,8 @@ defmodule Warpath.Expression.ParserTest do
   end
 
   test "array indexes" do
-    one_index = [@root_expression, {:array_indexes, [{:index_access, 1}]}]
-    two_indexes = [@root_expression, {:array_indexes, [{:index_access, 1}, {:index_access, 2}]}]
+    one_index = [@root_expression, {:indexes, [{:index_access, 1}]}]
+    two_indexes = [@root_expression, {:indexes, [{:index_access, 1}, {:index_access, 2}]}]
 
     assert_parse tokenize!("$[1]"), one_index
     assert_parse tokenize!("$.[1]"), one_index
@@ -501,7 +501,7 @@ defmodule Warpath.Expression.ParserTest do
 
       assert_parse tokens, [
         @root_expression,
-        {:scan, {:array_indexes, [index_access: 1, index_access: 2]}}
+        {:scan, {:indexes, [index_access: 1, index_access: 2]}}
       ]
     end
 
@@ -510,7 +510,7 @@ defmodule Warpath.Expression.ParserTest do
 
       assert_parse tokens, [
         @root_expression,
-        {:scan, {:array_indexes, [index_access: 1]}}
+        {:scan, {:indexes, [index_access: 1]}}
       ]
     end
 
