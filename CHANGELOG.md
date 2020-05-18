@@ -13,6 +13,8 @@ This release is a complete new implementation strategy, it relay on elixir proto
 ### Fixed
 - Forbidden negative step on slice operation
 - Fix reserved words used as children key lookup, to allow expression like, `$.true`, `$.in`.
+- Compute item index for path on evaluate negative index.
+  Ex. `Warpath.query(["a", "b"], "$.[-2]", result_type: :value_path) => {:ok, {"a", "$[0]"}}`
 
 ### Changed
 - Query with index that out off bounds, now will return empty list,
