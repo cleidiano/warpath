@@ -12,14 +12,16 @@ defmodule Warpath.Execution.Env do
 
   @type operator :: module()
   @type instruction :: Warpath.Expression.token()
+  @type metadata :: map()
 
   @type t :: %__MODULE__{
           instruction: instruction(),
           operator: operator(),
-          previous_operator: operator()
+          previous_operator: operator(),
+          metadata: metadata()
         }
 
-  defstruct operator: nil, instruction: nil, previous_operator: nil
+  defstruct operator: nil, instruction: nil, previous_operator: nil, metadata: %{}
 
   def new(instruction, previous_operator \\ nil) do
     %__MODULE__{
