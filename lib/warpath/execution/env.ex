@@ -12,7 +12,7 @@ defmodule Warpath.Execution.Env do
 
   @type operator :: module()
   @type instruction :: Warpath.Expression.token()
-  @type metadata :: any()
+  @type metadata :: map()
 
   @type t :: %__MODULE__{
           instruction: instruction(),
@@ -39,6 +39,4 @@ defmodule Warpath.Execution.Env do
   defp operator_for({:filter, _}), do: FilterOperator
   defp operator_for({:array_slice, _}), do: SliceOperator
   defp operator_for({:union, _}), do: UnionOperator
-
-  def instruction(%__MODULE__{instruction: instruction}), do: instruction
 end

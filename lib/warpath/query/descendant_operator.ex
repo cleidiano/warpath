@@ -21,30 +21,30 @@ defimpl DescendantOperator, for: [Map, List] do
         document,
         relative_path,
         %Env{
-          instruction: {:scan, {:array_indexes, [{:index_access, index}]}},
+          instruction: {:scan, {:array_indexes, indexes}},
           metadata: %{descendant_started: true}
         } = env
       ) do
-    collect_by(
-      document,
-      relative_path,
-      env,
-      _acceptor = &list_with_index?(&1, index)
-    )
+    collect_by(document, relative_path, env, _acceptor = &at_least_one?(&1, indexes))
   end
 
-  def evaluate(document, path, %Env{instruction: {:scan, {:array_indexes, _}}} = env) do
-    with {:scan, {:array_indexes, [index_access: index]} = index_expr} <- Env.instruction(env),
-         indexes_env <- Env.new(index_expr),
-         metadata <- %{descendant_started: true},
-         env_started <- %{env | metadata: metadata},
-         doc <- wrap_if_needed(document) do
-      doc
-      |> collect_by(path, env_started, _acceptor = &list_with_index?(&1, index))
-      |> Enum.map(fn %Element{value: list, path: list_path} ->
-        ArrayIndexOperator.evaluate(list, list_path, indexes_env)
-      end)
-    end
+  def evaluate(
+        document,
+        path,
+        %Env{instruction: {:scan, {:array_indexes, indexes} = index_expr}} = env
+      ) do
+    indexes_env = Env.new(index_expr)
+    env_started = %{env | metadata: Map.put(env.metadata, :descendant_started, true)}
+
+    document
+    |> wrap_if_needed()
+    |> collect_by(path, env_started, _acceptor = &at_least_one?(&1, indexes))
+    |> Enum.flat_map(fn %Element{value: list, path: list_path} ->
+      case ArrayIndexOperator.evaluate(list, list_path, indexes_env) do
+        %Element{} = element -> [element]
+        result -> result
+      end
+    end)
   end
 
   def evaluate(
@@ -60,8 +60,6 @@ defimpl DescendantOperator, for: [Map, List] do
   end
 
   def evaluate(document, relative_path, %Env{instruction: {:scan, {:filter, _} = filter}} = env) do
-    # filter_scan(document, relative_path, env)
-
     filter_env = Env.new(filter)
 
     collect_by(
@@ -69,17 +67,14 @@ defimpl DescendantOperator, for: [Map, List] do
       relative_path,
       env,
       _acceptor = fn %Element{value: value, path: path} ->
-        # List will be traversed by descedant algorithm
+        # List will be traversed by descendant algorithm
         not is_list(value) and FilterOperator.evaluate(value, path, filter_env) != []
       end
     )
   end
 
-  defp wrap_if_needed(document) when is_list(document), do: [document]
-  defp wrap_if_needed(document), do: document
-
-  def collect_by(data, relative_path, env, acceptor, walker \\ &DescendantOperator.evaluate/3)
-      when is_list(data) or is_map(data) do
+  defp collect_by(data, relative_path, env, acceptor)
+       when is_list(data) or is_map(data) do
     members =
       data
       |> Element.new(relative_path)
@@ -88,7 +83,7 @@ defimpl DescendantOperator, for: [Map, List] do
     children =
       members
       |> Task.async_stream(fn %Element{value: value, path: path} ->
-        walker.(value, path, env)
+        DescendantOperator.evaluate(value, path, env)
       end)
       |> Stream.flat_map(fn {:ok, enum} -> enum end)
 
@@ -97,18 +92,20 @@ defimpl DescendantOperator, for: [Map, List] do
     |> Enum.filter(acceptor)
   end
 
-  defp list_with_index?(%Element{value: []}, _index), do: false
+  # Index search
+  defp wrap_if_needed(document) when is_list(document), do: [document]
+  defp wrap_if_needed(document), do: document
 
-  defp list_with_index?(%Element{value: value}, index) when is_list(value) and index >= 0,
-    do: length(value) > index
+  defp at_least_one?(%Element{value: []}, _indexes), do: false
+  defp at_least_one?(%Element{value: value}, _indexes) when not is_list(value), do: false
 
-  defp list_with_index?(%Element{value: value}, index) when is_list(value) do
-    count = length(value)
-    computed_index = count + index
-    computed_index >= 0 and computed_index <= count
+  defp at_least_one?(%Element{value: list}, indexes) do
+    count = length(list)
+    Enum.any?(indexes, &in_bound?(&1, count))
   end
 
-  defp list_with_index?(_, _), do: false
+  defp in_bound?({:index_access, index}, list_length) when index >= 0, do: list_length > index
+  defp in_bound?({:index_access, index}, list_length), do: list_length + index >= 0
 
   # Property search
   defp accept_key?(%Element{value: _, path: path}, token_key), do: match?([^token_key | _], path)

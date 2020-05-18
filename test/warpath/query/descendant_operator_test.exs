@@ -133,7 +133,6 @@ defmodule Warpath.Query.DescendantOperatorTest do
              ]
     end
 
-    @tag :skip
     test "scan more than one index", %{document: document} do
       env = env_for({:array_indexes, index_access: 0, index_access: 1})
 
