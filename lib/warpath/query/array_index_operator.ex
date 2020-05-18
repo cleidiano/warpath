@@ -40,17 +40,25 @@ defimpl ArrayIndexOperator, for: List do
   end
 
   defp value_for_indexes(list, path, indexes) do
-    max_index = Enum.count(list) - 1
-
     indexes
-    |> Stream.reject(fn {:index_access, index} -> index > max_index end)
-    |> Enum.map(fn {:index_access, index} = token ->
-      item_path = ElementPath.accumulate(token, path)
+    |> Stream.reject(&out_of_bound?(&1, list))
+    |> Enum.map(fn {:index_access, index} ->
+      {term, item_index} =
+        list
+        |> Stream.with_index()
+        |> Enum.at(index)
 
-      list
-      |> Enum.at(index)
-      |> Element.new(item_path)
+      Element.new(term, ElementPath.accumulate({:index_access, item_index}, path))
     end)
+  end
+
+  defp out_of_bound?({:index_access, _}, []), do: true
+  defp out_of_bound?({:index_access, index}, list) when index >= 0, do: index >= length(list)
+
+  defp out_of_bound?({:index_access, index}, list) do
+    count = length(list)
+    computed_index = count + index
+    computed_index < 0
   end
 end
 
