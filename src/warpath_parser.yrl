@@ -274,9 +274,7 @@ whitelist_functions() -> [
 build_descendant_lookup(_, {dot, Expression}) -> {scan, Expression};
 build_descendant_lookup(_, {filter, _} = Expression) -> {scan, Expression};
 build_descendant_lookup(_, {wildcard, _} = Expression) -> {scan, Expression};
-build_descendant_lookup(_, {array_indexes, [_]} = Expression) -> {scan, Expression};
-build_descendant_lookup(Op, {array_indexes, _} = Expression) ->
-    error_union_not_allowed("descendant", Op, Expression).
+build_descendant_lookup(_, {array_indexes, _} = Expression) -> {scan, Expression}.
 
 value_of({_Token, _Line, Value}) -> Value.
 token_of({Token, _Line, _Value}) -> Token.
