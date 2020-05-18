@@ -16,6 +16,7 @@ This release is a complete new implementation strategy, it relay on elixir proto
 - Compute item index for path on evaluate negative index.
   Ex. `Warpath.query(["a", "b"], "$.[-2]", result_type: :value_path) => {:ok, {"a", "$[0]"}}`
 - Recursive descendant with filter were applying filter over list only, support for map were added.
+     
      Ex. Given this input:
      ```elixir
           %{
@@ -26,7 +27,7 @@ This release is a complete new implementation strategy, it relay on elixir proto
                %{"id" => %{"id" => 2}},
                [%{"id" => 2}]
           ]
-          }}
+          }
      ```
      Given this query selector `$..[?(@.id==2)]`
      - version 0.2.1 -> `[%{"id" => 2}, %{"id" => 2}]`
