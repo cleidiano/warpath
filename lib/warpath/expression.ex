@@ -15,7 +15,7 @@ defmodule Warpath.Expression do
 
   @type index :: integer()
 
-  @type array_indexes :: {:array_indexes, [{:index_access, index}, ...]}
+  @type indexes :: {:indexes, [{:index_access, index}, ...]}
 
   @type array_slice ::
           {:array_slice,
@@ -45,11 +45,11 @@ defmodule Warpath.Expression do
 
   @type filter :: {:filter, has_property | {operator | fun, term}}
 
-  @type scan :: {:scan, property | wildcard | filter | array_indexes}
+  @type scan :: {:scan, property | wildcard | filter | indexes}
 
   @type token ::
           root()
-          | array_indexes()
+          | indexes()
           | array_slice()
           | dot_access()
           | filter()

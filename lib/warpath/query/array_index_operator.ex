@@ -1,23 +1,23 @@
 alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Execution.Env
-alias Warpath.Query.ArrayIndexOperator
+alias Warpath.Query.IndexOperator
 
-defprotocol ArrayIndexOperator do
+defprotocol IndexOperator do
   @fallback_to_any true
 
   @type document :: list()
   @type relative_path :: ElementPath.t()
   @type result :: Element.t() | [Element.t()]
-  @type instruction :: {:array_indexes, list({:index, integer()})}
+  @type instruction :: {:indexes, list({:index, integer()})}
   @type env :: %Env{instruction: instruction()}
 
   @spec evaluate(document(), relative_path(), Env.t()) :: result()
   def evaluate(document, relative_path, env)
 end
 
-defimpl ArrayIndexOperator, for: List do
-  def evaluate([%Element{} | _] = elements, [], %Env{instruction: {:array_indexes, indexes}}) do
+defimpl IndexOperator, for: List do
+  def evaluate([%Element{} | _] = elements, [], %Env{instruction: {:indexes, indexes}}) do
     elements
     |> Stream.filter(&Element.value_list?/1)
     |> Enum.flat_map(fn %Element{value: list, path: path} ->
@@ -25,7 +25,7 @@ defimpl ArrayIndexOperator, for: List do
     end)
   end
 
-  def evaluate(document, path, %Env{instruction: {:array_indexes, [index]}}) do
+  def evaluate(document, path, %Env{instruction: {:indexes, [index]}}) do
     case value_for_indexes(document, path, [index]) do
       [] ->
         []
@@ -35,7 +35,7 @@ defimpl ArrayIndexOperator, for: List do
     end
   end
 
-  def evaluate(document, path, %Env{instruction: {:array_indexes, indexes}}) do
+  def evaluate(document, path, %Env{instruction: {:indexes, indexes}}) do
     value_for_indexes(document, path, indexes)
   end
 
@@ -62,6 +62,6 @@ defimpl ArrayIndexOperator, for: List do
   end
 end
 
-defimpl ArrayIndexOperator, for: Any do
+defimpl IndexOperator, for: Any do
   def evaluate(_, _, _), do: []
 end

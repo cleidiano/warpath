@@ -110,7 +110,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
 
   describe "descendant index" do
     test "scan a existent one", %{document: document} do
-      env = env_for({:array_indexes, index_access: 0})
+      env = env_for({:indexes, index_access: 0})
 
       assert DescendantOperator.evaluate(document, [], env) == [
                Element.new(%{"key" => "something"},
@@ -122,7 +122,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
     end
 
     test "scan a existent one using negative index", %{document: document} do
-      env = env_for({:array_indexes, index_access: -1})
+      env = env_for({:indexes, index_access: -1})
 
       assert DescendantOperator.evaluate(document, [], env) == [
                Element.new(%{"key" => %{"key" => "russian dolls"}},
@@ -134,7 +134,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
     end
 
     test "scan more than one index", %{document: document} do
-      env = env_for({:array_indexes, index_access: 0, index_access: 1})
+      env = env_for({:indexes, index_access: 0, index_access: 1})
 
       assert DescendantOperator.evaluate(document, [], env) == [
                Element.new(%{"key" => "something"},
@@ -151,7 +151,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
     end
 
     test "scan a inexistent index result in an empty list", %{document: document} do
-      env = env_for({:array_indexes, index_access: 99})
+      env = env_for({:indexes, index_access: 99})
       assert DescendantOperator.evaluate(document, [], env) == []
     end
   end

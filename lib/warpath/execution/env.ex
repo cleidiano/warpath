@@ -1,10 +1,10 @@
 defmodule Warpath.Execution.Env do
   @moduledoc false
 
-  alias Warpath.Query.ArrayIndexOperator
   alias Warpath.Query.DescendantOperator
   alias Warpath.Query.FilterOperator
   alias Warpath.Query.IdentifierOperator
+  alias Warpath.Query.IndexOperator
   alias Warpath.Query.RootOperator
   alias Warpath.Query.SliceOperator
   alias Warpath.Query.UnionOperator
@@ -35,7 +35,7 @@ defmodule Warpath.Execution.Env do
   defp operator_for({:dot, _}), do: IdentifierOperator
   defp operator_for({:wildcard, _}), do: WildcardOperator
   defp operator_for({:scan, _}), do: DescendantOperator
-  defp operator_for({:array_indexes, _}), do: ArrayIndexOperator
+  defp operator_for({:indexes, _}), do: IndexOperator
   defp operator_for({:filter, _}), do: FilterOperator
   defp operator_for({:array_slice, _}), do: SliceOperator
   defp operator_for({:union, _}), do: UnionOperator

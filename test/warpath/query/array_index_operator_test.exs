@@ -6,24 +6,24 @@ defmodule Warpath.Query.ArrayIndexOperatorTest do
 
   alias Warpath.Element
   alias Warpath.Execution.Env
-  alias Warpath.Query.ArrayIndexOperator
+  alias Warpath.Query.IndexOperator
 
   @relative_path [{:root, "$"}]
 
   defp env_for_array_index(indexes, previous_operator \\ nil) do
     access = Enum.map(indexes, &{:index_access, &1})
-    Env.new({:array_indexes, access}, previous_operator)
+    Env.new({:indexes, access}, previous_operator)
   end
 
   test "evaluate a empty list always result in an element with empty list" do
-    ArrayIndexOperator.evaluate([], @relative_path, env_for_array_index([1, 2, 3]))
+    IndexOperator.evaluate([], @relative_path, env_for_array_index([1, 2, 3]))
   end
 
   property "always unwrap element when evaluate a single existent index" do
     check all terms <- list_of(term(), min_length: 1),
               index = Enum.random(Range.new(0, length(terms) - 1)),
               item = Enum.at(terms, index) do
-      result = ArrayIndexOperator.evaluate(terms, @relative_path, env_for_array_index([index]))
+      result = IndexOperator.evaluate(terms, @relative_path, env_for_array_index([index]))
       assert result == Element.new(item, [{:index_access, index} | @relative_path])
     end
   end
@@ -32,7 +32,7 @@ defmodule Warpath.Query.ArrayIndexOperatorTest do
     check all terms <- list_of(term(), min_length: 1),
               count = length(terms) do
       env = env_for_array_index([count, count + 1])
-      assert ArrayIndexOperator.evaluate(terms, @relative_path, env) == []
+      assert IndexOperator.evaluate(terms, @relative_path, env) == []
     end
   end
 
@@ -40,7 +40,7 @@ defmodule Warpath.Query.ArrayIndexOperatorTest do
     check all terms <- list_of(term(), min_length: 1),
               count = length(terms) do
       env = env_for_array_index([-(count + 1), -(count + 2)])
-      assert ArrayIndexOperator.evaluate(terms, @relative_path, env) == []
+      assert IndexOperator.evaluate(terms, @relative_path, env) == []
     end
   end
 
@@ -49,7 +49,7 @@ defmodule Warpath.Query.ArrayIndexOperatorTest do
     env = env_for_array_index([0, 1])
 
     check all elements <- list_of(element) do
-      result = ArrayIndexOperator.evaluate(elements, [], env)
+      result = IndexOperator.evaluate(elements, [], env)
 
       expected_elements =
         elements
@@ -70,7 +70,7 @@ defmodule Warpath.Query.ArrayIndexOperatorTest do
 
     check all term <- term(),
               element = Element.new(term, []) do
-      result = ArrayIndexOperator.evaluate([element], [], env)
+      result = IndexOperator.evaluate([element], [], env)
       assert result == [] or is_list(term)
     end
   end
@@ -79,7 +79,7 @@ defmodule Warpath.Query.ArrayIndexOperatorTest do
     env = env_for_array_index([0, 1])
 
     check all terms <- list_of(term(), length: 2) do
-      result = ArrayIndexOperator.evaluate(terms, [], env)
+      result = IndexOperator.evaluate(terms, [], env)
 
       [first, second | _] = terms
 
@@ -94,7 +94,7 @@ defmodule Warpath.Query.ArrayIndexOperatorTest do
     check all terms <- list_of(term(), length: 2),
               count = length(terms) do
       env = env_for_array_index([-count, -(count - 1)])
-      result = ArrayIndexOperator.evaluate(terms, [], env)
+      result = IndexOperator.evaluate(terms, [], env)
 
       [first, second | _] = terms
 

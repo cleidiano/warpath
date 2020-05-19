@@ -193,7 +193,7 @@ Erlang code.
 
 build_array(Indexes) ->
     IndexAccess = foldr(fun({int, _Line, Index}, Acc) -> [build_index(Index) | Acc] end, [], Indexes),
-    {array_indexes, IndexAccess}.
+    {indexes, IndexAccess}.
 
 build_index(Index) -> {index_access, Index}.
 
@@ -245,7 +245,7 @@ build_filter(FilterExpression) -> {filter, FilterExpression}.
 build_comparision(Operator, Left, Right) -> {value_of(Operator), [Left, Right]}.
 
 build_children_item(_AtOperator, {dot, Identifier}) -> Identifier;
-build_children_item(_AtOperator, {array_indexes, [IndexAccess]}) -> IndexAccess;
+build_children_item(_AtOperator, {indexes, [IndexAccess]}) -> IndexAccess;
 build_children_item(AtOperator, Token) -> error_union_not_allowed("filter", AtOperator, Token).
 
 build_has_children_lookup(_AtOperator, {dot, Identifier}) -> {'has_property?', Identifier}.
@@ -274,7 +274,7 @@ whitelist_functions() -> [
 build_descendant_lookup(_, {dot, Expression}) -> {scan, Expression};
 build_descendant_lookup(_, {filter, _} = Expression) -> {scan, Expression};
 build_descendant_lookup(_, {wildcard, _} = Expression) -> {scan, Expression};
-build_descendant_lookup(_, {array_indexes, _} = Expression) -> {scan, Expression}.
+build_descendant_lookup(_, {indexes, _} = Expression) -> {scan, Expression}.
 
 value_of({_Token, _Line, Value}) -> Value.
 token_of({Token, _Line, _Value}) -> Token.
@@ -306,7 +306,7 @@ error_dot_op_after_descendant_op({_, Line, _}) ->
     )
 ).
 
-error_union_not_allowed(ExpressionType, {_, Line, _}, {array_indexes, Indexes}) when length(Indexes) > 1 ->
+error_union_not_allowed(ExpressionType, {_, Line, _}, {indexes, Indexes}) when length(Indexes) > 1 ->
     return_error(Line, io_lib:format(
         "union index expression not supported in ~s expression",
         [ExpressionType]

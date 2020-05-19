@@ -2,7 +2,7 @@ alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Execution.Env
 alias Warpath.Query.Accessible
-alias Warpath.Query.ArrayIndexOperator
+alias Warpath.Query.IndexOperator
 alias Warpath.Query.DescendantOperator
 alias Warpath.Query.FilterOperator
 alias Warpath.Query.IdentifierOperator
@@ -31,7 +31,7 @@ end
 
 defimpl IdentifierOperator, for: List do
   @previous_operators_allowed [
-    ArrayIndexOperator,
+    IndexOperator,
     DescendantOperator,
     FilterOperator,
     UnionOperator,
