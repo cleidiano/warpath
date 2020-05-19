@@ -1,15 +1,23 @@
 alias Warpath.Element
 alias Warpath.Element.PathMarker
 alias Warpath.Execution.Env
+alias Warpath.Expression
 alias Warpath.Query.SliceOperator
 
 defprotocol SliceOperator do
   @fallback_to_any true
 
-  @type relative_path :: Element.Path.t()
+  @type document :: list()
+
+  @type relative_path :: Element.Path.acc()
+
+  @type instruction :: Expression.slice()
+
+  @type env :: %Env{instruction: instruction}
+
   @type result :: [Element.t()]
 
-  @spec evaluate(list(), relative_path(), Env.t()) :: [Element.t()]
+  @spec evaluate(document, relative_path(), env) :: [Element.t()]
   def evaluate(list, relative_path, env)
 end
 

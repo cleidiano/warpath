@@ -1,5 +1,5 @@
 alias Warpath.Element
-alias Warpath.Element.Path, as: ElementPath
+alias Warpath.Expression
 alias Warpath.Execution.Env
 alias Warpath.Query.IndexOperator
 
@@ -7,9 +7,13 @@ defprotocol IndexOperator do
   @fallback_to_any true
 
   @type document :: list()
-  @type relative_path :: ElementPath.t()
+
+  @type relative_path :: Element.Path.acc()
+
   @type result :: Element.t() | [Element.t()]
-  @type instruction :: {:indexes, list({:index, integer()})}
+
+  @type instruction :: Expression.indexes()
+
   @type env :: %Env{instruction: instruction()}
 
   @spec evaluate(document(), relative_path(), Env.t()) :: result()
@@ -48,7 +52,7 @@ defimpl IndexOperator, for: List do
         |> Stream.with_index()
         |> Enum.at(index)
 
-      Element.new(term, ElementPath.accumulate({:index_access, item_index}, path))
+      Element.new(term, Element.Path.accumulate({:index_access, item_index}, path))
     end)
   end
 

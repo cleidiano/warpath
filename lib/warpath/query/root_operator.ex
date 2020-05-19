@@ -3,12 +3,18 @@ defmodule Warpath.Query.RootOperator do
 
   alias Warpath.Element
   alias Warpath.Execution.Env
+  alias Warpath.Expression
 
   @token {:root, "$"}
 
-  @type result :: Element.t()
-  @type root_path :: [{:root, String.t()}]
+  @type document :: any()
 
-  @spec evaluate(Element.t(), [], Env.t()) :: result()
+  @type instruction :: Expression.root()
+
+  @type env :: %Env{instruction: instruction}
+
+  @type result :: Element.t()
+
+  @spec evaluate(document, [], env) :: result()
   def evaluate(document, [], _env), do: Element.new(document, [@token])
 end

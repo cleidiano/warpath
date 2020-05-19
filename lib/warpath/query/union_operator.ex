@@ -1,15 +1,22 @@
 alias Warpath.Element
 alias Warpath.Execution.Env
+alias Warpath.Expression
 alias Warpath.Query.Accessible
 alias Warpath.Query.UnionOperator
 alias Warpath.Query.IdentifierOperator
 
 defprotocol UnionOperator do
-  @type result :: [Element.t()]
-  @type relative_path :: Element.Path.t()
   @type document :: map() | keyword() | list(Element.t())
 
-  @spec evaluate(document, relative_path(), Env.t()) :: result()
+  @type result :: [Element.t()]
+
+  @type relative_path :: Element.Path.t()
+
+  @type instruction :: Expression.union()
+
+  @type env :: %Env{instruction: instruction}
+
+  @spec evaluate(document, relative_path(), env) :: result()
   def evaluate(document, relative_path, env)
 end
 
