@@ -316,6 +316,41 @@ defmodule WarpathTest do
       assert Warpath.query(document, "$.store.book[0]", result_type: :path) == {:ok, path}
     end
 
+    test "result_type: :path_tokens", %{data: document} do
+      path_tokens = [root: "$", property: "store", property: "book", index_access: 0]
+
+      assert Warpath.query(document, "$.store.book[0]", result_type: :path_tokens) ==
+               {:ok, path_tokens}
+    end
+
+    test "result_type: :value_path_tokens", %{data: document} do
+      book = %{
+        "author" => "Nigel Rees",
+        "category" => "reference",
+        "price" => 8.95,
+        "title" => "Sayings of the Century"
+      }
+
+      path_tokens = [root: "$", property: "store", property: "book", index_access: 0]
+
+      assert Warpath.query(document, "$.store.book[0]", result_type: :value_path_tokens) ==
+               {:ok, {book, path_tokens}}
+    end
+
+    test "result_type: :value_path", %{data: document} do
+      book = %{
+        "author" => "Nigel Rees",
+        "category" => "reference",
+        "price" => 8.95,
+        "title" => "Sayings of the Century"
+      }
+
+      path = "$['store']['book'][0]"
+
+      assert Warpath.query(document, "$.store.book[0]", result_type: :value_path) ==
+               {:ok, {book, path}}
+    end
+
     test "default result_type is value", %{data: document} do
       book = %{
         "author" => "Nigel Rees",

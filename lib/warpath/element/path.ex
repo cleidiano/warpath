@@ -6,15 +6,15 @@ defmodule Warpath.Element.Path do
           | {:property, String.t() | atom()}
           | {:index_access, integer}
 
-  @type t :: [token, ...] | []
+  @type acc :: [token, ...] | []
 
-  @spec accumulate(token, t) :: t
+  @spec accumulate(token, acc) :: acc
   def accumulate(token, acc) when is_list(acc), do: [token | acc]
 
-  @spec bracketify(t) :: binary
+  @spec bracketify(acc) :: binary
   def bracketify(paths), do: make_path(paths, :bracketify)
 
-  @spec dotify(t) :: binary
+  @spec dotify(acc) :: binary
   def dotify(paths), do: make_path(paths, :dotify)
 
   defp make_path([h | _] = tokens, option) when is_tuple(h) do
