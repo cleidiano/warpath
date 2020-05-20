@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 This release is a complete new implementation strategy, it relay on elixir protocol to promote extensibility and simplify maintainability.
 
 ### Added
+ - Add option `:path_tokens` and `:value_path_tokens` to Warpath.query/3, this turn possible to get the token of path produced by Warpath on evaluate a expression.
+
 
 ### Fixed
 - Forbidden negative step on slice operation

@@ -187,9 +187,11 @@ defmodule Warpath do
   ```
   ## Options:
     result_type:
-    * `:path` - return the path of evaluated expression instead of it's value
     * `:value` -  return the value of evaluated expression - `default`
-    * `:value_path` - return both path and value.
+    * `:path` - return the path of evaluated expression instead of it's value
+    * `:value_path` - return both value and path.
+    * `:path_tokens` - return the path tokens instead of it string representation, see `Warpath.Element.Path`.
+    * `:value_path_tokens` - return both value and path tokens.
   """
   @type json :: String.t()
   @type document :: map | list | json
@@ -239,9 +241,14 @@ defmodule Warpath do
 
   defp collect(elements, opt) when is_list(elements), do: Enum.map(elements, &collect(&1, opt))
 
+  defp collect(%Element{path: path}, :path), do: Path.bracketify(path)
+  defp collect(%Element{path: path}, :path_tokens), do: Enum.reverse(path)
+
   defp collect(%Element{value: member, path: path}, :value_path),
     do: {member, Path.bracketify(path)}
 
-  defp collect(%Element{path: path}, :path), do: Path.bracketify(path)
+  defp collect(%Element{value: member, path: path}, :value_path_tokens),
+    do: {member, Enum.reverse(path)}
+
   defp collect(%Element{value: member}, _), do: member
 end
