@@ -1,5 +1,9 @@
 defmodule Warpath.Element.Path do
-  @moduledoc false
+  @moduledoc """
+    This module contains functions to accumulate and transform item path tokens.
+
+    The path are built during a expression evaluation by `Warpath.query/3`.
+  """
 
   @type token ::
           {:root, String.t()}
@@ -8,12 +12,40 @@ defmodule Warpath.Element.Path do
 
   @type acc :: [token, ...] | []
 
-  @spec accumulate(token, acc) :: acc
-  def accumulate(token, acc) when is_list(acc), do: [token | acc]
+  @doc """
+  Accumulate a path token into a path acc.
 
+  ## Example
+      iex> acc = [{:root, "$"}]
+      ...> Warpath.Element.Path.accumulate({:property, "name"}, acc)
+      [{:property, "name"}, {:root, "$"}]
+  """
+  @spec accumulate(token, acc) :: acc
+  def accumulate({tag, _} = token, acc)
+      when is_list(acc) and tag in [:root, :property, :index_access],
+      do: [token | acc]
+
+  @doc """
+  Transform path tokens into a jsonpath bracket-notation representation.
+
+  ## Example
+      iex> acc = [{:property, "name"}, {:root, "$"}]
+      ...> Warpath.Element.Path.bracketify(acc)
+      "$['name']"
+
+  """
   @spec bracketify(acc) :: binary
   def bracketify(paths), do: make_path(paths, :bracketify)
 
+  @doc """
+  Transform path tokens into a jsonpath dot-notation representation.
+
+  ## Example
+      iex> acc = [{:property, "name"}, {:root, "$"}]
+      ...> Warpath.Element.Path.dotify(acc)
+      "$.name"
+
+  """
   @spec dotify(acc) :: binary
   def dotify(paths), do: make_path(paths, :dotify)
 

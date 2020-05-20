@@ -5,8 +5,6 @@ defmodule WarpathTest do
 
   alias Warpath.ExpressionError
 
-  @value_path [result_type: :value_path]
-
   setup_all do
     %{data: Oracle.json_store()}
   end
@@ -19,6 +17,13 @@ defmodule WarpathTest do
     test "successfully evaluate a valid expresssion" do
       assert {:ok, "Warpath"} =
                Warpath.query(%{"autobots" => ["Optimus Prime", "Warpath"]}, "$.autobots[1]")
+    end
+
+    test "successfully evaluate expression compiled" do
+      {:ok, expression} = Warpath.Expression.compile("$.autobots[0]")
+
+      assert {:ok, "Optimus Prime"} =
+               Warpath.query(%{"autobots" => ["Optimus Prime", "Warpath"]}, expression)
     end
 
     test "can decode and evaluate a valid json string" do

@@ -171,20 +171,20 @@ defmodule Warpath do
   @doc """
   Query data for the given expression.
 
-  ```
-    #data structure
-    iex> term = %{"name" => "Warpath"}
-    ...> Warpath.query(term, "$.name")
-    {:ok, "Warpath"}
+  ## Example
+      iex> data_structure = %{"name" => "Warpath"}
+      ...> Warpath.query(data_structure, "$.name")
+      {:ok, "Warpath"}
 
-  ```
-  ```
-    #raw json
-    iex> term = ~s/{"name": "Warpath"}/
-    ...> Warpath.query(term, "$.name")
-    {:ok, "Warpath"}
+      iex> raw_json = ~s/{"name": "Warpath"}/
+      ...> Warpath.query(raw_json, "$.name")
+      {:ok, "Warpath"}
 
-  ```
+      iex> #Pass a compiled expression as selector
+      ...> {:ok, expression} = Warpath.Expression.compile("$.autobots[0]")
+      ...> Warpath.query(%{"autobots" => ["Optimus Prime", "Warpath"]}, expression)
+      {:ok, "Optimus Prime"}
+
   ## Options:
     result_type:
     * `:value` -  return the value of evaluated expression - `default`
@@ -195,9 +195,10 @@ defmodule Warpath do
   """
   @type json :: String.t()
   @type document :: map | list | json
-  @type opts :: [result_type: :value | :path | :value_path]
+  @type selector :: Expression.t() | String.t()
+  @type opts :: [result_type: :value | :path | :value_path | :path_tokens | :value_path_tokens]
 
-  @spec query(document, String.t(), opts) :: {:ok, any} | {:error, any}
+  @spec query(document, selector(), opts) :: {:ok, any} | {:error, any}
   def query(document, selector, opts \\ [])
 
   def query(document, selector, opts) when is_binary(document) do
@@ -206,20 +207,24 @@ defmodule Warpath do
     |> query(selector, opts)
   end
 
-  def query(data, selector, opts) do
+  def query(document, selector, opts) when is_binary(selector) do
     case Expression.compile(selector) do
-      {:ok, tokens} ->
-        query_result =
-          tokens
-          |> Execution.execution_plan()
-          |> Enum.reduce(Element.new(data, []), &dispatch_reduce/2)
-          |> collect(opts[:result_type] || :value)
-
-        {:ok, query_result}
+      {:ok, expression} ->
+        query(document, expression, opts)
 
       {:error, _} = error ->
         error
     end
+  end
+
+  def query(document, %Expression{} = expression, opts) do
+    query_result =
+      expression
+      |> Execution.execution_plan()
+      |> Enum.reduce(Element.new(document, []), &dispatch_reduce/2)
+      |> collect(opts[:result_type] || :value)
+
+    {:ok, query_result}
   end
 
   @doc """
