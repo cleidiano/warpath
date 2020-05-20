@@ -241,8 +241,8 @@ defmodule Warpath.Query.DescendantOperatorTest do
   end
 
   property "descendant operator on data type other then list or map always produce empty list" do
-    check all term <- term(),
-              container? = is_list(term) or is_map(term) do
+    check all term <- term() do
+      container? = is_list(term) or is_map(term)
       assert container? or DescendantOperator.evaluate(term, [], env_for({:wildcard, :*})) == []
     end
   end

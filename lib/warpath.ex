@@ -227,8 +227,10 @@ defmodule Warpath do
   """
   @spec query!(document, String.t(), opts) :: any
   def query!(data, selector, opts \\ []) do
-    {:ok, query_result} = query(data, selector, opts)
-    query_result
+    case query(data, selector, opts) do
+      {:ok, query_result} -> query_result
+      {:error, error} -> raise error
+    end
   end
 
   defp dispatch_reduce(%Env{operator: operator} = env, elements) when is_list(elements) do
