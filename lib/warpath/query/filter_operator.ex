@@ -1,4 +1,5 @@
 alias Warpath.Element
+alias Warpath.Expression
 alias Warpath.Element.Path
 alias Warpath.Element.PathMarker
 alias Warpath.Execution.Env
@@ -9,10 +10,16 @@ defprotocol FilterOperator do
   @fallback_to_any true
 
   @type document :: map() | list()
-  @type relative_path :: Path.t()
+
+  @type relative_path :: Path.acc()
+
+  @type instruction :: Expression.filter()
+
+  @type env :: %Env{instruction: instruction}
+
   @type result :: Element.t() | [Element.t()]
 
-  @spec evaluate(document, relative_path(), Env.t()) :: result()
+  @spec evaluate(document, relative_path(), env) :: result()
   def evaluate(document, relative_path, env)
 end
 

@@ -2,16 +2,23 @@ alias Warpath.Element
 alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Element.PathMarker
 alias Warpath.Execution.Env
+alias Warpath.Expression
 alias Warpath.Query.WildcardOperator
 
 defprotocol WildcardOperator do
   @fallback_to_any true
 
   @type document :: map() | list()
+
   @type relative_path :: [] | ElementPath.t()
+
+  @type instruction :: Expression.wildcard()
+
+  @type env :: %Env{instruction: instruction}
+
   @type result :: [Element.t()]
 
-  @spec evaluate(document(), relative_path, Env.t()) :: [Element.t()]
+  @spec evaluate(document(), relative_path, env) :: [Element.t()]
   def evaluate(document, relative_path, env)
 end
 

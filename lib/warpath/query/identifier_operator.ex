@@ -1,6 +1,6 @@
 alias Warpath.Element
-alias Warpath.Element.Path, as: ElementPath
 alias Warpath.Execution.Env
+alias Warpath.Expression
 alias Warpath.Query.Accessible
 alias Warpath.Query.IndexOperator
 alias Warpath.Query.DescendantOperator
@@ -10,18 +10,24 @@ alias Warpath.Query.UnionOperator
 alias Warpath.Query.WildcardOperator
 
 defprotocol IdentifierOperator do
-  @type document :: Element.t() | map | list
+  @type document :: map | keyword() | list(Element.t())
+
   @type relative_path :: ElementPath.t() | []
+
+  @type instruction :: Expression.dot_access()
+
+  @type env :: %Env{instruction: instruction}
+
   @type result :: Element.t() | [Element.t()]
 
-  @spec evaluate(document, relative_path, Env.t()) :: result()
+  @spec evaluate(document, relative_path, env) :: result()
   def evaluate(document, relative_path, env)
 end
 
 defimpl IdentifierOperator, for: Map do
   def evaluate(document, relative_path, %Env{instruction: instruction}) do
     {:dot, {:property, identifier} = token} = instruction
-    path = ElementPath.accumulate(token, relative_path)
+    path = Element.Path.accumulate(token, relative_path)
 
     document
     |> Access.get(identifier)
@@ -55,13 +61,13 @@ defimpl IdentifierOperator, for: List do
 
       wrong_query =
         token
-        |> ElementPath.accumulate(relative_path)
-        |> ElementPath.dotify()
+        |> Element.Path.accumulate(relative_path)
+        |> Element.Path.dotify()
 
       tips =
         "You are trying to traverse a list using dot " <>
           "notation '#{wrong_query}', that it's not allowed for list type. " <>
-          "You can use something like '#{ElementPath.dotify(relative_path)}[*].#{name}' instead."
+          "You can use something like '#{Element.Path.dotify(relative_path)}[*].#{name}' instead."
 
       raise Warpath.UnsupportedOperationError, tips
     end

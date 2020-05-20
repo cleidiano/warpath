@@ -1,4 +1,5 @@
 alias Warpath.Element
+alias Warpath.Expression
 alias Warpath.Execution.Env
 alias Warpath.Query.IndexOperator
 alias Warpath.Query.DescendantOperator
@@ -8,9 +9,16 @@ defprotocol DescendantOperator do
   @fallback_to_any true
 
   @type document :: list() | map()
+
+  @type relative_path :: Element.Path.acc()
+
+  @type instruction :: Expression.scan()
+
+  @type env :: %Env{instruction: instruction()}
+
   @type result :: Element.t() | [Element.t()]
 
-  @spec evaluate(document(), Element.Path.t(), Env.t()) :: result()
+  @spec evaluate(document(), relative_path(), env) :: result()
   def evaluate(document, relative_path, env)
 end
 
