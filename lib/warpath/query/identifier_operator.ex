@@ -10,6 +10,8 @@ alias Warpath.Query.UnionOperator
 alias Warpath.Query.WildcardOperator
 
 defprotocol IdentifierOperator do
+  @moduledoc false
+
   @type document :: map | keyword() | list(Element.t())
 
   @type relative_path :: ElementPath.t() | []

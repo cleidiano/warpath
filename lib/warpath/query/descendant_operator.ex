@@ -6,6 +6,8 @@ alias Warpath.Query.DescendantOperator
 alias Warpath.Query.FilterOperator
 
 defprotocol DescendantOperator do
+  @moduledoc false
+
   @fallback_to_any true
 
   @type document :: list() | map()

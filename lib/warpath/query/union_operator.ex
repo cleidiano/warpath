@@ -6,6 +6,8 @@ alias Warpath.Query.UnionOperator
 alias Warpath.Query.IdentifierOperator
 
 defprotocol UnionOperator do
+  @moduledoc false
+
   @type document :: map() | keyword() | list(Element.t())
 
   @type result :: [Element.t()]

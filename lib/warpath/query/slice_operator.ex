@@ -5,6 +5,8 @@ alias Warpath.Expression
 alias Warpath.Query.SliceOperator
 
 defprotocol SliceOperator do
+  @moduledoc false
+
   @fallback_to_any true
 
   @type document :: list()

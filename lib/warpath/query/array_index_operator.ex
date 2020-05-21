@@ -4,6 +4,8 @@ alias Warpath.Execution.Env
 alias Warpath.Query.IndexOperator
 
 defprotocol IndexOperator do
+  @moduledoc false
+
   @fallback_to_any true
 
   @type document :: list()
