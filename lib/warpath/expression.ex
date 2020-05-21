@@ -1,6 +1,6 @@
 defmodule Warpath.Expression do
   @moduledoc """
-    This module contain function to compile a jsonpath query string.
+    This module contains functions to compile a jsonpath query string.
   """
 
   alias Warpath.Expression.Parser
@@ -79,6 +79,25 @@ defmodule Warpath.Expression do
       {:error, error} ->
         message = Exception.message(error)
         {:error, ExpressionError.exception(message)}
+    end
+  end
+
+  @doc """
+  Compiles jsonpath string query to expression.
+
+  ## Examples
+      iex> import Warpath.Expression, only: [sigil_q: 2]
+      iex> ~q"$.post.author"
+      %Warpath.Expression{tokens: [ {:root, "$"}, {:dot, {:property, "post"}}, {:dot, {:property, "author"}} ]}
+  """
+  defmacro sigil_q({:<<>>, _meta, [string]}, _modifiers) do
+    case compile(string) do
+      {:ok, compiled} ->
+        exp = Macro.escape(compiled)
+        quote(do: unquote(exp))
+
+      {:error, error} ->
+        raise error
     end
   end
 end
