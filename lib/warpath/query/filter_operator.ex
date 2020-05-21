@@ -7,6 +7,8 @@ alias Warpath.Filter.Predicate
 alias Warpath.Query.FilterOperator
 
 defprotocol FilterOperator do
+  @moduledoc false
+
   @fallback_to_any true
 
   @type document :: map() | list()

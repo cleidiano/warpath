@@ -6,6 +6,8 @@ alias Warpath.Expression
 alias Warpath.Query.WildcardOperator
 
 defprotocol WildcardOperator do
+  @moduledoc false
+
   @fallback_to_any true
 
   @type document :: map() | list()
