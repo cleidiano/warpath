@@ -7,7 +7,7 @@ defmodule Warpath.Query.SliceOperatorTest do
   alias Warpath.Query.SliceOperator
 
   defp env_for_slice(config \\ []) do
-    Env.new({:array_slice, config})
+    Env.new({:slice, config})
   end
 
   defp element({term, index}), do: Element.new(term, [{:index_access, index}])

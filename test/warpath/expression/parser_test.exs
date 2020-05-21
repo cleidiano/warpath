@@ -41,7 +41,7 @@ defmodule Warpath.Expression.ParserTest do
     test "with only one colon supplied" do
       expression = [
         @root_expression,
-        {:array_slice, []}
+        {:slice, []}
       ]
 
       assert_parse tokenize!("$[:]"), expression
@@ -51,7 +51,7 @@ defmodule Warpath.Expression.ParserTest do
     test "with two colon supplied without indexes" do
       expression = [
         @root_expression,
-        {:array_slice, []}
+        {:slice, []}
       ]
 
       assert_parse tokenize!("$[::]"), expression
@@ -61,7 +61,7 @@ defmodule Warpath.Expression.ParserTest do
     test "with only start index supplied" do
       expression = [
         @root_expression,
-        {:array_slice, [start_index: 1]}
+        {:slice, [start_index: 1]}
       ]
 
       assert_parse tokenize!("$[1:]"), expression
@@ -71,7 +71,7 @@ defmodule Warpath.Expression.ParserTest do
     test "with start and end_index supplied" do
       expression = [
         @root_expression,
-        {:array_slice, [start_index: 1, end_index: 3]}
+        {:slice, [start_index: 1, end_index: 3]}
       ]
 
       assert_parse tokenize!("$[1:3]"), expression
@@ -81,7 +81,7 @@ defmodule Warpath.Expression.ParserTest do
     test "with start end_index and step supplied" do
       expression = [
         @root_expression,
-        {:array_slice, [start_index: 1, end_index: 3, step: 2]}
+        {:slice, [start_index: 1, end_index: 3, step: 2]}
       ]
 
       assert_parse tokenize!("$[1:3:2]"), expression

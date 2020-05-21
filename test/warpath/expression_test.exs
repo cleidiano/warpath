@@ -1,10 +1,10 @@
 defmodule Warpath.ExpressionTest do
   use ExUnit.Case, async: true
 
+  import Warpath.Expression
+
   alias Warpath.Expression
   alias Warpath.ExpressionError
-
-  import Warpath.Expression
 
   doctest Expression
 
