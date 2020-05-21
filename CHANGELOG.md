@@ -10,7 +10,7 @@ This release is a complete new implementation strategy, it relay on elixir proto
 
 ### Added
  - Add option `:path_tokens` and `:value_path_tokens` to Warpath.query/3, this turn possible to get the token of path produced by Warpath on evaluate a expression.
-
+ - Add support to pass compiled expression to `Warpath.query/3` as a jsonpath selector.
 
 ### Fixed
 - Forbidden negative step on slice operation
