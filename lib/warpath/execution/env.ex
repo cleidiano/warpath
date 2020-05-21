@@ -37,6 +37,6 @@ defmodule Warpath.Execution.Env do
   defp operator_for({:scan, _}), do: DescendantOperator
   defp operator_for({:indexes, _}), do: IndexOperator
   defp operator_for({:filter, _}), do: FilterOperator
-  defp operator_for({:array_slice, _}), do: SliceOperator
+  defp operator_for({:slice, _}), do: SliceOperator
   defp operator_for({:union, _}), do: UnionOperator
 end

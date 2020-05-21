@@ -24,7 +24,7 @@ defprotocol SliceOperator do
 end
 
 defimpl SliceOperator, for: List do
-  def evaluate(elements, relative_path, %Env{instruction: {:array_slice, slice_args}}) do
+  def evaluate(elements, relative_path, %Env{instruction: {:slice, slice_args}}) do
     with {:empty_range?, false} <- {:empty_range?, empty_range?(slice_args)},
          {:config, {step, %Range{} = range}} <- {:config, slice_config(elements, slice_args)} do
       elements

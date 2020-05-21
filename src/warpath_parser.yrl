@@ -203,7 +203,7 @@ build_wildcard(Token) -> {wildcard, token_of(Token)}.
 
 build_slice(Tokens) -> 
 	Slice = compute_slice(_Line = start, _ColonCount = 0, _Acc = [], Tokens),
-    {array_slice, reverse(Slice)}.
+    {slice, reverse(Slice)}.
 
 compute_slice(_, ColonCount, Acc, [{':', Line, _} | Rest]) ->
     compute_slice(Line, ColonCount + 1, Acc, Rest);

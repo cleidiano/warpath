@@ -22,7 +22,7 @@ defmodule Warpath.Expression do
   @type indexes :: {:indexes, [{:index_access, index}, ...]}
 
   @type array_slice ::
-          {:array_slice,
+          {:slice,
            [
              {:start_index, index},
              {:end_index, index},
