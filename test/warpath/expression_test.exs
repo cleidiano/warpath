@@ -4,9 +4,11 @@ defmodule Warpath.ExpressionTest do
   alias Warpath.Expression
   alias Warpath.ExpressionError
 
+  import Warpath.Expression
+
   doctest Expression
 
-  describe "expression" do
+  describe "compile/1" do
     test "when tokenizer fail" do
       error = %ExpressionError{message: ~S(Invalid syntax on line 1, {:illegal, '"'})}
       assert {:error, error} == Expression.compile(~S("))
@@ -22,6 +24,20 @@ defmodule Warpath.ExpressionTest do
 
     test "compile successful" do
       assert {:ok, _} = Expression.compile("$.valid")
+    end
+  end
+
+  describe "sigil_q/2" do
+    test "rise when compilation fail" do
+      assert_raise ExpressionError, fn ->
+        defmodule InvalidExpression do
+          @path ~q"["
+        end
+      end
+    end
+
+    test "compile successful" do
+      assert %Expression{tokens: [{:root, "$"}, {:dot, {:property, "name"}}]} = ~q"$.name"
     end
   end
 end
