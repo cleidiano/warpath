@@ -12,7 +12,7 @@ defprotocol UnionOperator do
 
   @type relative_path :: Element.Path.t()
 
-  @type instruction :: Expression.union()
+  @type instruction :: Expression.union_property()
 
   @type env :: %Env{instruction: instruction}
 

@@ -3,6 +3,8 @@ defmodule Warpath.Element.PathTest do
 
   alias Warpath.Element.Path
 
+  doctest Warpath.Element.Path
+
   describe "bracketify/1 create path for" do
     test "root expression" do
       assert Path.bracketify([{:root, "$"}]) == "$"

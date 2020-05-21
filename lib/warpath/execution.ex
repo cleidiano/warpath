@@ -2,11 +2,10 @@ defmodule Warpath.Execution do
   @moduledoc false
 
   alias Warpath.Execution.Env
+  alias Warpath.Expression
 
-  @type tokens :: [Warpath.Expression.token()]
-
-  @spec execution_plan(tokens) :: list(Env.t())
-  def execution_plan(tokens) when is_list(tokens) do
+  @spec execution_plan(Expression.t()) :: list(Env.t())
+  def execution_plan(%Expression{tokens: tokens}) do
     tokens
     |> Enum.reduce([], fn token, acc ->
       previous_operator = List.first(acc)

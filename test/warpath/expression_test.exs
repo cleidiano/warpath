@@ -4,6 +4,8 @@ defmodule Warpath.ExpressionTest do
   alias Warpath.Expression
   alias Warpath.ExpressionError
 
+  doctest Expression
+
   describe "expression" do
     test "when tokenizer fail" do
       error = %ExpressionError{message: ~S(Invalid syntax on line 1, {:illegal, '"'})}

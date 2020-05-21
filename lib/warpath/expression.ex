@@ -1,9 +1,13 @@
 defmodule Warpath.Expression do
-  @moduledoc false
+  @moduledoc """
+    This module contain function to compile a jsonpath query string.
+  """
 
   alias Warpath.Expression.Parser
   alias Warpath.Expression.Tokenizer
   alias Warpath.ExpressionError
+
+  defstruct tokens: nil
 
   @type root :: {:root, String.t()}
 
@@ -27,7 +31,7 @@ defmodule Warpath.Expression do
 
   @type wildcard :: {:wildcard, :*}
 
-  @type union :: {:union, [dot_access, ...]}
+  @type union_property :: {:union, [dot_access(), ...]}
 
   @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!== | :not | :and | :or | :in
 
@@ -54,14 +58,23 @@ defmodule Warpath.Expression do
           | dot_access()
           | filter()
           | scan()
-          | union()
+          | union_property()
           | wildcard()
 
-  @spec compile(String.t()) :: {:ok, nonempty_list(token)} | {:error, ExpressionError.t()}
+  @type t :: %__MODULE__{tokens: nonempty_list(token())}
+
+  @doc """
+  Compile a jsonpath string query
+
+  ## Example
+      iex> Warpath.Expression.compile("$.post.author")
+      {:ok, %Warpath.Expression{tokens: [ {:root, "$"}, {:dot, {:property, "post"}}, {:dot, {:property, "author"}} ]}}
+  """
+  @spec compile(String.t()) :: {:ok, any} | {:error, ExpressionError.t()}
   def compile(expression) when is_binary(expression) do
     with {:ok, tokens} <- Tokenizer.tokenize(expression),
-         {:ok, _} = expression_tokens <- Parser.parse(tokens) do
-      expression_tokens
+         {:ok, expression_tokens} <- Parser.parse(tokens) do
+      {:ok, %Warpath.Expression{tokens: expression_tokens}}
     else
       {:error, error} ->
         message = Exception.message(error)
