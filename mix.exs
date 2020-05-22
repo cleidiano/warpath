@@ -1,7 +1,7 @@
 defmodule Warpath.MixProject do
   use Mix.Project
   @description "A implementation of Jsonpath expression for Elixir."
-  @version "0.3.0-dev"
+  @version "0.3.0-rc.1"
 
   def project do
     [
