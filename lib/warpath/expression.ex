@@ -17,16 +17,14 @@ defmodule Warpath.Expression do
 
   @type has_property :: {:has_property?, property}
 
-  @type index :: integer()
+  @type indexes :: {:indexes, [{:index_access, integer()}, ...]}
 
-  @type indexes :: {:indexes, [{:index_access, index}, ...]}
-
-  @type array_slice ::
+  @type slice ::
           {:slice,
            [
-             {:start_index, index},
-             {:end_index, index},
-             {:step, index}
+             {:start_index, integer()},
+             {:end_index, integer()},
+             {:step, non_neg_integer()}
            ]}
 
   @type wildcard :: {:wildcard, :*}
@@ -35,7 +33,7 @@ defmodule Warpath.Expression do
 
   @type operator :: :< | :> | :<= | :>= | :== | :!= | :=== | :!== | :not | :and | :or | :in
 
-  @type fun ::
+  @type guard ::
           :is_atom
           | :is_binary
           | :is_boolean
@@ -47,14 +45,14 @@ defmodule Warpath.Expression do
           | :is_number
           | :is_tuple
 
-  @type filter :: {:filter, has_property | {operator | fun, term}}
+  @type filter :: {:filter, has_property | {operator | guard, term}}
 
   @type scan :: {:scan, property | wildcard | filter | indexes}
 
   @type token ::
           root()
           | indexes()
-          | array_slice()
+          | slice()
           | dot_access()
           | filter()
           | scan()
@@ -70,7 +68,7 @@ defmodule Warpath.Expression do
       iex> Warpath.Expression.compile("$.post.author")
       {:ok, %Warpath.Expression{tokens: [ {:root, "$"}, {:dot, {:property, "post"}}, {:dot, {:property, "author"}} ]}}
   """
-  @spec compile(String.t()) :: {:ok, any} | {:error, ExpressionError.t()}
+  @spec compile(String.t()) :: {:ok, t()} | {:error, ExpressionError.t()}
   def compile(expression) when is_binary(expression) do
     with {:ok, tokens} <- Tokenizer.tokenize(expression),
          {:ok, expression_tokens} <- Parser.parse(tokens) do
