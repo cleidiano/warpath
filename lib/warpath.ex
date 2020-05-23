@@ -159,8 +159,16 @@ defmodule Warpath do
       {:ok, ["$['integers'][0]", "$['integers'][1]"]}
 
       iex>document = %{"integers" => [100, 200, 300]}
+      ...> Warpath.query(document, "$.integers[0]", result_type: :path_tokens)
+      {:ok, [{:root, "$"}, {:property, "integers"}, {:index_access, 0}]}
+
+      iex>document = %{"integers" => [100, 200, 300]}
       ...> Warpath.query(document, "$.integers[0, 1]", result_type: :value_path)
       {:ok, [{100, "$['integers'][0]"}, {200, "$['integers'][1]"}]}
+
+      iex>document = %{"integers" => [100, 200, 300]}
+      ...> Warpath.query(document, "$.integers[0]", result_type: :value_path_tokens)
+      {:ok, {100, [{:root, "$"}, {:property, "integers"}, {:index_access, 0}]}}
   """
   alias Warpath.Element
   alias Warpath.Element.Path
