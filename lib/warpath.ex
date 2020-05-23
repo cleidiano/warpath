@@ -168,7 +168,7 @@ defmodule Warpath do
 
       iex>document = %{"integers" => [100, 200, 300]}
       ...> Warpath.query(document, "$.integers[0]", result_type: :value_path_tokens)
-      {:ok, [{100, [{:root, "$"}, {:property, "integers"}, {:index_access, 0}]}]}
+      {:ok, {100, [{:root, "$"}, {:property, "integers"}, {:index_access, 0}]}}
   """
   alias Warpath.Element
   alias Warpath.Element.Path
