@@ -92,13 +92,12 @@ defimpl DescendantOperator, for: [Map, List] do
 
     children =
       members
-      |> Task.async_stream(fn %Element{value: value, path: path} ->
+      |> Enum.flat_map(fn %Element{value: value, path: path} ->
         DescendantOperator.evaluate(value, path, env)
       end)
-      |> Stream.flat_map(fn {:ok, enum} -> enum end)
 
     members
-    |> Stream.concat(children)
+    |> Enum.concat(children)
     |> Enum.filter(acceptor)
   end
 
