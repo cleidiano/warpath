@@ -1,7 +1,6 @@
 json =
   __DIR__
-  |> Path.join("/fixtures/json_sample.json")
-  |> Path.expand()
+  |> Path.join("test/fixtures/json_sample.json")
   |> File.read!()
 
 Benchee.run(
@@ -13,9 +12,15 @@ Benchee.run(
     "$..*" => {"$..*", json},
     "$.items[0]" => {"$.items[0]", json},
     "$.items[*].name" => {"$.items[*].name", json},
+    "$.items[0:]" => {"$.items[0:]", json},
     "$.items[?(is_integer(@.integer) and @.integer > 5)]" =>
-      {"$.items[?(is_integer(@.integer) and @.integer > 5)]", json},
-    "$.items[0:]" => {"$.items[0:]", json}
+      {"$.items[?(is_integer(@.integer) and @.integer > 5)]", json}
   },
-  memory_time: 2
+  save: [path: "benchmark.benchee"],
+  load: "benchmark.benchee",
+  memory_time: 2,
+  formatters: [
+    Benchee.Formatters.HTML,
+    Benchee.Formatters.Console
+  ]
 )

@@ -33,7 +33,8 @@ defmodule Warpath.MixProject do
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:yaml_elixir, "~> 2.4", only: :test},
       {:stream_data, "~> 0.1", only: [:test, :dev]},
-      {:benchee, "~> 1.0", only: :dev}
+      {:benchee, "~> 1.0", only: :dev},
+      {:benchee_html, "~> 1.0", only: :dev}
     ]
   end
 

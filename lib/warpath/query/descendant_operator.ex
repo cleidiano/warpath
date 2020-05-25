@@ -25,8 +25,6 @@ defprotocol DescendantOperator do
 end
 
 defimpl DescendantOperator, for: [Map, List] do
-  alias Warpath.Element.PathMarker
-
   def evaluate(
         document,
         relative_path,
@@ -85,16 +83,15 @@ defimpl DescendantOperator, for: [Map, List] do
 
   defp collect_by(data, relative_path, env, acceptor)
        when is_list(data) or is_map(data) do
-    members =
-      data
-      |> Element.new(relative_path)
-      |> PathMarker.stream()
+    members = Element.elementify(data, relative_path)
 
     children =
-      members
-      |> Enum.flat_map(fn %Element{value: value, path: path} ->
-        DescendantOperator.evaluate(value, path, env)
-      end)
+      Enum.flat_map(
+        members,
+        fn %Element{value: value, path: path} ->
+          DescendantOperator.evaluate(value, path, env)
+        end
+      )
 
     members
     |> Enum.concat(children)

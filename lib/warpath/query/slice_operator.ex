@@ -1,5 +1,4 @@
 alias Warpath.Element
-alias Warpath.Element.PathMarker
 alias Warpath.Execution.Env
 alias Warpath.Expression
 alias Warpath.Query.SliceOperator
@@ -27,9 +26,7 @@ defimpl SliceOperator, for: List do
   def evaluate(elements, relative_path, %Env{instruction: {:slice, slice_args}}) do
     with {:empty_range?, false} <- {:empty_range?, empty_range?(slice_args)},
          {:config, {step, %Range{} = range}} <- {:config, slice_config(elements, slice_args)} do
-      elements
-      |> Element.new(relative_path)
-      |> do_slice(range, step)
+      do_slice(elements, relative_path, range, step)
     else
       {:empty_range?, true} ->
         []
@@ -69,9 +66,9 @@ defimpl SliceOperator, for: List do
     Keyword.get_lazy(slice, :end_index, fn -> length(element) end)
   end
 
-  defp do_slice(element, range, step) do
-    element
-    |> PathMarker.stream()
+  defp do_slice(terms, relative_path, range, step) do
+    terms
+    |> Element.elementify(relative_path)
     |> Stream.with_index()
     |> Enum.slice(range)
     |> Stream.reject(fn {_, index} -> rem(index, step) != 0 end)

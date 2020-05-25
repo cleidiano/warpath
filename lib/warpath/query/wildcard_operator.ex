@@ -1,6 +1,4 @@
 alias Warpath.Element
-alias Warpath.Element.Path, as: ElementPath
-alias Warpath.Element.PathMarker
 alias Warpath.Execution.Env
 alias Warpath.Expression
 alias Warpath.Query.WildcardOperator
@@ -12,7 +10,7 @@ defprotocol WildcardOperator do
 
   @type document :: map() | list()
 
-  @type relative_path :: [] | ElementPath.t()
+  @type relative_path :: [] | Element.Path.t()
 
   @type instruction :: Expression.wildcard()
 
@@ -26,10 +24,7 @@ end
 
 defimpl WildcardOperator, for: Map do
   def evaluate(document, relative_path, _env) do
-    document
-    |> Element.new(relative_path)
-    |> PathMarker.stream()
-    |> Enum.to_list()
+    Element.elementify(document, relative_path)
   end
 end
 
@@ -41,10 +36,7 @@ defimpl WildcardOperator, for: List do
   end
 
   def evaluate(itens, relative_path, _env) do
-    itens
-    |> Element.new(relative_path)
-    |> PathMarker.stream()
-    |> Enum.to_list()
+    Element.elementify(itens, relative_path)
   end
 end
 

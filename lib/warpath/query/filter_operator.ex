@@ -1,7 +1,6 @@
 alias Warpath.Element
 alias Warpath.Expression
 alias Warpath.Element.Path
-alias Warpath.Element.PathMarker
 alias Warpath.Execution.Env
 alias Warpath.Filter.Predicate
 alias Warpath.Query.FilterOperator
@@ -37,8 +36,7 @@ defimpl FilterOperator, for: List do
 
   def evaluate(document, relative_path, %Env{instruction: {:filter, filter_expression}}) do
     document
-    |> Element.new(relative_path)
-    |> PathMarker.stream()
+    |> Element.elementify(relative_path)
     |> Enum.filter(fn %Element{value: value} -> Predicate.eval(filter_expression, value) end)
   end
 end
