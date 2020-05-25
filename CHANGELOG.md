@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased][unreleased]
 
+## [0.3.0-rc.2] - 2020-05-25
+- Improve performance remove overhead caused by Task.async_stream and Stream module.
+
 ## [0.3.0-rc.1] - 2020-05-22
 This release is a complete new implementation strategy, it relay on elixir protocol to promote extensibility and simplify maintainability.
 
@@ -81,7 +84,8 @@ This realease put a effort to become compatible as possible with the concensus i
 - Unwrap output of query that the only possible result is as scalar value, ex. `Warpath.query!([1, 2, 3], "$[0]")` will return `1` instead of `[1]`.
 
 
-[unreleased]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.1...HEAD
+[unreleased]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.2...HEAD
+[0.3.0-rc.2]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.1...v0.3.0-rc.2
 [0.3.0-rc.1]: https://github.com/Cleidiano/warpath/compare/v0.2.1...v0.3.0-rc.1
 [0.2.1]: https://github.com/Cleidiano/warpath/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Cleidiano/warpath/compare/v0.1.0...v0.2.0
