@@ -28,17 +28,17 @@ defmodule Warpath.Element do
     ## Example
       #List
       iex> Warpath.Element.elementify([:a, :b], [])
-        [
-          %Warpath.Element{value: :a, path: [{:index_access, 0}]},
-          %Warpath.Element{value: :b, path: [{:index_access, 1}]}
-        ]
+      [
+        %Warpath.Element{value: :a, path: [{:index_access, 0}]},
+        %Warpath.Element{value: :b, path: [{:index_access, 1}]}
+      ]
 
       #List
       iex> Warpath.Element.elementify(%{name: "Warpath", category: "Autobots"}, [])
-        [
-          %Warpath.Element{value: "Autobots", path: [{:property, :category }]},
-          %Warpath.Element{value: "Warpath", path: [{:property, :name }]}
-        ]
+      [
+        %Warpath.Element{value: "Autobots", path: [{:property, :category }]},
+        %Warpath.Element{value: "Warpath", path: [{:property, :name }]}
+      ]
   """
   @spec elementify(map(), Path.acc(), path_accumulator) :: [Element.t()]
   def elementify(enum, relative_path, path_fun \\ &Path.accumulate/2)
