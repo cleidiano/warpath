@@ -16,7 +16,6 @@ Benchee.run(
     "$.items[?(is_integer(@.integer) and @.integer > 5)]" =>
       {"$.items[?(is_integer(@.integer) and @.integer > 5)]", json}
   },
-  save: [path: "benchmark.benchee"],
   load: "benchmark.benchee",
   memory_time: 2,
   formatters: [
