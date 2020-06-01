@@ -189,6 +189,9 @@ Erlang code.
 
 -define(utf8_to_atom(Binary), binary_to_atom(Binary, utf8)).
 
+-type line() :: integer().
+-type token() :: {term(), line(), term()}.
+
 -import(lists, [reverse/1, foldr/3]).
 
 build_array(Indexes) ->
@@ -281,18 +284,18 @@ token_of({Token, _Line, _Value}) -> Token.
 % label_and_value_of({Token, _Line, Value}) -> {Token, Value}.
 
 %%Errors
--dialyzer({nowarn_function, error_slice_step_less_then_one/1}).
+-spec error_slice_step_less_then_one(line()) -> no_return().
 error_slice_step_less_then_one(Line) ->
     return_error(Line, "slice step should be greater than zero.").
 
--dialyzer({nowarn_function, error_slice_with_many_params/1}).
+-spec error_slice_with_many_params(line) -> no_return().
 error_slice_with_many_params(Line) ->
     return_error(Line,
     "to many params found for slice operation, "
     "the valid syntax is [start_index:end_index:step]"
 ).
 
--dialyzer({nowarn_function, error_forbidden_function/1}).
+-spec error_forbidden_function(token()) -> no_return().
 error_forbidden_function({identifier, Line, Identifier}) ->
     return_error(Line, io_lib:format(
         "forbidden function '~s', it's only allowed to call whitelist functions: [~s]",
@@ -300,7 +303,7 @@ error_forbidden_function({identifier, Line, Identifier}) ->
     )
 ).
 
--dialyzer({nowarn_function, error_dot_op_after_descendant_op/1}).
+-spec error_dot_op_after_descendant_op(token()) -> no_return().
 error_dot_op_after_descendant_op({_, Line, _}) ->
     return_error(Line, io_lib:format("~s", [
             "operator dot ('.') is not allowed after descendant operator ('..'),\n"
@@ -310,7 +313,7 @@ error_dot_op_after_descendant_op({_, Line, _}) ->
     )
 ).
 
--dialyzer({nowarn_function, error_union_not_allowed/3}).
+-spec error_union_not_allowed(list(), token(), {integer(), list(integer())}) -> no_return().
 error_union_not_allowed(ExpressionType, {_, Line, _}, {indexes, Indexes}) when length(Indexes) > 1 ->
     return_error(Line, io_lib:format(
         "union index expression not supported in ~s expression",
