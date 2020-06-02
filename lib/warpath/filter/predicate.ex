@@ -34,6 +34,8 @@ defmodule Warpath.Filter.Predicate do
       when action in @operators
       when action in @functions do
     resolve(expression, context)
+  catch
+    :not_indexable_type -> false
   end
 
   for operator <- @operators do
@@ -62,9 +64,8 @@ defmodule Warpath.Filter.Predicate do
       list when is_list(list) ->
         Enum.at(context, index)
 
-      value ->
-        raise Warpath.UnsupportedOperationError,
-              "You are try to access index '[#{index}]' on '#{inspect(value)}' that is not support for this data type."
+      _ ->
+        throw(:not_indexable_type)
     end
   end
 

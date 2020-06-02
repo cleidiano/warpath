@@ -14,6 +14,10 @@ defmodule WarpathTest do
       assert {:error, %ExpressionError{}} = Warpath.query(%{}, "$[]")
     end
 
+    test "report {:error, reason} for invalid operation" do
+      assert {:error, {:unsupported_operation, _tips}} = Warpath.query([1], "$.abc")
+    end
+
     test "successfully evaluate a valid expresssion" do
       assert {:ok, "Warpath"} =
                Warpath.query(%{"autobots" => ["Optimus Prime", "Warpath"]}, "$.autobots[1]")
@@ -92,7 +96,7 @@ defmodule WarpathTest do
                {:ok, {book, path}}
     end
 
-    test "default result_type is value", %{data: document} do
+    test "default result_type is :value", %{data: document} do
       book = %{
         "author" => "Nigel Rees",
         "category" => "reference",

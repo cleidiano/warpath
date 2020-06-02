@@ -226,13 +226,16 @@ defmodule Warpath do
   end
 
   def query(document, %Expression{} = expression, opts) do
-    query_result =
-      expression
-      |> Execution.execution_plan()
-      |> Enum.reduce(Element.new(document, []), &dispatch_reduce/2)
-      |> collect(opts[:result_type] || :value)
+    expression
+    |> Execution.execution_plan()
+    |> Enum.reduce_while(Element.new(document, []), &dispatch/2)
+    |> case do
+      {:error, _} = error ->
+        error
 
-    {:ok, query_result}
+      result ->
+        {:ok, collect(result, opts[:result_type] || :value)}
+    end
   end
 
   @doc """
@@ -246,13 +249,18 @@ defmodule Warpath do
     end
   end
 
-  defp dispatch_reduce(%Env{operator: operator} = env, elements) when is_list(elements) do
-    operator.evaluate(elements, [], env)
+  defp dispatch(%Env{operator: operator} = env, elements) when is_list(elements) do
+    output = operator.evaluate(elements, [], env)
+    {label_of(output), output}
   end
 
-  defp dispatch_reduce(%Env{operator: operator} = env, %Element{value: document, path: path}) do
-    operator.evaluate(document, path, env)
+  defp dispatch(%Env{operator: operator} = env, %Element{value: document, path: path}) do
+    output = operator.evaluate(document, path, env)
+    {label_of(output), output}
   end
+
+  defp label_of({:error, _}), do: :halt
+  defp label_of(_), do: :cont
 
   defp collect(elements, opt) when is_list(elements), do: Enum.map(elements, &collect(&1, opt))
 
