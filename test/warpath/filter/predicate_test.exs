@@ -199,9 +199,7 @@ defmodule Warpath.Filter.PredicateTest do
     test "from context when the context is not a list" do
       context = :atom
 
-      assert_raise Warpath.UnsupportedOperationError, fn ->
-        Predicate.eval({:==, [{:index_access, 1}, {:index_access, 1}]}, context)
-      end
+      refute Predicate.eval({:==, [{:index_access, 1}, {:index_access, 1}]}, context)
     end
 
     test "from context when the context is nil, nil will be returned" do

@@ -9,20 +9,19 @@ queries:
   bracket_notation_with_two_literals_separated_by_dot: error
   bracket_notation_without_quotes: error
   dot_bracket_notation_without_quotes: error
-  dot_notation_on_array_with_containing_object_matching_key: [raise, Elixir.Warpath.UnsupportedOperationError]
-  dot_notation_on_array: [raise, Elixir.Warpath.UnsupportedOperationError]
+  dot_notation_on_array_with_containing_object_matching_key: error
+  dot_notation_on_array: error
   dot_notation_with_double_quotes_after_recursive_descent: error
   dot_notation_with_double_quotes: error
   dot_notation_with_empty_path: error
   dot_notation_with_key_named_true: error
   dot_notation_with_key_root_literal: error
-  dot_notation_with_number_-1: [raise, Elixir.Warpath.UnsupportedOperationError]
-  dot_notation_with_number: [raise, Elixir.Warpath.UnsupportedOperationError]
+  dot_notation_with_number_-1: error
+  dot_notation_with_number: error
   dot_notation_with_single_quotes_after_recursive_descent: error
   dot_notation_with_single_quotes_and_dot: error
   dot_notation_with_single_quotes: error
   dot_notation_without_root: error
-  filter_expression_with_bracket_notation_with_number_on_object: [raise, Elixir.Warpath.UnsupportedOperationError]
   filter_expression_with_current_object: error
   filter_expression_with_empty_expression: error
   filter_expression_with_equals_array: error

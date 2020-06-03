@@ -7,7 +7,6 @@ defmodule Warpath.Query.IdentifierOperatorTest do
   alias Warpath.Query.IdentifierOperator
   alias Warpath.Query.RootOperator
   alias Warpath.Query.SliceOperator
-  alias Warpath.UnsupportedOperationError
 
   @relative_path [{:root, "$"}]
 
@@ -116,9 +115,8 @@ defmodule Warpath.Query.IdentifierOperatorTest do
                 property_name <- string(:printable) do
         env = env_evaluation_for(property_name, previous_operator)
 
-        assert_raise UnsupportedOperationError, fn ->
-          IdentifierOperator.evaluate(elements, [], env)
-        end
+        assert {:error, {:unsupported_operation, _}} =
+                 IdentifierOperator.evaluate(elements, [], env)
       end
     end
 
@@ -128,13 +126,16 @@ defmodule Warpath.Query.IdentifierOperatorTest do
 
     test "raise for non keyword list" do
       tips =
-        "You are trying to traverse a list using dot notation '.a_property_name', " <>
+        "You are trying to traverse a list using dot notation '$.a_property_name', " <>
           "that it's not allowed for list type. " <>
-          "You can use something like '[*].a_property_name' instead."
+          "You can use something like '$[*].a_property_name' instead."
 
-      assert_raise UnsupportedOperationError, tips, fn ->
-        IdentifierOperator.evaluate(["abc"], [], env_evaluation_for("a_property_name"))
-      end
+      assert {:error, {:unsupported_operation, tips}} ==
+               IdentifierOperator.evaluate(
+                 ["abc"],
+                 @relative_path,
+                 env_evaluation_for("a_property_name")
+               )
     end
   end
 end
