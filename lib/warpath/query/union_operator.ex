@@ -8,7 +8,7 @@ alias Warpath.Query.IdentifierOperator
 defprotocol UnionOperator do
   @moduledoc false
 
-  @type document :: map() | keyword() | list(Element.t())
+  @type document :: map() | keyword() | list(Element.t()) | nil
 
   @type result :: [Element.t()]
 
@@ -51,4 +51,8 @@ defimpl UnionOperator, for: List do
       do: UnionOperator.Map.evaluate(document, relative_path, env),
       else: []
   end
+end
+
+defimpl UnionOperator, for: Atom do
+  def evaluate(nil, _, _), do: []
 end

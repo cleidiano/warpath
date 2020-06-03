@@ -116,4 +116,8 @@ defmodule Warpath.Query.UnionOperatorOperatorTest do
       assert UnionOperator.evaluate([], @relative_path, env_evaluation_for([:any])) == []
     end
   end
+
+  test "evaluate/3 is nil safe traverse" do
+    assert UnionOperator.evaluate(nil, [], env_evaluation_for([:first, :second])) == []
+  end
 end

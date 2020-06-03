@@ -138,4 +138,9 @@ defmodule Warpath.Query.IdentifierOperatorTest do
                )
     end
   end
+
+  test "evaluate/3 is nil safe" do
+    assert IdentifierOperator.evaluate(nil, @relative_path, env_evaluation_for("propery_name")) ==
+             Element.new(nil, @relative_path)
+  end
 end

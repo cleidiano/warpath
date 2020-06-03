@@ -12,7 +12,7 @@ alias Warpath.Query.WildcardOperator
 defprotocol IdentifierOperator do
   @moduledoc false
 
-  @type document :: map | keyword() | list(Element.t())
+  @type document :: map | keyword() | list(Element.t()) | nil
 
   @type relative_path :: ElementPath.t() | []
 
@@ -83,4 +83,8 @@ defimpl IdentifierOperator, for: List do
   end
 
   defp accessible_with_key?(%Element{value: value}, key), do: Accessible.has_key?(value, key)
+end
+
+defimpl IdentifierOperator, for: Atom do
+  def evaluate(nil, relative_path, _), do: Element.new(nil, relative_path)
 end

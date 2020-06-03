@@ -246,4 +246,10 @@ defmodule Warpath.Query.DescendantOperatorTest do
       assert container? or DescendantOperator.evaluate(term, [], env_for({:wildcard, :*})) == []
     end
   end
+
+  test "evaluate/3 is nil safe" do
+    env = env_for({:property, "any"})
+
+    assert DescendantOperator.evaluate(nil, [], env) == []
+  end
 end
