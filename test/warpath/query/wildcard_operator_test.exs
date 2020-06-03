@@ -62,8 +62,8 @@ defmodule Warpath.Query.WildcardOperatorTest do
           |> Enum.map(&{:property, &1})
           |> Enum.sort()
 
-        assert Enum.flat_map(result, &Element.path/1) |> Enum.sort() == keys_as_properties
-        assert Enum.map(result, &Element.value/1) |> Enum.sort() == Map.values(map) |> Enum.sort()
+        assert Enum.sort(Enum.flat_map(result, &Element.path/1)) == keys_as_properties
+        assert Enum.sort(Enum.map(result, &Element.value/1)) == Enum.sort(Map.values(map))
       end
     end
   end
