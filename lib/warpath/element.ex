@@ -70,7 +70,7 @@ defmodule Warpath.Element do
         ...> Warpath.Element.path(element)
         [{:root, "$"}]
   """
-  @spec path(t) :: Path.t()
+  @spec path(t) :: Path.acc()
   def path(%Element{path: path}), do: path
 
   @doc """

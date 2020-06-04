@@ -187,6 +187,8 @@ close_bracket -> ']' : '$1'.
 
 Erlang code.
 
+-dialyzer(no_return).
+
 -define(utf8_to_atom(Binary), binary_to_atom(Binary, utf8)).
 
 -type line() :: integer().

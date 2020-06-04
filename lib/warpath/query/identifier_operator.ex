@@ -14,7 +14,7 @@ defprotocol IdentifierOperator do
 
   @type document :: map | keyword() | list(Element.t()) | nil
 
-  @type relative_path :: ElementPath.t() | []
+  @type relative_path :: Element.Path.acc() | []
 
   @type instruction :: Expression.dot_access()
 
