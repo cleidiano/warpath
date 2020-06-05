@@ -43,11 +43,11 @@ jobs:
         if: (!startsWith(matrix.elixir, '1.6') && !startsWith(matrix.elixir, '1.7'))
         run: mix format --check-formatted
 
-      - name: Run dialyzer
-        run: mix dialyzer
-      
       - name: Run static code analysis
         run: mix credo --strict
+
+      - name: Run dialyzer
+        run: mix dialyzer
        
       - name: Run tests
         run: mix test --cover
