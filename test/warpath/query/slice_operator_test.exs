@@ -199,4 +199,8 @@ defmodule Warpath.Query.SliceOperatorTest do
       end
     end
   end
+
+  test "evaluate/3 is nil safe traverse" do
+    assert SliceOperator.evaluate(nil, [], env_for_slice()) == []
+  end
 end

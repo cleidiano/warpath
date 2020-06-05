@@ -81,4 +81,10 @@ defmodule Warpath.Query.FilterOperatorTest do
       assert Enum.all?(result, &Map.has_key?(Element.value(&1), key))
     end
   end
+
+  test "evaluate/3 is nil safe" do
+    env = env_for_filter({:has_property, {:property, "any"}})
+
+    assert FilterOperator.evaluate(nil, @relative_path, env) == []
+  end
 end

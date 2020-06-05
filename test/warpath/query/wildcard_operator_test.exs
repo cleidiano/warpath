@@ -11,7 +11,11 @@ defmodule Warpath.Query.WildcardOperatorTest do
   end
 
   describe "wildcard operator" do
-    property "always return empty list for data type other thean list and map" do
+    test "nil safe traverse" do
+      assert WildcardOperator.evaluate(nil, [], env()) == []
+    end
+
+    property "always return empty list for data type other then list and map" do
       check all term <- term() do
         unless is_list(term) or is_map(term) do
           assert WildcardOperator.evaluate(term, [], env()) == []

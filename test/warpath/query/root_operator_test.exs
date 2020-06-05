@@ -19,4 +19,8 @@ defmodule Warpath.Query.RootOperatorTest do
       assert RootOperator.evaluate(term, [], env_for_root()) == element
     end
   end
+
+  test "evaluate/3 is nil safe" do
+    assert RootOperator.evaluate(nil, [], env_for_root()) == Element.new(nil, @relative_path)
+  end
 end

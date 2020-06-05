@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased][unreleased]
 
+### Added
+- Safe nil traverse on expression.
+
 ### Changed
 - Do not raise for expression that are not supported, instead return `{:error, reason}`.
 - Using index on filter expression in data type that is not a list, result in empty list, ex: `Warpath.query!([%{}, :a, "b"], "$[?(@[0] > 1)]") => []`.
