@@ -1,4 +1,4 @@
-name: CI
+name: build
 
 on: [push]
 
@@ -19,6 +19,15 @@ jobs:
         ubuntu: ["bionic-20200219"]
 
     steps:
+      - uses: actions/cache@v1
+      - name: Cache dependencies and plt files
+        with:
+          path: deps/
+          key: dependencies-${{ matrix.elixir }}-erlang-${{ matrix.erlang }}-${{ hashFiles('mix.lock') }}
+        with:
+          path: _build/
+          key: build-elixir-${{ matrix.elixir }}-erlang-${{ matrix.erlang }}-${{ hashFiles('mix.lock') }}
+      
       - uses: actions/checkout@v1.0.0
       - name: Install dependencies
         run: |-
@@ -30,6 +39,11 @@ jobs:
         if: (!startsWith(matrix.elixir, '1.6') && !startsWith(matrix.elixir, '1.7'))
         run: mix format --check-formatted
 
+      - name: Run dialyzer
+        run: mix dialyzer
+      
+      - name: Run static code analysis
+        run: mix credo --strict
+       
       - name: Run tests
-        run: |-
-          mix test --cover
+        run: mix test --cover

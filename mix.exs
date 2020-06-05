@@ -14,7 +14,10 @@ defmodule Warpath.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       source_url: "https://github.com/cleidiano/warpath",
-      docs: [main: "Warpath"]
+      docs: [main: "Warpath"],
+      dialyzer: [
+        plt_core_path: "_build/#{Mix.env()}"
+      ]
     ]
   end
 
