@@ -1,4 +1,4 @@
-[![Actions Status](https://github.com/cleidiano/warpath/workflows/CI/badge.svg?branch=master)](https://github.com/cleidiano/warpath/actions)
+[![Actions Status](https://github.com/cleidiano/warpath/workflows/build/badge.svg?branch=master)](https://github.com/cleidiano/warpath/actions)
 [![Warpath version](https://img.shields.io/hexpm/v/warpath.svg)](https://hex.pm/packages/warpath)
 
 # Warpath

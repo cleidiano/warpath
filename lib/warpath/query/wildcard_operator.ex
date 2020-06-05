@@ -10,7 +10,7 @@ defprotocol WildcardOperator do
 
   @type document :: map() | list()
 
-  @type relative_path :: [] | Element.Path.t()
+  @type relative_path :: [] | Element.Path.acc()
 
   @type instruction :: Expression.wildcard()
 

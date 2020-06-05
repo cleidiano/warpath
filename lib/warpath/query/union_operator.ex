@@ -12,7 +12,7 @@ defprotocol UnionOperator do
 
   @type result :: [Element.t()]
 
-  @type relative_path :: Element.Path.t()
+  @type relative_path :: Element.Path.acc()
 
   @type instruction :: Expression.union_property()
 
