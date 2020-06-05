@@ -19,16 +19,20 @@ jobs:
         ubuntu: ["bionic-20200219"]
 
     steps:
-      - uses: actions/cache@v1
-      - name: Cache dependencies and plt files
+      - uses: actions/checkout@v1.0.0
+      
+      - name: Cache dependencies
+        uses: actions/cache@v1
         with:
           path: deps/
           key: dependencies-${{ matrix.elixir }}-erlang-${{ matrix.erlang }}-${{ hashFiles('mix.lock') }}
+      
+      - name: Cache dialyzer plt  
+        uses: actions/cache@v1
         with:
           path: _build/
           key: build-elixir-${{ matrix.elixir }}-erlang-${{ matrix.erlang }}-${{ hashFiles('mix.lock') }}
       
-      - uses: actions/checkout@v1.0.0
       - name: Install dependencies
         run: |-
           mix local.rebar --force
