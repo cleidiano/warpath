@@ -94,7 +94,7 @@ This realease put a effort to become compatible as possible with the concensus i
 
 
 [unreleased]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.3...HEAD
-0.3.0-rc.3]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.2...v0.3.0-rc.3
+[0.3.0-rc.3]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.2...v0.3.0-rc.3
 [0.3.0-rc.2]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.1...v0.3.0-rc.2
 [0.3.0-rc.1]: https://github.com/Cleidiano/warpath/compare/v0.2.1...v0.3.0-rc.1
 [0.2.1]: https://github.com/Cleidiano/warpath/compare/v0.2.0...v0.2.1
