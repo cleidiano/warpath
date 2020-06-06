@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased][unreleased]
 
+## [0.3.0-rc.3] - 2020-06-06
+
 ### Added
 - Safe nil traverse on expression.
 
@@ -91,7 +93,8 @@ This realease put a effort to become compatible as possible with the concensus i
 - Unwrap output of query that the only possible result is as scalar value, ex. `Warpath.query!([1, 2, 3], "$[0]")` will return `1` instead of `[1]`.
 
 
-[unreleased]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.2...HEAD
+[unreleased]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.3...HEAD
+[0.3.0-rc.3]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.2...v0.3.0-rc.3
 [0.3.0-rc.2]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.1...v0.3.0-rc.2
 [0.3.0-rc.1]: https://github.com/Cleidiano/warpath/compare/v0.2.1...v0.3.0-rc.1
 [0.2.1]: https://github.com/Cleidiano/warpath/compare/v0.2.0...v0.2.1
