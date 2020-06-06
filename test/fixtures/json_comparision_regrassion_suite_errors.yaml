@@ -16,6 +16,7 @@ queries:
   dot_notation_with_empty_path: error
   dot_notation_with_key_named_true: error
   dot_notation_with_key_root_literal: error
+  dot_notation_with_key_named_length_on_array: error
   dot_notation_with_number_-1: error
   dot_notation_with_number: error
   dot_notation_with_single_quotes_after_recursive_descent: error
@@ -27,6 +28,7 @@ queries:
   filter_expression_with_equals_array: error
   filter_expression_with_equals_object: error
   filter_expression_with_equals_with_root_reference: error
+  filter_expression_with_equals_array_with_single_quotes: error
   filter_expression_with_in_current_object: error
   filter_expression_with_multiplication: error
   filter_expression_with_negation_and_equals: error

@@ -4,12 +4,12 @@ defmodule RegrationSuiteTest do
 
   %{"queries" => errors} =
     __DIR__
-    |> Path.join("/fixtures/json_comparision_regration_suite_errors.yaml")
+    |> Path.join("/fixtures/json_comparision_regrassion_suite_errors.yaml")
     |> YamlElixir.read_from_file!()
 
   %{"queries" => queries} =
     __DIR__
-    |> Path.join("/fixtures/json_comparision_regration_suite.yaml")
+    |> Path.join("/fixtures/json_comparision_regrassion_suite.yaml")
     |> YamlElixir.read_from_file!()
 
   queries =
@@ -48,6 +48,9 @@ defmodule RegrationSuiteTest do
             type ->
               assert {^type, _} = Warpath.query(document, query_selector)
           end
+
+        {"NOT_SUPPORTED", _} ->
+          assert {:error, _} = Warpath.query(document, query_selector)
 
         {consensus, false} when is_list(consensus) ->
           result = Warpath.query!(document, query_selector)
