@@ -175,6 +175,7 @@ defmodule Warpath do
   alias Warpath.Execution
   alias Warpath.Execution.Env
   alias Warpath.Expression
+  alias Warpath.Query.RootOperator
 
   @doc """
   Query data for the given expression.
@@ -247,6 +248,11 @@ defmodule Warpath do
       {:ok, query_result} -> query_result
       {:error, error} -> raise error
     end
+  end
+
+  defp dispatch(%Env{operator: operator}, %Element{value: nil} = element)
+       when operator != RootOperator do
+    {:halt, element}
   end
 
   defp dispatch(%Env{operator: operator} = env, elements) when is_list(elements) do

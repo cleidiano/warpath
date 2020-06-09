@@ -34,6 +34,18 @@ defmodule WarpathTest do
       assert {:ok, "Warpath"} =
                Warpath.query(~S/{"autobots": ["Optimus Prime", "Warpath"]}/, "$.autobots[1]")
     end
+
+    test "halt evaluation early when reaches nil value" do
+      document = %{"name" => "warpath"}
+
+      assert {:ok, {nil, "$['bla']"}} ==
+               Warpath.query(document, "$.bla", result_type: :value_path)
+
+      assert {:ok, {nil, "$['bla']"}} ==
+               Warpath.query(document, "$.bla.bla.bla", result_type: :value_path)
+
+      assert {:ok, {nil, "$"}} == Warpath.query(nil, "$.bla", result_type: :value_path)
+    end
   end
 
   describe "query!/3" do
