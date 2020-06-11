@@ -29,9 +29,16 @@ defmodule Warpath.Filter.Predicate do
     :not
   ]
 
-  actions = [:has_property?] ++ @operators ++ @functions
+  @type expression ::
+          {:property, atom() | String.t()}
+          | {:index_access, integer()}
+          | :current_node
 
-  for action <- actions do
+  @spec eval(boolean | {atom, expression}, any) :: boolean()
+  def eval(false, _), do: false
+  def eval(true, _), do: true
+
+  for action <- [:has_property?] ++ @operators ++ @functions do
     def eval({unquote(action), _} = expression, context) do
       resolve(expression, context)
     catch
