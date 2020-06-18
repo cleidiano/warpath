@@ -61,22 +61,25 @@ defmodule Warpath.Filter.Predicate do
   defp resolve({:has_property?, {:property, name}}, context),
     do: is_map(context) and Map.has_key?(context, name)
 
-  defp resolve({:property, name}, context) when is_map(context),
+  defp resolve({:subpath_expression, [{:at, _}, dot: {:property, name}]}, %{} = context),
     do: context[name]
 
-  defp resolve({:index_access, index}, context) do
-    case context do
-      nil ->
-        nil
+  defp resolve({:subpath_expression, [{:at, _}, indexes: _]}, nil), do: nil
 
-      list when is_list(list) ->
-        Enum.at(context, index)
+  defp resolve({:subpath_expression, [{:at, _}, indexes: [index_access: index]]}, context)
+       when is_list(context),
+       do: Enum.at(context, index)
 
-      _ ->
-        throw(:not_indexable_type)
-    end
+  defp resolve({:subpath_expression, [{:at, _}, indexes: _]}, _),
+    do: throw(:not_indexable_type)
+
+  defp resolve({:subpath_expression, tokens}, context) do
+    expression = %Warpath.Expression{tokens: tokens}
+    {:ok, value} = Warpath.query(context, expression)
+    value
   end
 
+  # TODO Substituir pelo token {:at, "@"}
   defp resolve(:current_node, context),
     do: context
 
@@ -84,6 +87,7 @@ defmodule Warpath.Filter.Predicate do
     Enum.map(term, &resolve(&1, context))
   end
 
+  # Value literal
   defp resolve(term, _context),
     do: term
 end

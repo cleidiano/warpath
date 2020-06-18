@@ -6,8 +6,16 @@ defmodule Warpath.Query.DescendantOperatorTest do
   alias Warpath.Execution.Env
   alias Warpath.Query.DescendantOperator
 
+  import Warpath.Expression
+
   defp env_for(expr) do
     Env.new({:scan, expr})
+  end
+
+  defp filter_expression(filter) do
+    %Warpath.Expression{tokens: tokens} = ~q"$[?( #{filter} )]"
+    [_root, filter] = tokens
+    filter
   end
 
   setup_all do
@@ -193,7 +201,10 @@ defmodule Warpath.Query.DescendantOperatorTest do
         ]
       }
 
-      env = env_for({:filter, {:==, [{:property, "id"}, 2]}})
+      env =
+        "@.id == 2"
+        |> filter_expression()
+        |> env_for()
 
       expected = [
         Element.new(%{"id" => 2}, index_access: 0, property: "more"),
@@ -218,14 +229,9 @@ defmodule Warpath.Query.DescendantOperatorTest do
       }
 
       env =
-        env_for(
-          {:filter,
-           {:or,
-            [
-              {:is_list, {:property, "id"}},
-              {:is_map, {:property, "id"}}
-            ]}}
-        )
+        "is_list(@.id) or is_map(@.id)"
+        |> filter_expression()
+        |> env_for()
 
       assert DescendantOperator.evaluate(document, [], env) == [
                Element.new(%{"id" => [%{"id" => 2}]}, index_access: 1, property: "more"),

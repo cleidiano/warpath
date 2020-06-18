@@ -3,9 +3,15 @@ defmodule Warpath.Filter.PredicateTest do
 
   alias Warpath.Filter.Predicate
 
+  defp expression(filter) do
+    {:ok, %Warpath.Expression{tokens: tokens}} = Warpath.Expression.compile("$[?( #{filter} )]")
+    [_root | [{:filter, expression}]] = tokens
+    expression
+  end
+
   describe "eval/2 ensure dispatch call for operator" do
     test ">" do
-      assert Predicate.eval({:>, [5, 1]}, %{})
+      assert Predicate.eval(expression("5 > 1"), %{})
     end
 
     test ">=" do
@@ -158,24 +164,37 @@ defmodule Warpath.Filter.PredicateTest do
     test "a property value from context on eval operators" do
       context = %{"likes" => 100}
 
-      assert Predicate.eval({:>, [{:property, "likes"}, 10]}, context)
-      refute Predicate.eval({:>, [{:property, "likes"}, 1000]}, context)
+      assert Predicate.eval(expression("@.likes > 10"), context)
+      refute Predicate.eval(expression("@.likes > 1000"), context)
     end
 
     test "a property value from context on eval function call" do
       context = %{"likes" => 100}
 
-      assert Predicate.eval({:is_integer, {:property, "likes"}}, context)
-      refute Predicate.eval({:is_float, {:property, "likes"}}, context)
+      assert Predicate.eval(expression("is_integer(@.likes)"), context)
+      refute Predicate.eval(expression("is_float(@.likes)"), context)
     end
 
     test "a value from context for each property on list on eval IN operator" do
-      left_is_value = {:in, ["Warpath", [property: "nickName", property: "name"]]}
-      left_is_expression = {:in, [{:property, "name"}, ["Warpath", "Bumblebee"]]}
+      left_is_value = expression(" 'Warpath' in [@.affiliation, @.name] ")
+      left_is_expression = expression(" @.name in [Warpath, Bumblebee] ")
 
-      assert Predicate.eval(left_is_value, %{"nickName" => "Bla", "name" => "Warpath"})
-      assert Predicate.eval(left_is_expression, %{"nickName" => "Bla", "name" => "Warpath"})
-      refute Predicate.eval(left_is_expression, %{"nickName" => "Bla", "name" => "Blabla"})
+      assert Predicate.eval(left_is_value, %{"affiliation" => "Autobots", "name" => "Warpath"})
+
+      refute Predicate.eval(left_is_value, %{
+               "affiliation" => "Decepticon",
+               "name" => "Megatronus"
+             })
+
+      assert Predicate.eval(left_is_expression, %{
+               "affiliation" => "Autobots",
+               "name" => "Warpath"
+             })
+
+      refute Predicate.eval(left_is_expression, %{
+               "affiliation" => "Autobots",
+               "name" => "Optimus"
+             })
     end
 
     test "a value for the current node that is context it self" do
@@ -183,27 +202,69 @@ defmodule Warpath.Filter.PredicateTest do
     end
   end
 
-  describe "eval/2 evaluate index access" do
-    test "from context when it exists" do
+  describe "eval/2 evaluate index access from context " do
+    test "when it exists" do
       context = [1, 2, 3, 4]
 
-      assert Predicate.eval({:==, [1, {:index_access, 0}]}, context)
+      assert Predicate.eval(expression("1 == @[0]"), context)
     end
 
-    test "from context when it doesn't exists" do
+    test "when it doesn't exists" do
       context = [1, 2, 3, 4]
 
-      refute Predicate.eval({:==, [1, {:index_access, 5}]}, context)
+      refute Predicate.eval(expression("1 == @[5]"), context)
     end
 
-    test "from context when the context is not a list" do
+    test "when the context is not a list" do
       context = :atom
 
-      refute Predicate.eval({:==, [{:index_access, 1}, {:index_access, 1}]}, context)
+      refute Predicate.eval(expression("@[0] == @[0]"), context)
     end
 
-    test "from context when the context is nil, nil will be returned" do
-      assert Predicate.eval({:==, [nil, {:index_access, 1}]}, nil)
+    test "when the context is nil, nil will be returned" do
+      assert Predicate.eval(expression("is_nil(@[1])"), nil)
+    end
+  end
+
+  describe "eval/2 evaluate sub path expression" do
+    test "simple filter using dot notation" do
+      transformer = %{
+        "transformer" => %{
+          "name" => "Optmius Prime",
+          "family" => "Autobot"
+        }
+      }
+
+      assert Predicate.eval(expression("@.transformer.family == 'Autobot'"), transformer)
+    end
+
+    test "simple filter using index access" do
+      transformer = %{
+        "transformer" => %{
+          "name" => "Optmius Prime",
+          "family" => "Autobot",
+          "accessories" => [
+            "Laser Blaster",
+            "2 fists (left & right)",
+            "Trailer/Combat Deck",
+            "Roller",
+            "4 rockets",
+            "hose",
+            "nozzle",
+            "fuel pump"
+          ]
+        }
+      }
+
+      assert Predicate.eval(
+               expression("@.transformer.accessories[0] == 'Laser Blaster'"),
+               transformer
+             )
+
+      refute Predicate.eval(
+               expression("@.transformer.accessories[1] == 'Laser Blaster'"),
+               transformer
+             )
     end
   end
 
