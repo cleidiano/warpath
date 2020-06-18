@@ -29,10 +29,12 @@ defmodule Warpath.Filter.Predicate do
     :not
   ]
 
+  @current_node {:at, "@"}
+
   @type expression ::
           {:property, atom() | String.t()}
           | {:index_access, integer()}
-          | :current_node
+          | {:at, String.t()}
 
   @spec eval(boolean | {atom, expression}, any) :: boolean()
   def eval(false, _), do: false
@@ -61,16 +63,16 @@ defmodule Warpath.Filter.Predicate do
   defp resolve({:has_property?, {:property, name}}, context),
     do: is_map(context) and Map.has_key?(context, name)
 
-  defp resolve({:subpath_expression, [{:at, _}, dot: {:property, name}]}, %{} = context),
+  defp resolve({:subpath_expression, [@current_node, dot: {:property, name}]}, %{} = context),
     do: context[name]
 
-  defp resolve({:subpath_expression, [{:at, _}, indexes: _]}, nil), do: nil
+  defp resolve({:subpath_expression, [@current_node, indexes: _]}, nil), do: nil
 
-  defp resolve({:subpath_expression, [{:at, _}, indexes: [index_access: index]]}, context)
+  defp resolve({:subpath_expression, [@current_node, indexes: [index_access: index]]}, context)
        when is_list(context),
        do: Enum.at(context, index)
 
-  defp resolve({:subpath_expression, [{:at, _}, indexes: _]}, _),
+  defp resolve({:subpath_expression, [@current_node, indexes: _]}, _),
     do: throw(:not_indexable_type)
 
   defp resolve({:subpath_expression, tokens}, context) do
@@ -79,15 +81,12 @@ defmodule Warpath.Filter.Predicate do
     value
   end
 
-  # TODO Substituir pelo token {:at, "@"}
-  defp resolve(:current_node, context),
-    do: context
+  defp resolve(@current_node, context), do: context
 
   defp resolve(term, context) when is_list(term) do
     Enum.map(term, &resolve(&1, context))
   end
 
   # Value literal
-  defp resolve(term, _context),
-    do: term
+  defp resolve(term, _context), do: term
 end

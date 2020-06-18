@@ -131,7 +131,7 @@ element -> element ',' item : ['$3' | '$1'].
 int_value -> int : value_of('$1').
 float_value -> float : value_of('$1').
 boolean_value -> boolean : value_of('$1').
-current_node_op -> at_op : current_node.
+current_node_op -> at_op : current_node_token('$1').
 
 identifier_value -> identifier : identifier_value('$1').
 identifier_value -> atom_identifier : identifier_value('$1').
@@ -259,7 +259,9 @@ build_subpath_expression(AtOperator, PathExpression)
                   ({indexes, _} = TooManyIndex, _Acc) -> error_union_not_allowed("filter", AtOperator, TooManyIndex)
               end,
     Expression = foldl(Reducer, [], PathExpression),
-    {subpath_expression, [{at, <<"@">>} | Expression]}.
+    {subpath_expression, [current_node_token(AtOperator) | Expression]}.
+
+current_node_token({'@', _Line, Symbol}) -> {at, Symbol}.
 
 build_has_children_lookup(_AtOperator, {dot, Identifier}) -> {'has_property?', Identifier}.
 
@@ -292,7 +294,6 @@ build_descendant_lookup(_, {indexes, _} = Expression) -> {scan, Expression}.
 
 value_of({_Token, _Line, Value}) -> Value.
 token_of({Token, _Line, _Value}) -> Token.
-% label_and_value_of({Token, _Line, Value}) -> {Token, Value}.
 
 %%Errors
 -spec error_slice_step_less_then_one(line()) -> no_return().

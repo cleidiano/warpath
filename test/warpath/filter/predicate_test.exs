@@ -198,7 +198,7 @@ defmodule Warpath.Filter.PredicateTest do
     end
 
     test "a value for the current node that is context it self" do
-      assert Predicate.eval({:is_map, :current_node}, %{})
+      assert Predicate.eval(expression("is_map(@)"), %{})
     end
   end
 

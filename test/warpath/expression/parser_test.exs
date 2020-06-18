@@ -478,12 +478,12 @@ defmodule Warpath.Expression.ParserTest do
     test "current children in criteria on comparision expression" do
       assert_parse tokenize!("$[?(@ == 10)]"), [
         @root_expression,
-        {:filter, {:==, [:current_node, 10]}}
+        {:filter, {:==, [{:at, "@"}, 10]}}
       ]
 
       assert_parse tokenize!("$[?(10 == @)]"), [
         @root_expression,
-        {:filter, {:==, [10, :current_node]}}
+        {:filter, {:==, [10, {:at, "@"}]}}
       ]
     end
 
