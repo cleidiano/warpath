@@ -6,14 +6,12 @@ defmodule Warpath.Query.DescendantOperatorTest do
   alias Warpath.Execution.Env
   alias Warpath.Query.DescendantOperator
 
-  import Warpath.Expression
-
   defp env_for(expr) do
     Env.new({:scan, expr})
   end
 
   defp filter_expression(filter) do
-    %Warpath.Expression{tokens: tokens} = ~q"$[?( #{filter} )]"
+    {:ok, %Warpath.Expression{tokens: tokens}} = Warpath.Expression.compile("$[?( #{filter} )]")
     [_root, filter] = tokens
     filter
   end

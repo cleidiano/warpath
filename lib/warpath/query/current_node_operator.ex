@@ -4,7 +4,6 @@ defmodule Warpath.Query.CurrentNodeOperator do
   alias Warpath.Element
   alias Warpath.Execution.Env
 
-
   @type document :: any()
 
   @type instruction :: {:at, String.t()}
