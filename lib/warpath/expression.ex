@@ -84,18 +84,19 @@ defmodule Warpath.Expression do
   Compiles jsonpath string query to expression.
 
   ## Examples
-      iex> import Warpath.Expression, only: [sigil_q: 2]
+      iex> import Warpath.Expression
       iex> ~q"$.post.author"
       %Warpath.Expression{tokens: [ {:root, "$"}, {:dot, {:property, "post"}}, {:dot, {:property, "author"}} ]}
   """
-  defmacro sigil_q({:<<>>, _meta, [string]}, _modifiers) do
-    case compile(string) do
-      {:ok, compiled} ->
-        exp = Macro.escape(compiled)
-        quote(do: unquote(exp))
+  defmacro sigil_q({:<<>>, _meta, _pieces} = selector, _modifiers) do
+    quote do
+      case compile(unquote(selector)) do
+        {:ok, expression} ->
+          expression
 
-      {:error, error} ->
-        raise error
+        {:error, error} ->
+          raise error
+      end
     end
   end
 end
