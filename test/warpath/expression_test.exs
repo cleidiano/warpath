@@ -39,5 +39,10 @@ defmodule Warpath.ExpressionTest do
     test "compile successful" do
       assert %Expression{tokens: [{:root, "$"}, {:dot, {:property, "name"}}]} = ~q"$.name"
     end
+
+    test "can handle interpolation" do
+      var = "name"
+      assert %Expression{tokens: [{:root, "$"}, {:dot, {:property, "name"}}]} = ~q"$.#{var}"
+    end
   end
 end
