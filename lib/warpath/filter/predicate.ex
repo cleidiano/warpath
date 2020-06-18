@@ -29,13 +29,21 @@ defmodule Warpath.Filter.Predicate do
     :not
   ]
 
-  def eval({action, _} = expression, context)
-      when action == :has_property?
-      when action in @operators
-      when action in @functions do
-    resolve(expression, context)
-  catch
-    :not_indexable_type -> false
+  @type expression ::
+          {:property, atom() | String.t()}
+          | {:index_access, integer()}
+          | :current_node
+
+  @spec eval(boolean | {atom, expression}, any) :: boolean()
+  def eval(false, _), do: false
+  def eval(true, _), do: true
+
+  for action <- [:has_property?] ++ @operators ++ @functions do
+    def eval({unquote(action), _} = expression, context) do
+      resolve(expression, context)
+    catch
+      :not_indexable_type -> false
+    end
   end
 
   for operator <- @operators do

@@ -206,4 +206,9 @@ defmodule Warpath.Filter.PredicateTest do
       assert Predicate.eval({:==, [nil, {:index_access, 1}]}, nil)
     end
   end
+
+  test "eval/2 when expression is a boolean literal" do
+    assert Predicate.eval(true, %{})
+    refute Predicate.eval(false, %{})
+  end
 end
