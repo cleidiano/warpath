@@ -7,7 +7,7 @@ defmodule Warpath.Query.CurrentNodeOperatorTest do
   alias Warpath.Query.CurrentNodeOperator
 
   defp current_node do
-    Env.new({:at, "@"})
+    Env.new({:current_node, "@"})
   end
 
   property "create element for any term" do

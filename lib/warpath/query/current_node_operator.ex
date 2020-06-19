@@ -6,7 +6,7 @@ defmodule Warpath.Query.CurrentNodeOperator do
 
   @type document :: any()
 
-  @type instruction :: {:at, String.t()}
+  @type instruction :: {:current_node, String.t()}
 
   @type env :: %Env{instruction: instruction}
 

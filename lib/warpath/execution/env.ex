@@ -40,5 +40,5 @@ defmodule Warpath.Execution.Env do
   defp operator_for({:filter, _}), do: FilterOperator
   defp operator_for({:slice, _}), do: SliceOperator
   defp operator_for({:union, _}), do: UnionOperator
-  defp operator_for({:at, _}), do: CurrentNodeOperator
+  defp operator_for({:current_node, _}), do: CurrentNodeOperator
 end

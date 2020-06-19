@@ -29,7 +29,7 @@ defmodule Warpath.Filter.Predicate do
     :not
   ]
 
-  @current_node {:at, "@"}
+  @current_node {:current_node, "@"}
 
   @type expression ::
           {:property, atom() | String.t()}

@@ -261,7 +261,7 @@ build_subpath_expression(AtOperator, PathExpression)
     Expression = foldl(Reducer, [], PathExpression),
     {subpath_expression, [current_node_token(AtOperator) | Expression]}.
 
-current_node_token({'@', _Line, Symbol}) -> {at, Symbol}.
+current_node_token({'@', _Line, Symbol}) -> {current_node, Symbol}.
 
 build_has_children_lookup(_AtOperator, {dot, Identifier}) -> {'has_property?', Identifier}.
 

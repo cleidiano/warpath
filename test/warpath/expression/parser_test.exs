@@ -276,7 +276,7 @@ defmodule Warpath.Expression.ParserTest do
         {:filter,
          {:<,
           [
-            {:subpath_expression, [{:at, "@"}, {:dot, {:property, "identifier"}}]},
+            {:subpath_expression, [{:current_node, "@"}, {:dot, {:property, "identifier"}}]},
             2
           ]}}
       ]
@@ -293,7 +293,7 @@ defmodule Warpath.Expression.ParserTest do
           [
             {:subpath_expression,
              [
-               {:at, "@"},
+               {:current_node, "@"},
                dot: {:property, "child"},
                dot: {:property, "identifier"},
                indexes: [index_access: 1]
@@ -317,7 +317,7 @@ defmodule Warpath.Expression.ParserTest do
         {:filter,
          {:<,
           [
-            {:subpath_expression, [{:at, "@"}, dot: {:property, :identifier}]},
+            {:subpath_expression, [{:current_node, "@"}, dot: {:property, :identifier}]},
             2
           ]}}
       ]
@@ -329,7 +329,8 @@ defmodule Warpath.Expression.ParserTest do
     test "index lookup in criteria on comparison expression" do
       filter_expression = [
         @root_expression,
-        {:filter, {:<, [{:subpath_expression, [{:at, "@"}, indexes: [index_access: 0]]}, 2]}}
+        {:filter,
+         {:<, [{:subpath_expression, [{:current_node, "@"}, indexes: [index_access: 0]]}, 2]}}
       ]
 
       assert_parse tokenize!("$[?( @[0] < 2)]"), filter_expression
@@ -361,7 +362,7 @@ defmodule Warpath.Expression.ParserTest do
         {:filter,
          {:<,
           [
-            {:subpath_expression, [{:at, "@"}, dot: {:property, "children"}]},
+            {:subpath_expression, [{:current_node, "@"}, dot: {:property, "children"}]},
             2
           ]}}
       ]
@@ -398,7 +399,10 @@ defmodule Warpath.Expression.ParserTest do
 
       Enum.each(safe_functions, fn function ->
         fun_name = Atom.to_string(function)
-        children_lookup = {:subpath_expression, [{:at, "@"}, dot: {:property, "children"}]}
+
+        children_lookup =
+          {:subpath_expression, [{:current_node, "@"}, dot: {:property, "children"}]}
+
         tokens = tokenize!("$[?( #{fun_name}(@.children)  )]")
 
         assert_parse tokens, [@root_expression, {:filter, {function, children_lookup}}]
@@ -454,7 +458,7 @@ defmodule Warpath.Expression.ParserTest do
         {:filter,
          {:in,
           [
-            {:subpath_expression, [{:at, "@"}, dot: {:property, "name"}]},
+            {:subpath_expression, [{:current_node, "@"}, dot: {:property, "name"}]},
             ["Warpath", 0, :warpath, 1.1]
           ]}}
       ]
@@ -468,8 +472,8 @@ defmodule Warpath.Expression.ParserTest do
           [
             "Warpath",
             [
-              subpath_expression: [{:at, "@"}, dot: {:property, "transformer"}],
-              subpath_expression: [{:at, "@"}, dot: {:property, "autobot"}]
+              subpath_expression: [{:current_node, "@"}, dot: {:property, "transformer"}],
+              subpath_expression: [{:current_node, "@"}, dot: {:property, "autobot"}]
             ]
           ]}}
       ]
@@ -478,12 +482,12 @@ defmodule Warpath.Expression.ParserTest do
     test "current children in criteria on comparision expression" do
       assert_parse tokenize!("$[?(@ == 10)]"), [
         @root_expression,
-        {:filter, {:==, [{:at, "@"}, 10]}}
+        {:filter, {:==, [{:current_node, "@"}, 10]}}
       ]
 
       assert_parse tokenize!("$[?(10 == @)]"), [
         @root_expression,
-        {:filter, {:==, [10, {:at, "@"}]}}
+        {:filter, {:==, [10, {:current_node, "@"}]}}
       ]
     end
 
@@ -538,7 +542,7 @@ defmodule Warpath.Expression.ParserTest do
          {:filter,
           {:<,
            [
-             {:subpath_expression, [{:at, "@"}, dot: {:property, "identifier"}]},
+             {:subpath_expression, [{:current_node, "@"}, dot: {:property, "identifier"}]},
              2
            ]}}}
       ]
