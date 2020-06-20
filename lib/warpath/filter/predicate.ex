@@ -37,8 +37,8 @@ defmodule Warpath.Filter.Predicate do
           | {:at, String.t()}
 
   @spec eval(boolean | {atom, expression}, any) :: boolean()
-  def eval(false, _), do: false
-  def eval(true, _), do: true
+  def eval({:literal, false}, _), do: false
+  def eval({:literal, true}, _), do: true
 
   for action <- [:has_property?] ++ @operators ++ @functions do
     def eval({unquote(action), _} = expression, context) do
@@ -87,6 +87,5 @@ defmodule Warpath.Filter.Predicate do
     Enum.map(term, &resolve(&1, context))
   end
 
-  # Value literal
-  defp resolve(term, _context), do: term
+  defp resolve({:literal, value}, _context), do: value
 end

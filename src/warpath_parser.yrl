@@ -92,7 +92,7 @@ filter_query -> dot_op filter : '$2'.
 filter -> open_bracket '?' '(' boolean_exp ')' close_bracket : '$4'.
 
 boolean_exp -> predicate : '$1'.
-boolean_exp -> boolean_value : '$1'.
+boolean_exp -> boolean_value : literal_of('$1').
 boolean_exp -> boolean_exp and_op boolean_exp : {'and', ['$1', '$3']}.
 boolean_exp -> boolean_exp or_op boolean_exp : {'or', ['$1', '$3']}.
 boolean_exp -> not_op boolean_exp : {'not', '$2'}.
@@ -108,10 +108,10 @@ has_children_query -> identifier_expression : '$1'.
 
 function_call -> identifier '(' item ')' : build_function_call('$1', '$3').
 
-item -> int_value : '$1'.
-item -> float_value : '$1'.
-item -> boolean_value : '$1'.
-item -> identifier_value : '$1'.
+item -> int_value : literal_of('$1').
+item -> float_value : literal_of('$1').
+item -> boolean_value : literal_of('$1').
+item -> identifier_value : literal_of('$1').
 item -> current_node_op : '$1'.
 item -> children_item : '$1'.
 
@@ -294,6 +294,9 @@ build_descendant_lookup(_, {indexes, _} = Expression) -> {scan, Expression}.
 
 value_of({_Token, _Line, Value}) -> Value.
 token_of({Token, _Line, _Value}) -> Token.
+
+literal_of({_Token, _Line, Value}) -> literal_of(Value);
+literal_of(Value) -> {literal, Value}.
 
 %%Errors
 -spec error_slice_step_less_then_one(line()) -> no_return().

@@ -21,6 +21,8 @@ defmodule Warpath.Expression.ParserTest do
     assert_parse tokenize!("$"), [@root_expression]
   end
 
+  defp literal_of(value), do: {:literal, value}
+
   test "array indexes" do
     one_index = [@root_expression, {:indexes, [{:index_access, 1}]}]
     two_indexes = [@root_expression, {:indexes, [{:index_access, 1}, {:index_access, 2}]}]
@@ -253,7 +255,7 @@ defmodule Warpath.Expression.ParserTest do
     test "boolean literal as criteria" do
       filter_expression = [
         @root_expression,
-        {:filter, true}
+        {:filter, literal_of(true)}
       ]
 
       assert_parse tokenize!("$[?(true)]"), filter_expression
@@ -263,7 +265,7 @@ defmodule Warpath.Expression.ParserTest do
     test "number literal comparison expression as criteria" do
       filter_expression = [
         @root_expression,
-        {:filter, {:<, [1.0, 2]}}
+        {:filter, {:<, [{:literal, 1.0}, {:literal, 2}]}}
       ]
 
       assert_parse tokenize!("$[?( 1.0 < 2)]"), filter_expression
@@ -277,7 +279,7 @@ defmodule Warpath.Expression.ParserTest do
          {:<,
           [
             {:subpath_expression, [{:current_node, "@"}, {:dot, {:property, "identifier"}}]},
-            2
+            {:literal, 2}
           ]}}
       ]
 
@@ -298,7 +300,7 @@ defmodule Warpath.Expression.ParserTest do
                dot: {:property, "identifier"},
                indexes: [index_access: 1]
              ]},
-            2
+            {:literal, 2}
           ]}}
       ]
 
@@ -318,7 +320,7 @@ defmodule Warpath.Expression.ParserTest do
          {:<,
           [
             {:subpath_expression, [{:current_node, "@"}, dot: {:property, :identifier}]},
-            2
+            {:literal, 2}
           ]}}
       ]
 
@@ -330,7 +332,11 @@ defmodule Warpath.Expression.ParserTest do
       filter_expression = [
         @root_expression,
         {:filter,
-         {:<, [{:subpath_expression, [{:current_node, "@"}, indexes: [index_access: 0]]}, 2]}}
+         {:<,
+          [
+            {:subpath_expression, [{:current_node, "@"}, indexes: [index_access: 0]]},
+            {:literal, 2}
+          ]}}
       ]
 
       assert_parse tokenize!("$[?( @[0] < 2)]"), filter_expression
@@ -363,7 +369,7 @@ defmodule Warpath.Expression.ParserTest do
          {:<,
           [
             {:subpath_expression, [{:current_node, "@"}, dot: {:property, "children"}]},
-            2
+            {:literal, 2}
           ]}}
       ]
 
@@ -422,33 +428,33 @@ defmodule Warpath.Expression.ParserTest do
     test "and operator" do
       assert_parse tokenize!("$[?(true and true)]"), [
         @root_expression,
-        {:filter, {:and, [true, true]}}
+        {:filter, {:and, [literal_of(true), literal_of(true)]}}
       ]
     end
 
     test "or operator" do
       assert_parse tokenize!("$[?(true or true)]"), [
         @root_expression,
-        {:filter, {:or, [true, true]}}
+        {:filter, {:or, [literal_of(true), literal_of(true)]}}
       ]
     end
 
     test "or operator precedence" do
       assert_parse tokenize!("$[?(true and true or false)]"), [
         @root_expression,
-        {:filter, {:or, [{:and, [true, true]}, false]}}
+        {:filter, {:or, [{:and, [literal_of(true), literal_of(true)]}, literal_of(false)]}}
       ]
     end
 
     test "not operator" do
       assert_parse tokenize!("$[?(not true)]"), [
         @root_expression,
-        {:filter, {:not, true}}
+        {:filter, {:not, literal_of(true)}}
       ]
 
       assert_parse tokenize!("$[?(not false and true)]"), [
         @root_expression,
-        {:filter, {:and, [{:not, false}, true]}}
+        {:filter, {:and, [{:not, literal_of(false)}, literal_of(true)]}}
       ]
     end
 
@@ -459,7 +465,7 @@ defmodule Warpath.Expression.ParserTest do
          {:in,
           [
             {:subpath_expression, [{:current_node, "@"}, dot: {:property, "name"}]},
-            ["Warpath", 0, :warpath, 1.1]
+            [{:literal, "Warpath"}, {:literal, 0}, {:literal, :warpath}, {:literal, 1.1}]
           ]}}
       ]
     end
@@ -470,7 +476,7 @@ defmodule Warpath.Expression.ParserTest do
         {:filter,
          {:in,
           [
-            "Warpath",
+            {:literal, "Warpath"},
             [
               subpath_expression: [{:current_node, "@"}, dot: {:property, "transformer"}],
               subpath_expression: [{:current_node, "@"}, dot: {:property, "autobot"}]
@@ -482,19 +488,19 @@ defmodule Warpath.Expression.ParserTest do
     test "current children in criteria on comparision expression" do
       assert_parse tokenize!("$[?(@ == 10)]"), [
         @root_expression,
-        {:filter, {:==, [{:current_node, "@"}, 10]}}
+        {:filter, {:==, [{:current_node, "@"}, {:literal, 10}]}}
       ]
 
       assert_parse tokenize!("$[?(10 == @)]"), [
         @root_expression,
-        {:filter, {:==, [10, {:current_node, "@"}]}}
+        {:filter, {:==, [{:literal, 10}, {:current_node, "@"}]}}
       ]
     end
 
     test "parenthesis precedence defined" do
       assert_parse tokenize!("$[?(true and (true or false))]"), [
         @root_expression,
-        {:filter, {:and, [true, {:or, [true, false]}]}}
+        {:filter, {:and, [literal_of(true), {:or, [literal_of(true), literal_of(false)]}]}}
       ]
     end
   end
@@ -543,7 +549,7 @@ defmodule Warpath.Expression.ParserTest do
           {:<,
            [
              {:subpath_expression, [{:current_node, "@"}, dot: {:property, "identifier"}]},
-             2
+             {:literal, 2}
            ]}}}
       ]
 

@@ -45,7 +45,7 @@ defmodule Warpath.Query.FilterOperatorTest do
   end
 
   property "keep only item that is accepted by filter applied in na list" do
-    env = env_for_filter({:is_integer, :current_node})
+    env = env_for_filter({:is_integer, {:current_node, "@"}})
 
     check all list <- list_of(term()) do
       result = FilterOperator.evaluate(list, @relative_path, env)
@@ -56,7 +56,7 @@ defmodule Warpath.Query.FilterOperatorTest do
   end
 
   property "empty list when there isn' any titem that is accepted by filter" do
-    env = env_for_filter({:is_float, :current_node})
+    env = env_for_filter({:is_float, {:current_node, "@"}})
 
     check all map <- list_of(integer()) do
       assert FilterOperator.evaluate(map, @relative_path, env) == []
@@ -75,7 +75,9 @@ defmodule Warpath.Query.FilterOperatorTest do
         FilterOperator.evaluate(
           elements,
           [],
-          env_for_filter({:is_integer, {:property, key}})
+          env_for_filter(
+            {:is_integer, {:subpath_expression, [current_node: "@", dot: {:property, key}]}}
+          )
         )
 
       assert Enum.all?(result, &Map.has_key?(Element.value(&1), key))
