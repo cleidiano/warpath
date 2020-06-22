@@ -34,7 +34,7 @@ defmodule Warpath.Filter.Predicate do
   @type expression ::
           {:property, atom() | String.t()}
           | {:index_access, integer()}
-          | {:at, String.t()}
+          | {:current_node, String.t()}
 
   @spec eval(boolean | {atom, expression}, any) :: boolean()
   def eval({:literal, false}, _), do: false
@@ -44,7 +44,7 @@ defmodule Warpath.Filter.Predicate do
     def eval({unquote(action), _} = expression, context) do
       resolve(expression, context)
     catch
-      :not_indexable_type -> false
+      error when error in [:not_indexable_type, :not_container_type] -> false
     end
   end
 
@@ -60,32 +60,56 @@ defmodule Warpath.Filter.Predicate do
     end
   end
 
-  defp resolve({:has_property?, {:property, name}}, context),
-    do: is_map(context) and Map.has_key?(context, name)
+  defp resolve(@current_node, context), do: context
 
-  defp resolve({:subpath_expression, [@current_node, dot: {:property, name}]}, %{} = context),
-    do: context[name]
-
-  defp resolve({:subpath_expression, [@current_node, indexes: _]}, nil), do: nil
-
-  defp resolve({:subpath_expression, [@current_node, indexes: [index_access: index]]}, context)
-       when is_list(context),
-       do: Enum.at(context, index)
-
-  defp resolve({:subpath_expression, [@current_node, indexes: _]}, _),
-    do: throw(:not_indexable_type)
+  defp resolve({:literal, value}, _context), do: value
 
   defp resolve({:subpath_expression, tokens}, context) do
-    expression = %Warpath.Expression{tokens: tokens}
-    {:ok, value} = Warpath.query(context, expression)
-    value
+    Enum.reduce(tokens, context, fn token, acc -> resolve(token, acc) end)
   end
 
-  defp resolve(@current_node, context), do: context
+  defp resolve({:has_property?, {:property, name}}, context) do
+    case {context, name} do
+      {map = %{}, key} ->
+        Map.has_key?(map, key)
+
+      {list, key} when is_list(list) and is_atom(key) ->
+        Keyword.has_key?(list, key)
+
+      _ ->
+        false
+    end
+  end
+
+  defp resolve({:dot, {:property, name}}, context) do
+    case {context, name} do
+      {map = %{}, key} ->
+        Map.get(map, key)
+
+      {list, key} when is_list(list) and is_atom(key) ->
+        Access.get(list, key)
+
+      _ ->
+        throw(:not_container_type)
+    end
+  end
+
+  defp resolve({:indexes, [index_access: index]}, context) do
+    case context do
+      nil ->
+        nil
+
+      indexable when is_list(indexable) ->
+        Enum.at(indexable, index)
+
+      _ ->
+        throw(:not_indexable_type)
+    end
+  end
+
+  false
 
   defp resolve(term, context) when is_list(term) do
     Enum.map(term, &resolve(&1, context))
   end
-
-  defp resolve({:literal, value}, _context), do: value
 end

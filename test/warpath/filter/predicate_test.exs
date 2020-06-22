@@ -97,13 +97,18 @@ defmodule Warpath.Filter.PredicateTest do
     end
   end
 
-  describe "eval/2 handle a has_property? operation" do
-    test "that return true" do
+  describe "eval/2 can evaluate {:has_property?, property} expression" do
+    test "when context is map" do
       assert Predicate.eval(expression("@.likes"), %{"likes" => 1})
+      refute Predicate.eval(expression("@.likes"), %{"followers" => 10})
     end
 
-    test "that return false" do
-      refute Predicate.eval(expression("@.likes"), %{"followers" => 10})
+    test "when context is a keyword list and property key is atom" do
+      assert Predicate.eval(expression("@.:my_key"), my_key: :any)
+    end
+
+    test "when context is a keyword list and property key is string" do
+      refute Predicate.eval(expression("@.my_key"), my_key: 1)
     end
   end
 
@@ -161,22 +166,22 @@ defmodule Warpath.Filter.PredicateTest do
     end
   end
 
-  describe "eval/2 can discovery" do
-    test "a property value from context on eval operators" do
+  describe "eval/2 can evaluate {:dot, property} expression" do
+    test "when action is a operator" do
       context = %{"likes" => 100}
 
       assert Predicate.eval(expression("@.likes > 10"), context)
       refute Predicate.eval(expression("@.likes > 1000"), context)
     end
 
-    test "a property value from context on eval function call" do
+    test "when action is a function call" do
       context = %{"likes" => 100}
 
       assert Predicate.eval(expression("is_integer(@.likes)"), context)
       refute Predicate.eval(expression("is_float(@.likes)"), context)
     end
 
-    test "a value from context for each property on list on eval IN operator" do
+    test "when acion is an IN operator" do
       left_is_value = expression(" 'Warpath' in [@.affiliation, @.name] ")
       left_is_expression = expression(" @.name in [Warpath, Bumblebee] ")
 
@@ -198,9 +203,18 @@ defmodule Warpath.Filter.PredicateTest do
              })
     end
 
-    test "a value for the current node that is context it self" do
-      assert Predicate.eval(expression("is_map(@)"), %{})
+    test "when context is a keyword list and property key is atom" do
+      assert Predicate.eval(expression("@.:my_key == false"), my_key: false)
     end
+
+    test "when context is a keyword list and property key is string" do
+      refute Predicate.eval(expression("@.my_key == 1"), my_key: 1)
+    end
+  end
+
+  test "eval/2 can evaluate current node expression" do
+    assert Predicate.eval(expression("is_map(@)"), %{})
+    refute Predicate.eval(expression("is_map(@)"), [])
   end
 
   describe "eval/2 evaluate index access from context " do
@@ -237,6 +251,10 @@ defmodule Warpath.Filter.PredicateTest do
       }
 
       assert Predicate.eval(expression("@.transformer.family == 'Autobot'"), transformer)
+    end
+
+    test "simple filter using dot notation for nil context" do
+      refute Predicate.eval(expression("@.transformer.family == 'Autobot'"), 1)
     end
 
     test "simple filter using index access" do
