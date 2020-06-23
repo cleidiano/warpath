@@ -346,7 +346,9 @@ defmodule Warpath.Expression.ParserTest do
     test "has children predicate as a criteria expression" do
       filter_expression = [
         @root_expression,
-        {:filter, {:has_property?, {:property, "children"}}}
+        {:filter,
+         {:has_property?,
+          {:subpath_expression, [{:current_node, "@"}, {:dot, {:property, "children"}}]}}}
       ]
 
       assert_parse tokenize!("$[?( @['children'] )]"), filter_expression

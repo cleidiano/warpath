@@ -110,6 +110,29 @@ defmodule Warpath.Filter.PredicateTest do
     test "when context is a keyword list and property key is string" do
       refute Predicate.eval(expression("@.my_key"), my_key: 1)
     end
+
+    test "when context is a list and target is a positive index " do
+      assert Predicate.eval(expression("@[0]"), [1, 2, 3, 4, 5])
+      assert Predicate.eval(expression("@[4]"), [1, 2, 3, 4, 5])
+      refute Predicate.eval(expression("@[5]"), [1, 2, 3, 4, 5])
+    end
+
+    test "when context is a keyword list and target is a negative index" do
+      assert Predicate.eval(expression("@[-1]"), [1, 2, 3, 4, 5])
+      assert Predicate.eval(expression("@[-5]"), [1, 2, 3, 4, 5])
+      refute Predicate.eval(expression("@[-6]"), [1, 2, 3, 4, 5])
+    end
+
+    test "when expression is subpath expression using dot notation" do
+      transformer = %{
+        "transformer" => %{
+          "name" => "Optmius Prime",
+          "family" => "Autobot"
+        }
+      }
+
+      assert Predicate.eval(expression("@.transformer.family"), transformer)
+    end
   end
 
   describe "eval/2 handle function call" do
@@ -210,6 +233,41 @@ defmodule Warpath.Filter.PredicateTest do
     test "when context is a keyword list and property key is string" do
       refute Predicate.eval(expression("@.my_key == 1"), my_key: 1)
     end
+
+    test "when expression is subpath expression using dot notation" do
+      transformer = %{
+        "transformer" => %{
+          "name" => "Optmius Prime",
+          "family" => "Autobot"
+        }
+      }
+
+      assert Predicate.eval(expression("@.transformer.family == 'Autobot'"), transformer)
+    end
+
+    test "when expression is subpath expression using index access" do
+      transformer = %{
+        "transformer" => %{
+          "name" => "Optmius Prime",
+          "family" => "Autobot",
+          "accessories" => [
+            "Roller",
+            "Laser Blaster",
+            "4 rockets"
+          ]
+        }
+      }
+
+      assert Predicate.eval(
+               expression("@.transformer.accessories[1] == 'Laser Blaster'"),
+               transformer
+             )
+
+      refute Predicate.eval(
+               expression("@.transformer.accessories[0] == 'Laser Blaster'"),
+               transformer
+             )
+    end
   end
 
   test "eval/2 can evaluate current node expression" do
@@ -238,52 +296,6 @@ defmodule Warpath.Filter.PredicateTest do
 
     test "when the context is nil, nil will be returned" do
       assert Predicate.eval(expression("is_nil(@[1])"), nil)
-    end
-  end
-
-  describe "eval/2 evaluate sub path expression" do
-    test "simple filter using dot notation" do
-      transformer = %{
-        "transformer" => %{
-          "name" => "Optmius Prime",
-          "family" => "Autobot"
-        }
-      }
-
-      assert Predicate.eval(expression("@.transformer.family == 'Autobot'"), transformer)
-    end
-
-    test "simple filter using dot notation for nil context" do
-      refute Predicate.eval(expression("@.transformer.family == 'Autobot'"), 1)
-    end
-
-    test "simple filter using index access" do
-      transformer = %{
-        "transformer" => %{
-          "name" => "Optmius Prime",
-          "family" => "Autobot",
-          "accessories" => [
-            "Laser Blaster",
-            "2 fists (left & right)",
-            "Trailer/Combat Deck",
-            "Roller",
-            "4 rockets",
-            "hose",
-            "nozzle",
-            "fuel pump"
-          ]
-        }
-      }
-
-      assert Predicate.eval(
-               expression("@.transformer.accessories[0] == 'Laser Blaster'"),
-               transformer
-             )
-
-      refute Predicate.eval(
-               expression("@.transformer.accessories[1] == 'Laser Blaster'"),
-               transformer
-             )
     end
   end
 

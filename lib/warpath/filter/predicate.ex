@@ -68,13 +68,23 @@ defmodule Warpath.Filter.Predicate do
     Enum.reduce(tokens, context, fn token, acc -> resolve(token, acc) end)
   end
 
-  defp resolve({:has_property?, {:property, name}}, context) do
-    case {context, name} do
-      {map = %{}, key} ->
+  defp resolve({:has_property?, {:subpath_expression, tokens}}, context) do
+    {last_token, rest} = List.pop_at(tokens, -1)
+    result = resolve({:subpath_expression, rest}, context)
+
+    case {result, last_token} do
+      {map, {:dot, {:property, key}}} when is_map(map) ->
         Map.has_key?(map, key)
 
-      {list, key} when is_list(list) and is_atom(key) ->
+      {list, {:dot, {:property, key}}} when is_list(list) and is_atom(key) ->
         Keyword.has_key?(list, key)
+
+      {list, {:indexes, [index_access: index]}} when is_list(list) and index >= 0 ->
+        length(list) > index
+
+      {list, {:indexes, [index_access: index]}} when is_list(list) ->
+        count = length(list)
+        count + index >= 0
 
       _ ->
         false

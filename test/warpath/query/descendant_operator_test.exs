@@ -174,7 +174,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
         ]
       }
 
-      env = env_for({:filter, {:has_property?, {:property, "id"}}})
+      env = env_for(filter_expression("@.id"))
 
       expected = [
         Element.new(%{"id" => 2}, index_access: 0, property: "more"),
@@ -238,7 +238,12 @@ defmodule Warpath.Query.DescendantOperatorTest do
     end
 
     test "scan that doesn't match a predicate", %{document: document} do
-      env = env_for({:filter, {:has_property?, {:property, make_ref()}}})
+      env =
+        env_for(
+          {:filter,
+           {:has_property?,
+            {:subpath_expression, [{:current_node, "@"}, {:dot, {:property, make_ref()}}]}}}
+        )
 
       assert DescendantOperator.evaluate(document, [], env) == []
     end
