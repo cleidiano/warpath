@@ -97,7 +97,7 @@ defmodule Warpath.Filter.PredicateTest do
     end
   end
 
-  describe "eval/2 can evaluate {:has_property?, property} expression" do
+  describe "eval/2 can evaluate {:has_children?, property} expression" do
     test "when context is map" do
       assert Predicate.eval(expression("@.likes"), %{"likes" => 1})
       refute Predicate.eval(expression("@.likes"), %{"followers" => 10})

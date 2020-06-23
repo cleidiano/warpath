@@ -347,7 +347,7 @@ defmodule Warpath.Expression.ParserTest do
       filter_expression = [
         @root_expression,
         {:filter,
-         {:has_property?,
+         {:has_children?,
           {:subpath_expression, [{:current_node, "@"}, {:dot, {:property, "children"}}]}}}
       ]
 

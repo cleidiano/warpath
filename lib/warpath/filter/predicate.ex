@@ -40,7 +40,7 @@ defmodule Warpath.Filter.Predicate do
   def eval({:literal, false}, _), do: false
   def eval({:literal, true}, _), do: true
 
-  for action <- [:has_property?] ++ @operators ++ @functions do
+  for action <- [:has_children?] ++ @operators ++ @functions do
     def eval({unquote(action), _} = expression, context) do
       resolve(expression, context)
     catch
@@ -68,7 +68,7 @@ defmodule Warpath.Filter.Predicate do
     Enum.reduce(tokens, context, fn token, acc -> resolve(token, acc) end)
   end
 
-  defp resolve({:has_property?, {:subpath_expression, tokens}}, context) do
+  defp resolve({:has_children?, {:subpath_expression, tokens}}, context) do
     {last_token, rest} = List.pop_at(tokens, -1)
     result = resolve({:subpath_expression, rest}, context)
 

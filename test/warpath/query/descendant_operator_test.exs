@@ -163,7 +163,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
   end
 
   describe "descendant filter" do
-    test "scan that match a has_property? predicate" do
+    test "scan that match a has_children? predicate" do
       document = %{
         "id" => 1,
         "more" => [
@@ -241,7 +241,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
       env =
         env_for(
           {:filter,
-           {:has_property?,
+           {:has_children?,
             {:subpath_expression, [{:current_node, "@"}, {:dot, {:property, make_ref()}}]}}}
         )
 

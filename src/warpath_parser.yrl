@@ -3,8 +3,8 @@ children_expression identifier_expression identifier_query bracket_notation_iden
 array_index_expression array_index_query
 array_slice_expression array_slice_query index indexes slice_fragment slice_fragments
 filter_expression filter_query filter boolean_exp comparision_exp current_node_op element elements
-identifier_value boolean_value int_value float_value function_call has_children_expression has_children_query
-in_expression item children_item subpath_expression node_subpath_query predicate
+identifier_value boolean_value int_value float_value function_call has_children_expression
+in_expression item subpath_expression subpath_expression_query predicate
 union_expression union_query union union_element union_elements
 wildcard_expression wildcard_query bracket_wildcard
 descendant_expression descendant_query descendant_identifier_expression descendant_wildcard_expression
@@ -103,12 +103,7 @@ predicate -> function_call : '$1'.
 predicate -> in_expression : '$1'.
 predicate -> comparision_exp : '$1'.
 
-has_children_expression -> subpath_expression : build_has_children_lookup('$1').
-% has_children_expression -> at_op has_children_query : build_has_children_lookup('$1', '$2').
-% has_children_query -> identifier_expression : ['$1'].
-% has_children_query -> has_children_query array_index_expression identifier_expression : ['$3' | ['$2' | '$1']].
-% has_children_query -> has_children_query identifier_expression : ['$' | '$1'].
-
+has_children_expression -> subpath_expression : build_has_children_predicate('$1').
 
 function_call -> identifier '(' item ')' : build_function_call('$1', '$3').
 
@@ -119,11 +114,11 @@ item -> identifier_value : literal_of('$1').
 item -> current_node_op : '$1'.
 item -> subpath_expression : '$1'.
 
-subpath_expression -> at_op node_subpath_query : build_subpath_expression('$1', '$2').
-node_subpath_query -> identifier_expression : ['$1'].
-node_subpath_query -> array_index_expression : ['$1'].
-node_subpath_query -> node_subpath_query identifier_expression : ['$2' | '$1'].
-node_subpath_query -> node_subpath_query array_index_expression : ['$2' | '$1'].
+subpath_expression -> at_op subpath_expression_query : build_subpath_expression('$1', '$2').
+subpath_expression_query -> identifier_expression : ['$1'].
+subpath_expression_query -> array_index_expression : ['$1'].
+subpath_expression_query -> subpath_expression_query identifier_expression : ['$2' | '$1'].
+subpath_expression_query -> subpath_expression_query array_index_expression : ['$2' | '$1'].
 
 comparision_exp -> item comparator item : build_comparision('$2', '$1', '$3').
 
@@ -267,8 +262,7 @@ build_subpath_expression(AtOperator, PathExpression)
 
 current_node_token({'@', _Line, Symbol}) -> {current_node, Symbol}.
 
-% build_has_children_lookup(_AtOperator, {dot, Identifier}) -> {'has_property?', Identifier}.
-build_has_children_lookup(SubPathExpression) -> {'has_property?', SubPathExpression}.
+build_has_children_predicate(SubPathExpression) -> {'has_children?', SubPathExpression}.
 
 build_function_call({identifier, _, Identifier} = Token, Arguments) ->
     Fun = binary_to_list(Identifier),
