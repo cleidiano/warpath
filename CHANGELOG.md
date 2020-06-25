@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased][unreleased]
 
+### Added
+- Add support for deep match on filter expression predicate, exemple selector: `$.addresses[?(@.address.state=='Bahia')]`
+
 ## [0.3.0] - 2020-06-09
 This release is a complete new implementation strategy, it relay on elixir protocol to promote extensibility and simplify maintainability.
 
