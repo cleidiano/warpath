@@ -117,7 +117,7 @@ defmodule Warpath.Filter.PredicateTest do
       refute Predicate.eval(expression("@[5]"), [1, 2, 3, 4, 5])
     end
 
-    test "when context is a keyword list and target is a negative index" do
+    test "when context is a list and target is a negative index" do
       assert Predicate.eval(expression("@[-1]"), [1, 2, 3, 4, 5])
       assert Predicate.eval(expression("@[-5]"), [1, 2, 3, 4, 5])
       refute Predicate.eval(expression("@[-6]"), [1, 2, 3, 4, 5])
