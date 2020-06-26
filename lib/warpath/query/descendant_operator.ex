@@ -1,9 +1,9 @@
 alias Warpath.Element
 alias Warpath.Expression
 alias Warpath.Execution.Env
+alias Warpath.Filter
 alias Warpath.Query.IndexOperator
 alias Warpath.Query.DescendantOperator
-alias Warpath.Query.FilterOperator
 
 defprotocol DescendantOperator do
   @moduledoc false
@@ -67,17 +67,12 @@ defimpl DescendantOperator, for: [Map, List] do
     collect_by(document, relative_path, env, _acceptor = fn _ -> true end)
   end
 
-  def evaluate(document, relative_path, %Env{instruction: {:scan, {:filter, _} = filter}} = env) do
-    filter_env = Env.new(filter)
-
+  def evaluate(document, relative_path, %Env{instruction: {:scan, {:filter, filter}}} = env) do
     collect_by(
       document,
       relative_path,
       env,
-      _acceptor = fn %Element{value: value, path: path} ->
-        # List will be traversed by descendant algorithm
-        not is_list(value) and FilterOperator.evaluate(value, path, filter_env) != []
-      end
+      _acceptor = &Filter.Predicate.eval(filter, Element.value(&1))
     )
   end
 
