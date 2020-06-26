@@ -15,7 +15,9 @@ defmodule Warpath.Expression do
 
   @type dot_access :: {:dot, property}
 
-  @type has_property :: {:has_property?, property}
+  @type subpath_expression :: {:subpath_expression, keyword()}
+
+  @type has_children :: {:has_children?, subpath_expression()}
 
   @type indexes :: {:indexes, [{:index_access, integer()}, ...]}
 
@@ -45,7 +47,7 @@ defmodule Warpath.Expression do
           | :is_number
           | :is_tuple
 
-  @type filter :: {:filter, has_property | {operator | guard, term}}
+  @type filter :: {:filter, has_children | {operator | guard, subpath_expression() | term}}
 
   @type scan :: {:scan, property | wildcard | filter | indexes}
 

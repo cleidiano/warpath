@@ -10,6 +10,12 @@ defmodule Warpath.Query.DescendantOperatorTest do
     Env.new({:scan, expr})
   end
 
+  defp filter_expression(filter) do
+    {:ok, %Warpath.Expression{tokens: tokens}} = Warpath.Expression.compile("$[?( #{filter} )]")
+    [_root, filter] = tokens
+    filter
+  end
+
   setup_all do
     document = %{
       "object" => %{
@@ -157,7 +163,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
   end
 
   describe "descendant filter" do
-    test "scan that match a has_property? predicate" do
+    test "scan that match a has_children? predicate" do
       document = %{
         "id" => 1,
         "more" => [
@@ -168,7 +174,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
         ]
       }
 
-      env = env_for({:filter, {:has_property?, {:property, "id"}}})
+      env = env_for(filter_expression("@.id"))
 
       expected = [
         Element.new(%{"id" => 2}, index_access: 0, property: "more"),
@@ -193,7 +199,10 @@ defmodule Warpath.Query.DescendantOperatorTest do
         ]
       }
 
-      env = env_for({:filter, {:==, [{:property, "id"}, 2]}})
+      env =
+        "@.id == 2"
+        |> filter_expression()
+        |> env_for()
 
       expected = [
         Element.new(%{"id" => 2}, index_access: 0, property: "more"),
@@ -218,14 +227,9 @@ defmodule Warpath.Query.DescendantOperatorTest do
       }
 
       env =
-        env_for(
-          {:filter,
-           {:or,
-            [
-              {:is_list, {:property, "id"}},
-              {:is_map, {:property, "id"}}
-            ]}}
-        )
+        "is_list(@.id) or is_map(@.id)"
+        |> filter_expression()
+        |> env_for()
 
       assert DescendantOperator.evaluate(document, [], env) == [
                Element.new(%{"id" => [%{"id" => 2}]}, index_access: 1, property: "more"),
@@ -234,7 +238,12 @@ defmodule Warpath.Query.DescendantOperatorTest do
     end
 
     test "scan that doesn't match a predicate", %{document: document} do
-      env = env_for({:filter, {:has_property?, {:property, make_ref()}}})
+      env =
+        env_for(
+          {:filter,
+           {:has_children?,
+            {:subpath_expression, [{:current_node, "@"}, {:dot, {:property, make_ref()}}]}}}
+        )
 
       assert DescendantOperator.evaluate(document, [], env) == []
     end

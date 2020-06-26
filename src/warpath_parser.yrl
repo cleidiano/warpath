@@ -3,8 +3,8 @@ children_expression identifier_expression identifier_query bracket_notation_iden
 array_index_expression array_index_query
 array_slice_expression array_slice_query index indexes slice_fragment slice_fragments
 filter_expression filter_query filter boolean_exp comparision_exp current_node_op element elements
-identifier_value boolean_value int_value float_value function_call has_children_expression has_children_query
-in_expression item children_item item_resolver predicate
+identifier_value boolean_value int_value float_value function_call has_children_expression
+in_expression item subpath_expression subpath_expression_query predicate
 union_expression union_query union union_element union_elements
 wildcard_expression wildcard_query bracket_wildcard
 descendant_expression descendant_query descendant_identifier_expression descendant_wildcard_expression
@@ -92,7 +92,7 @@ filter_query -> dot_op filter : '$2'.
 filter -> open_bracket '?' '(' boolean_exp ')' close_bracket : '$4'.
 
 boolean_exp -> predicate : '$1'.
-boolean_exp -> boolean_value : '$1'.
+boolean_exp -> boolean_value : literal_of('$1').
 boolean_exp -> boolean_exp and_op boolean_exp : {'and', ['$1', '$3']}.
 boolean_exp -> boolean_exp or_op boolean_exp : {'or', ['$1', '$3']}.
 boolean_exp -> not_op boolean_exp : {'not', '$2'}.
@@ -103,21 +103,22 @@ predicate -> function_call : '$1'.
 predicate -> in_expression : '$1'.
 predicate -> comparision_exp : '$1'.
 
-has_children_expression -> at_op has_children_query : build_has_children_lookup('$1', '$2').
-has_children_query -> identifier_expression : '$1'.
+has_children_expression -> subpath_expression : build_has_children_predicate('$1').
 
 function_call -> identifier '(' item ')' : build_function_call('$1', '$3').
 
-item -> int_value : '$1'.
-item -> float_value : '$1'.
-item -> boolean_value : '$1'.
-item -> identifier_value : '$1'.
+item -> int_value : literal_of('$1').
+item -> float_value : literal_of('$1').
+item -> boolean_value : literal_of('$1').
+item -> identifier_value : literal_of('$1').
 item -> current_node_op : '$1'.
-item -> children_item : '$1'.
+item -> subpath_expression : '$1'.
 
-children_item -> at_op item_resolver : build_children_item('$1', '$2').
-item_resolver -> identifier_expression : '$1'.
-item_resolver -> array_index_expression : '$1'.
+subpath_expression -> at_op subpath_expression_query : build_subpath_expression('$1', '$2').
+subpath_expression_query -> identifier_expression : ['$1'].
+subpath_expression_query -> array_index_expression : ['$1'].
+subpath_expression_query -> subpath_expression_query identifier_expression : ['$2' | '$1'].
+subpath_expression_query -> subpath_expression_query array_index_expression : ['$2' | '$1'].
 
 comparision_exp -> item comparator item : build_comparision('$2', '$1', '$3').
 
@@ -129,7 +130,7 @@ element -> element ',' item : ['$3' | '$1'].
 int_value -> int : value_of('$1').
 float_value -> float : value_of('$1').
 boolean_value -> boolean : value_of('$1').
-current_node_op -> at_op : current_node.
+current_node_op -> at_op : current_node_token('$1').
 
 identifier_value -> identifier : identifier_value('$1').
 identifier_value -> atom_identifier : identifier_value('$1').
@@ -194,7 +195,7 @@ Erlang code.
 -type line() :: integer().
 -type token() :: {term(), line(), term()}.
 
--import(lists, [reverse/1, foldr/3]).
+-import(lists, [reverse/1, foldr/3, foldl/3]).
 
 build_array(Indexes) ->
     IndexAccess = foldr(fun({int, _Line, Index}, Acc) -> [build_index(Index) | Acc] end, [], Indexes),
@@ -245,15 +246,23 @@ convert_to_identifier({_, Line, V}) when is_atom(V) -> to_identifier(Line, atom_
 convert_to_identifier({_, Line, V}) when is_integer(V) -> to_identifier(Line, integer_to_binary(V)).
 to_identifier(Line, Value) -> {identifier, Line, Value}.
 
+%% Filter
 build_filter(FilterExpression) -> {filter, FilterExpression}.
 
 build_comparision(Operator, Left, Right) -> {value_of(Operator), [Left, Right]}.
 
-build_children_item(_AtOperator, {dot, Identifier}) -> Identifier;
-build_children_item(_AtOperator, {indexes, [IndexAccess]}) -> IndexAccess;
-build_children_item(AtOperator, Token) -> error_union_not_allowed("filter", AtOperator, Token).
+build_subpath_expression(AtOperator, PathExpression)
+    when is_list(PathExpression) ->
+    Reducer = fun ({dot, _} = Token, Acc) -> [Token | Acc];
+                  ({indexes, [_]} = Token, Acc) -> [Token | Acc];
+                  ({indexes, _} = TooManyIndex, _Acc) -> error_union_not_allowed("filter", AtOperator, TooManyIndex)
+              end,
+    Expression = foldl(Reducer, [], PathExpression),
+    {subpath_expression, [current_node_token(AtOperator) | Expression]}.
 
-build_has_children_lookup(_AtOperator, {dot, Identifier}) -> {'has_property?', Identifier}.
+current_node_token({'@', _Line, Symbol}) -> {current_node, Symbol}.
+
+build_has_children_predicate(SubPathExpression) -> {'has_children?', SubPathExpression}.
 
 build_function_call({identifier, _, Identifier} = Token, Arguments) ->
     Fun = binary_to_list(Identifier),
@@ -276,6 +285,7 @@ whitelist_functions() -> [
     "is_tuple"
 ].
 
+%% Descendant
 build_descendant_lookup(_, {dot, Expression}) -> {scan, Expression};
 build_descendant_lookup(_, {filter, _} = Expression) -> {scan, Expression};
 build_descendant_lookup(_, {wildcard, _} = Expression) -> {scan, Expression};
@@ -283,7 +293,9 @@ build_descendant_lookup(_, {indexes, _} = Expression) -> {scan, Expression}.
 
 value_of({_Token, _Line, Value}) -> Value.
 token_of({Token, _Line, _Value}) -> Token.
-% label_and_value_of({Token, _Line, Value}) -> {Token, Value}.
+
+literal_of({_Token, _Line, Value}) -> literal_of(Value);
+literal_of(Value) -> {literal, Value}.
 
 %%Errors
 -spec error_slice_step_less_then_one(line()) -> no_return().

@@ -1,6 +1,7 @@
 defmodule Warpath.Execution.Env do
   @moduledoc false
 
+  alias Warpath.Query.CurrentNodeOperator
   alias Warpath.Query.DescendantOperator
   alias Warpath.Query.FilterOperator
   alias Warpath.Query.IdentifierOperator
@@ -39,4 +40,5 @@ defmodule Warpath.Execution.Env do
   defp operator_for({:filter, _}), do: FilterOperator
   defp operator_for({:slice, _}), do: SliceOperator
   defp operator_for({:union, _}), do: UnionOperator
+  defp operator_for({:current_node, _}), do: CurrentNodeOperator
 end

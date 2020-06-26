@@ -21,6 +21,8 @@ defmodule Warpath.Expression.ParserTest do
     assert_parse tokenize!("$"), [@root_expression]
   end
 
+  defp literal_of(value), do: {:literal, value}
+
   test "array indexes" do
     one_index = [@root_expression, {:indexes, [{:index_access, 1}]}]
     two_indexes = [@root_expression, {:indexes, [{:index_access, 1}, {:index_access, 2}]}]
@@ -253,7 +255,7 @@ defmodule Warpath.Expression.ParserTest do
     test "boolean literal as criteria" do
       filter_expression = [
         @root_expression,
-        {:filter, true}
+        {:filter, literal_of(true)}
       ]
 
       assert_parse tokenize!("$[?(true)]"), filter_expression
@@ -263,7 +265,7 @@ defmodule Warpath.Expression.ParserTest do
     test "number literal comparison expression as criteria" do
       filter_expression = [
         @root_expression,
-        {:filter, {:<, [1.0, 2]}}
+        {:filter, {:<, [{:literal, 1.0}, {:literal, 2}]}}
       ]
 
       assert_parse tokenize!("$[?( 1.0 < 2)]"), filter_expression
@@ -273,11 +275,37 @@ defmodule Warpath.Expression.ParserTest do
     test "identifier lookup in criteria on comparison expression" do
       filter_expression = [
         @root_expression,
-        {:filter, {:<, [{:property, "identifier"}, 2]}}
+        {:filter,
+         {:<,
+          [
+            {:subpath_expression, [{:current_node, "@"}, {:dot, {:property, "identifier"}}]},
+            {:literal, 2}
+          ]}}
       ]
 
-      assert_parse tokenize!("$[?( @.identifier < 2)]"), filter_expression
-      assert_parse tokenize!("$.[?( @.identifier < 2)]"), filter_expression
+      assert_parse tokenize!("$[?( @.identifier < 2 )]"), filter_expression
+      assert_parse tokenize!("$.[?( @.identifier < 2 )]"), filter_expression
+    end
+
+    test "deep path expression lookup in criteria on comparison expression" do
+      filter_expression = [
+        @root_expression,
+        {:filter,
+         {:<,
+          [
+            {:subpath_expression,
+             [
+               {:current_node, "@"},
+               dot: {:property, "child"},
+               dot: {:property, "identifier"},
+               indexes: [index_access: 1]
+             ]},
+            {:literal, 2}
+          ]}}
+      ]
+
+      assert_parse tokenize!("$[?( @.child.identifier[1] < 2 )]"), filter_expression
+      assert_parse tokenize!("$.[?( @.child.identifier[1] < 2 )]"), filter_expression
     end
 
     test "at operator must be followed by a dot operator on lookup criteria" do
@@ -288,7 +316,12 @@ defmodule Warpath.Expression.ParserTest do
     test "atom_identifier lookup in criteria on comparison expression" do
       filter_expression = [
         @root_expression,
-        {:filter, {:<, [{:property, :identifier}, 2]}}
+        {:filter,
+         {:<,
+          [
+            {:subpath_expression, [{:current_node, "@"}, dot: {:property, :identifier}]},
+            {:literal, 2}
+          ]}}
       ]
 
       assert_parse tokenize!("$[?( @.:identifier < 2)]"), filter_expression
@@ -298,7 +331,12 @@ defmodule Warpath.Expression.ParserTest do
     test "index lookup in criteria on comparison expression" do
       filter_expression = [
         @root_expression,
-        {:filter, {:<, [{:index_access, 0}, 2]}}
+        {:filter,
+         {:<,
+          [
+            {:subpath_expression, [{:current_node, "@"}, indexes: [index_access: 0]]},
+            {:literal, 2}
+          ]}}
       ]
 
       assert_parse tokenize!("$[?( @[0] < 2)]"), filter_expression
@@ -308,7 +346,9 @@ defmodule Warpath.Expression.ParserTest do
     test "has children predicate as a criteria expression" do
       filter_expression = [
         @root_expression,
-        {:filter, {:has_property?, {:property, "children"}}}
+        {:filter,
+         {:has_children?,
+          {:subpath_expression, [{:current_node, "@"}, {:dot, {:property, "children"}}]}}}
       ]
 
       assert_parse tokenize!("$[?( @['children'] )]"), filter_expression
@@ -327,7 +367,12 @@ defmodule Warpath.Expression.ParserTest do
     test "bracket notation identifier lookup in criteria on comparison expression" do
       filter_expression = [
         @root_expression,
-        {:filter, {:<, [{:property, "children"}, 2]}}
+        {:filter,
+         {:<,
+          [
+            {:subpath_expression, [{:current_node, "@"}, dot: {:property, "children"}]},
+            {:literal, 2}
+          ]}}
       ]
 
       assert_parse tokenize!("$[?( @['children'] < 2)]"), filter_expression
@@ -362,7 +407,10 @@ defmodule Warpath.Expression.ParserTest do
 
       Enum.each(safe_functions, fn function ->
         fun_name = Atom.to_string(function)
-        children_lookup = {:property, "children"}
+
+        children_lookup =
+          {:subpath_expression, [{:current_node, "@"}, dot: {:property, "children"}]}
+
         tokens = tokenize!("$[?( #{fun_name}(@.children)  )]")
 
         assert_parse tokens, [@root_expression, {:filter, {function, children_lookup}}]
@@ -382,51 +430,59 @@ defmodule Warpath.Expression.ParserTest do
     test "and operator" do
       assert_parse tokenize!("$[?(true and true)]"), [
         @root_expression,
-        {:filter, {:and, [true, true]}}
+        {:filter, {:and, [literal_of(true), literal_of(true)]}}
       ]
     end
 
     test "or operator" do
       assert_parse tokenize!("$[?(true or true)]"), [
         @root_expression,
-        {:filter, {:or, [true, true]}}
+        {:filter, {:or, [literal_of(true), literal_of(true)]}}
       ]
     end
 
     test "or operator precedence" do
       assert_parse tokenize!("$[?(true and true or false)]"), [
         @root_expression,
-        {:filter, {:or, [{:and, [true, true]}, false]}}
+        {:filter, {:or, [{:and, [literal_of(true), literal_of(true)]}, literal_of(false)]}}
       ]
     end
 
     test "not operator" do
       assert_parse tokenize!("$[?(not true)]"), [
         @root_expression,
-        {:filter, {:not, true}}
+        {:filter, {:not, literal_of(true)}}
       ]
 
       assert_parse tokenize!("$[?(not false and true)]"), [
         @root_expression,
-        {:filter, {:and, [{:not, false}, true]}}
+        {:filter, {:and, [{:not, literal_of(false)}, literal_of(true)]}}
       ]
     end
 
     test "in operator in criteria with literals in list" do
       assert_parse tokenize!("$[?(@.name in ['Warpath', 0, :warpath, 1.1])]"), [
         @root_expression,
-        {:filter, {:in, [{:property, "name"}, ["Warpath", 0, :warpath, 1.1]]}}
+        {:filter,
+         {:in,
+          [
+            {:subpath_expression, [{:current_node, "@"}, dot: {:property, "name"}]},
+            [{:literal, "Warpath"}, {:literal, 0}, {:literal, :warpath}, {:literal, 1.1}]
+          ]}}
       ]
     end
 
     test "in operator in criteria with item lookup on list" do
-      assert_parse tokenize!("$[?(@.name in [@.transformer, @.autobot])]"), [
+      assert_parse tokenize!("$[?('Warpath' in [@.transformer, @.autobot])]"), [
         @root_expression,
         {:filter,
          {:in,
           [
-            {:property, "name"},
-            [{:property, "transformer"}, {:property, "autobot"}]
+            {:literal, "Warpath"},
+            [
+              subpath_expression: [{:current_node, "@"}, dot: {:property, "transformer"}],
+              subpath_expression: [{:current_node, "@"}, dot: {:property, "autobot"}]
+            ]
           ]}}
       ]
     end
@@ -434,19 +490,19 @@ defmodule Warpath.Expression.ParserTest do
     test "current children in criteria on comparision expression" do
       assert_parse tokenize!("$[?(@ == 10)]"), [
         @root_expression,
-        {:filter, {:==, [:current_node, 10]}}
+        {:filter, {:==, [{:current_node, "@"}, {:literal, 10}]}}
       ]
 
       assert_parse tokenize!("$[?(10 == @)]"), [
         @root_expression,
-        {:filter, {:==, [10, :current_node]}}
+        {:filter, {:==, [{:literal, 10}, {:current_node, "@"}]}}
       ]
     end
 
     test "parenthesis precedence defined" do
       assert_parse tokenize!("$[?(true and (true or false))]"), [
         @root_expression,
-        {:filter, {:and, [true, {:or, [true, false]}]}}
+        {:filter, {:and, [literal_of(true), {:or, [literal_of(true), literal_of(false)]}]}}
       ]
     end
   end
@@ -490,7 +546,13 @@ defmodule Warpath.Expression.ParserTest do
     test "filter lookup" do
       filter_expression = [
         @root_expression,
-        {:scan, {:filter, {:<, [{:property, "identifier"}, 2]}}}
+        {:scan,
+         {:filter,
+          {:<,
+           [
+             {:subpath_expression, [{:current_node, "@"}, dot: {:property, "identifier"}]},
+             {:literal, 2}
+           ]}}}
       ]
 
       assert_parse tokenize!("$..[?( @.identifier < 2)]"), filter_expression
