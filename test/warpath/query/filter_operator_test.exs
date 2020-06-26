@@ -9,11 +9,11 @@ defmodule Warpath.Query.FilterOperatorTest do
 
   @relative_path [{:root, "$"}]
 
-  defp env_for_filter(filter) do
+  defp env_for_filter(filter, metadata \\ %{}) do
     {:ok, %Expression{tokens: [_root, {:filter, expression} | _]}} =
       Expression.compile("$[?( #{filter} )]")
 
-    Env.new({:filter, expression})
+    Env.new({:filter, expression}, nil, metadata)
   end
 
   defp quoted_key(key) do

@@ -22,13 +22,15 @@ defmodule Warpath.Execution.Env do
           metadata: metadata()
         }
 
-  defstruct operator: nil, instruction: nil, previous_operator: nil, metadata: %{}
+  defstruct operator: nil, instruction: nil, previous_operator: nil, metadata: nil
 
-  def new(instruction, previous_operator \\ nil) do
+  @spec new(instruction(), operator() | nil, map()) :: Warpath.Execution.Env.t()
+  def new(instruction, previous_operator \\ nil, metadata \\ %{}) do
     %__MODULE__{
       operator: operator_for(instruction),
       instruction: instruction,
-      previous_operator: previous_operator
+      previous_operator: previous_operator,
+      metadata: metadata
     }
   end
 
