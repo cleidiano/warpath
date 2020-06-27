@@ -14,10 +14,6 @@ defmodule WarpathTest do
       assert {:error, %ExpressionError{}} = Warpath.query(%{}, "$[]")
     end
 
-    test "report {:error, reason} for invalid operation" do
-      assert {:error, {:unsupported_operation, _tips}} = Warpath.query([1], "$.abc")
-    end
-
     test "successfully evaluate a valid expresssion" do
       assert {:ok, "Warpath"} =
                Warpath.query(%{"autobots" => ["Optimus Prime", "Warpath"]}, "$.autobots[1]")

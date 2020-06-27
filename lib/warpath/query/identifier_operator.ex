@@ -57,25 +57,11 @@ defimpl IdentifierOperator, for: List do
     end)
   end
 
-  def evaluate(elements, relative_path, %Env{instruction: instruction} = env) do
+  def evaluate(elements, relative_path, %Env{instruction: {:dot, property}} = env) do
     case {elements, Keyword.keyword?(elements)} do
-      {[], _} ->
-        []
-
       {_, false} ->
-        {:dot, {:property, name} = token} = instruction
-
-        wrong_query =
-          token
-          |> Element.Path.accumulate(relative_path)
-          |> Element.Path.dotify()
-
-        tips =
-          "You are trying to traverse a list using dot " <>
-            "notation '#{wrong_query}', that it's not allowed for list type. " <>
-            "You can use something like '#{Element.Path.dotify(relative_path)}[*].#{name}' instead."
-
-        {:error, {:unsupported_operation, tips}}
+        path = Element.Path.accumulate(property, relative_path)
+        Element.new(nil, path)
 
       {keyword, true} ->
         IdentifierOperator.Map.evaluate(keyword, relative_path, env)
