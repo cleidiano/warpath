@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix DescendantOperator weren't apply the filter predicate properly when it's operate on first-class citizen data type.
 Example: Queries like `Warpath.query([[1, 2], :item, 9, [9, 8]], "$..[?( is_list(@) )]")`, always returned empty list, now it will produce, `[[1, 2], [9, 8]]`
 
+### Changed
+- Traverse a list using dot notation key lookup will produce a nil value.
+  
 ## [0.3.0] - 2020-06-09
 This release is a complete new implementation strategy, it relay on elixir protocol to promote extensibility and simplify maintainability.
 
@@ -25,7 +28,7 @@ This release is a complete new implementation strategy, it relay on elixir proto
 
 ### Fixed
 - Forbidden negative step on slice operation
-- Fix reserved words used as children key lookup, to allow expression like, `$.true`, `$.in`.
+- Fix reserved words used as children key lookup to allow expression like, `$.true`, `$.in`.
 - Compute item index for path on evaluate negative index.
   Ex. `Warpath.query(["a", "b"], "$.[-2]", result_type: :value_path) => {:ok, {"a", "$[0]"}}`
 - Recursive descendant with filter were applying filter over list only, support for map were added.

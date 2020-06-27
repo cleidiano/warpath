@@ -115,27 +115,14 @@ defmodule Warpath.Query.IdentifierOperatorTest do
                 property_name <- string(:printable) do
         env = env_evaluation_for(property_name, previous_operator)
 
-        assert {:error, {:unsupported_operation, _}} =
+        assert Element.new(nil, [{:property, property_name}]) ==
                  IdentifierOperator.evaluate(elements, [], env)
       end
     end
 
-    test "evaluate a empty list always result in empty list" do
-      assert IdentifierOperator.evaluate([], @relative_path, env_evaluation_for(:any)) == []
-    end
-
-    test "raise for non keyword list" do
-      tips =
-        "You are trying to traverse a list using dot notation '$.a_property_name', " <>
-          "that it's not allowed for list type. " <>
-          "You can use something like '$[*].a_property_name' instead."
-
-      assert {:error, {:unsupported_operation, tips}} ==
-               IdentifierOperator.evaluate(
-                 ["abc"],
-                 @relative_path,
-                 env_evaluation_for("a_property_name")
-               )
+    test "evaluate a empty list always result in nil" do
+      assert IdentifierOperator.evaluate([], @relative_path, env_evaluation_for(:any)) ==
+               Element.new(nil, [{:property, :any} | @relative_path])
     end
   end
 
