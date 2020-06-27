@@ -4,6 +4,7 @@ defmodule WarpathTest do
   doctest Warpath
 
   alias Warpath.ExpressionError
+  alias Warpath.JsonDecodeError
 
   setup_all do
     %{data: Oracle.json_store()}
@@ -12,6 +13,10 @@ defmodule WarpathTest do
   describe "query/3" do
     test "report {:error, ExpressionError.t()} when evaluate a invalid expression" do
       assert {:error, %ExpressionError{}} = Warpath.query(%{}, "$[]")
+    end
+
+    test "report {:error, JsonDecodeError} when evaluate a invalid expression" do
+      assert {:error, %JsonDecodeError{}} = Warpath.query("invalid", "$")
     end
 
     test "successfully evaluate a valid expresssion" do
@@ -48,6 +53,12 @@ defmodule WarpathTest do
     test "raise on evaluate a invalid expression" do
       assert_raise ExpressionError, fn ->
         Warpath.query!(%{}, "$[]")
+      end
+    end
+
+    test "raise on decode a invalid json" do
+      assert_raise JsonDecodeError, fn ->
+        Warpath.query!("invalid", "$")
       end
     end
 

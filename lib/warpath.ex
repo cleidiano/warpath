@@ -260,8 +260,14 @@ defmodule Warpath do
 
   def query(document, selector, opts) when is_binary(document) do
     document
-    |> Jason.decode!()
-    |> query(selector, opts)
+    |> Jason.decode()
+    |> case do
+      {:ok, decodedDocument} ->
+        query(decodedDocument, selector, opts)
+
+      {:error, exception} ->
+        {:error, Warpath.JsonDecodeError.from(exception)}
+    end
   end
 
   def query(document, selector, opts) when is_binary(selector) do
