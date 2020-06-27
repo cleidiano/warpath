@@ -115,7 +115,8 @@ defmodule Warpath.Query.IdentifierOperatorTest do
                 property_name <- string(:printable) do
         env = env_evaluation_for(property_name, previous_operator)
 
-        assert Element.new(nil, [{:property, property_name}]) == IdentifierOperator.evaluate(elements, [], env)
+        assert Element.new(nil, [{:property, property_name}]) ==
+                 IdentifierOperator.evaluate(elements, [], env)
       end
     end
 
