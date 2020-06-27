@@ -262,8 +262,8 @@ defmodule Warpath do
     document
     |> Jason.decode()
     |> case do
-      {:ok, decodedDocument} ->
-        query(decodedDocument, selector, opts)
+      {:ok, decoded_document} ->
+        query(decoded_document, selector, opts)
 
       {:error, exception} ->
         {:error, Warpath.JsonDecodeError.from(exception)}
