@@ -196,6 +196,11 @@ defmodule Warpath do
       ...>Warpath.query(document, "$..[2]")
       {:ok, [:item, 3, 7]}
 
+      #Using filter criteria to scan
+      iex> document = [ [1,2], [], :item, 9, [9,8], 1.1, "string" ]
+      ...>Warpath.query(document, "$..[?( is_list(@) )]")
+      {:ok, [ [1, 2], [], [9, 8]]}
+
   ### Options
       iex>document = %{"integers" => [100, 200, 300]}
       ...> Warpath.query(document, "$.integers[0, 1]", result_type: :path)

@@ -41,14 +41,10 @@ defimpl FilterOperator, for: List do
   end
 end
 
-defimpl FilterOperator, for: Map do
+defimpl FilterOperator, for: Any do
   def evaluate(document, relative_path, %Env{instruction: {:filter, filter_expression}}) do
     if Predicate.eval(filter_expression, document),
       do: [Element.new(document, relative_path)],
       else: []
   end
-end
-
-defimpl FilterOperator, for: Any do
-  def evaluate(_, _, _), do: []
 end

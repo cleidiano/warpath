@@ -249,6 +249,32 @@ defmodule Warpath.Query.DescendantOperatorTest do
     end
   end
 
+  property "descendant filter that use a function on predicate" do
+    functions = [
+      :is_atom,
+      :is_binary,
+      :is_boolean,
+      :is_float,
+      :is_integer,
+      :is_list,
+      :is_map,
+      :is_nil,
+      :is_number,
+      :is_tuple
+    ]
+
+    check all terms <- list_of(term()),
+              function <- member_of(functions) do
+      env =
+        "#{function}(@)"
+        |> filter_expression()
+        |> env_for()
+
+      result = DescendantOperator.evaluate(terms, [], env)
+      assert Enum.all?(result, fn %Element{value: item} -> apply(Kernel, function, [item]) end)
+    end
+  end
+
   property "descendant operator on data type other then list or map always produce empty list" do
     check all term <- term() do
       container? = is_list(term) or is_map(term)
