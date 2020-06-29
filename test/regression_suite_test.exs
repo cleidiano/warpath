@@ -37,7 +37,9 @@ defmodule RegrationSuiteTest do
       test_type = Map.get(@query, "test_type")
 
       consensus_value =
-        Map.get_lazy(@query, "scalar-consensus", fn -> Map.get(@query, "consensus", :no_consensus) end)
+        Map.get_lazy(@query, "scalar-consensus", fn ->
+          Map.get(@query, "consensus", :no_consensus)
+        end)
 
       case {consensus_value, Map.get(@query, "ordered")} do
         {:no_consensus, _} ->
