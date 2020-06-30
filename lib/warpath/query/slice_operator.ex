@@ -24,21 +24,27 @@ end
 
 defimpl SliceOperator, for: List do
   def evaluate(elements, relative_path, %Env{instruction: {:slice, slice_args}}) do
-    with {:empty_range?, false} <- {:empty_range?, empty_range?(slice_args)},
-         {:config, {step, %Range{} = range}} <- {:config, slice_config(elements, slice_args)} do
-      do_slice(elements, relative_path, range, step)
-    else
-      {:empty_range?, true} ->
+    {first, last, step} = slice_config(elements, slice_args)
+
+    case build_range(first, last) do
+      {:range, range} ->
+        elements
+        |> Element.elementify(relative_path)
+        |> Stream.with_index()
+        |> Stream.reject(fn {_, index} -> rem(index, step) != 0 end)
+        |> Stream.filter(fn {_, index} -> index in range end)
+        |> Enum.map(fn {element, _index} -> element end)
+
+      _ ->
         []
     end
   end
 
-  defp empty_range?(slice_args) do
-    with {:ok, start_index} <- Keyword.fetch(slice_args, :start_index),
-         {:ok, end_index} <- Keyword.fetch(slice_args, :end_index) do
-      start_index == end_index
+  defp build_range(first, last) do
+    if first > last do
+      {:empty_range?, true}
     else
-      _ -> false
+      {:range, Range.new(first, last)}
     end
   end
 
@@ -47,7 +53,7 @@ defimpl SliceOperator, for: List do
     end_index = end_index(elements, slice_ops)
     step = step(slice_ops)
 
-    {step, Range.new(start, end_index - 1)}
+    {start, end_index, step}
   end
 
   defp step(slice), do: Keyword.get(slice, :step, 1)
@@ -58,21 +64,19 @@ defimpl SliceOperator, for: List do
         start
 
       start ->
-        max(-length(elements), start)
+        max(length(elements) + start, 0)
     end
   end
 
-  defp end_index(element, slice) do
-    Keyword.get_lazy(slice, :end_index, fn -> length(element) end)
-  end
+  defp end_index(elements, slice) do
+    end_index =
+      case Keyword.get_lazy(slice, :end_index, fn -> length(elements) end) do
+        index when index >= 0 -> index
+        index -> index + length(elements)
+      end
 
-  defp do_slice(terms, relative_path, range, step) do
-    terms
-    |> Element.elementify(relative_path)
-    |> Stream.with_index()
-    |> Enum.slice(range)
-    |> Stream.reject(fn {_, index} -> rem(index, step) != 0 end)
-    |> Enum.map(fn {element, _index} -> element end)
+    # end_index exclusive.
+    end_index - 1
   end
 end
 

@@ -164,11 +164,25 @@ defmodule Warpath.Query.SliceOperatorTest do
     end
   end
 
-  property "slice with start_index and end_index equals, it's handled as empty range and result in empty list" do
-    check all(list <- list_of(term(), min_length: 1)) do
-      index = Enum.random(0..length(list))
-      env = env_for_slice(start_index: index, end_index: index)
+  describe "configuration that result in empty range always produce an empty list" do
+    property "start_index and end_index equals" do
+      check all(list <- list_of(term(), min_length: 1)) do
+        index = Enum.random(0..length(list))
+        env = env_for_slice(start_index: index, end_index: index)
 
+        assert SliceOperator.evaluate(list, [], env) == []
+      end
+    end
+
+    test "negative start_index after normalize greater than end_index" do
+      list = [1, 2, 3, 4, 5, 6]
+      env = env_for_slice(start_index: -3, end_index: 2)
+      assert SliceOperator.evaluate(list, [], env) == []
+    end
+
+    test "positve start_index greater than end_index" do
+      list = [1, 2, 3, 4, 5, 6]
+      env = env_for_slice(start_index: 4, end_index: 2)
       assert SliceOperator.evaluate(list, [], env) == []
     end
   end
