@@ -16,7 +16,8 @@ Example: Queries like `Warpath.query([[1, 2], :item, 9, [9, 8]], "$..[?( is_list
 
 ### Changed
 - Traverse a list using dot notation key lookup will produce a nil value.
-  
+- Scalar query that it index is out of bounds, will result in a nil value. This revert the behaviour introduced at version `0.3.0`.
+
 ## [0.3.0] - 2020-06-09
 This release is a complete new implementation strategy, it relay on elixir protocol to promote extensibility and simplify maintainability.
 

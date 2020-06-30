@@ -32,12 +32,11 @@ defimpl IndexOperator, for: List do
   end
 
   def evaluate(document, path, %Env{instruction: {:indexes, [index]}}) do
-    case value_for_indexes(document, path, [index]) do
-      [] ->
-        []
-
-      [element] ->
-        element
+    if out_of_bound?(index, document) do
+      Element.new(nil, Element.Path.accumulate(index, path))
+    else
+      [element] = value_for_indexes(document, path, [index])
+      element
     end
   end
 
@@ -69,5 +68,9 @@ defimpl IndexOperator, for: List do
 end
 
 defimpl IndexOperator, for: Any do
+  def evaluate(_, path, %Env{instruction: {:indexes, [index]}}) do
+    Element.new(nil, Element.Path.accumulate(index, path))
+  end
+
   def evaluate(_, _, _), do: []
 end
