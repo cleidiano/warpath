@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Fix DescendantOperator weren't apply the filter predicate properly when it's operate on first-class citizen data type.
 Example: Queries like `Warpath.query([[1, 2], :item, 9, [9, 8]], "$..[?( is_list(@) )]")`, always returned empty list, now it will produce, `[[1, 2], [9, 8]]`
+- Fix SliceOperatior when normalized start index is greater than end_index. Now empty list will be returned.
+
 
 ### Changed
 - Traverse a list using dot notation key lookup will produce a nil value.
