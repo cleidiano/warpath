@@ -5,8 +5,6 @@ defmodule Warpath.Query.IdentifierOperatorTest do
   alias Warpath.Element
   alias Warpath.Execution.Env
   alias Warpath.Query.IdentifierOperator
-  alias Warpath.Query.RootOperator
-  alias Warpath.Query.SliceOperator
 
   @relative_path [{:root, "$"}]
 
@@ -99,25 +97,6 @@ defmodule Warpath.Query.IdentifierOperatorTest do
       ]
 
       assert IdentifierOperator.evaluate(elements_with_keyword_list, [], env) == expected
-    end
-
-    property "traverse is only allowed with previous operator that is on whitelist" do
-      blacklist_operator = [
-        IdentifierOperator,
-        RootOperator,
-        SliceOperator
-      ]
-
-      element_generator = StreamData.map(term(), fn value -> Element.new(value, []) end)
-
-      check all elements <- list_of(element_generator, min_length: 1),
-                previous_operator <- member_of(blacklist_operator),
-                property_name <- string(:printable) do
-        env = env_evaluation_for(property_name, previous_operator)
-
-        assert Element.new(nil, [{:property, property_name}]) ==
-                 IdentifierOperator.evaluate(elements, [], env)
-      end
     end
 
     test "evaluate a empty list always result in nil" do
