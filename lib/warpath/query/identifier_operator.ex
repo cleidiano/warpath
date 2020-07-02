@@ -2,12 +2,7 @@ alias Warpath.Element
 alias Warpath.Execution.Env
 alias Warpath.Expression
 alias Warpath.Query.Accessible
-alias Warpath.Query.IndexOperator
-alias Warpath.Query.DescendantOperator
-alias Warpath.Query.FilterOperator
 alias Warpath.Query.IdentifierOperator
-alias Warpath.Query.UnionOperator
-alias Warpath.Query.WildcardOperator
 
 defprotocol IdentifierOperator do
   @moduledoc false
@@ -38,16 +33,7 @@ defimpl IdentifierOperator, for: Map do
 end
 
 defimpl IdentifierOperator, for: List do
-  @previous_operators_allowed [
-    IndexOperator,
-    DescendantOperator,
-    FilterOperator,
-    UnionOperator,
-    WildcardOperator
-  ]
-
-  def evaluate(elements, [], %Env{previous_operator: %Env{operator: previous_operator}} = env)
-      when previous_operator in @previous_operators_allowed do
+  def evaluate([%Element{} | _] = elements, [], env) do
     {:dot, {:property, key}} = env.instruction
 
     elements
