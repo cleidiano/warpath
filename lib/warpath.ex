@@ -184,7 +184,7 @@ defmodule Warpath do
       ...> Warpath.query(document, "$[?( @[2] )]") # That means give me all list that have index 2.
       {:ok, [ [1,2,3], [9,8,7]] }
 
-  ### Recursive descent
+  ### Recursive descendant
 
       #Collect key
       iex>document = %{"store" => %{"car" => %{"price" => 100_000}, "bicycle" => %{"price" => 500}}}
@@ -202,7 +202,6 @@ defmodule Warpath do
       {:ok, [ [1, 2], [], [9, 8]]}
 
   ### Options
-      #default
       iex>document = %{"integers" => [100, 200, 300]}
       ...> Warpath.query(document, "$.integers")
       {:ok, [100, 200, 300]}
@@ -249,7 +248,7 @@ defmodule Warpath do
   ## Options:
     result_type:
     * `:value` - return the value of evaluated expression - `default`
-    * `:path` - return the bracketfiy path string of evaluated expression instead of it's value
+    * `:path` - return the bracketfiy path string representation of evaluated expression instead of it's value
     * `:value_path` - return both value and bracketify path string.
     * `:path_tokens` - return the path tokens instead of it string representation, see `Warpath.Element.Path`.
     * `:value_path_tokens` - return both value and path tokens.
