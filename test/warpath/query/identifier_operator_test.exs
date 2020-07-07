@@ -23,21 +23,15 @@ defmodule Warpath.Query.IdentifierOperatorTest do
       end
     end
 
-    property "evaluate a non existent property always create a element with value nil" do
+    property "evaluate a non existent property always create a element with value nil with empty path" do
       unique = make_ref()
 
       check all map <- map_of(term(), term(), min_length: 1) do
-        element = Element.new(nil, [{:property, unique} | @relative_path])
+        element = Element.new(nil, [])
 
         assert IdentifierOperator.evaluate(map, @relative_path, env_evaluation_for(unique)) ==
                  element
       end
-    end
-
-    test "evaluate a property on empty map" do
-      result = IdentifierOperator.evaluate(%{}, @relative_path, env_evaluation_for("any"))
-
-      assert result == Element.new(nil, [{:property, "any"} | @relative_path])
     end
   end
 
@@ -99,14 +93,14 @@ defmodule Warpath.Query.IdentifierOperatorTest do
       assert IdentifierOperator.evaluate(elements_with_keyword_list, [], env) == expected
     end
 
-    test "evaluate a empty list always result in nil" do
+    test "evaluate a empty list always result in element with nil value and empty path" do
       assert IdentifierOperator.evaluate([], @relative_path, env_evaluation_for(:any)) ==
-               Element.new(nil, [{:property, :any} | @relative_path])
+               Element.new(nil, [])
     end
   end
 
   test "evaluate/3 is nil safe" do
     assert IdentifierOperator.evaluate(nil, @relative_path, env_evaluation_for("propery_name")) ==
-             Element.new(nil, @relative_path)
+             Element.new(nil, [])
   end
 end

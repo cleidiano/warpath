@@ -29,20 +29,20 @@ defmodule Warpath.Query.IndexOperatorTest do
       end
     end
 
-    property "always produce a nil value for positive out of bound index" do
+    property "always produce a element with nil value and empty path for positive out of bound index" do
       check all terms <- list_of(term()),
                 count = length(terms) do
         result = IndexOperator.evaluate(terms, @relative_path, env_for_indexes([count]))
-        assert result == Element.new(nil, [{:index_access, count} | @relative_path])
+        assert result == Element.new(nil, [])
       end
     end
 
-    property "always produce a nil value for negative out of bound index" do
+    property "always produce a element with nil value and empty path for negative out of bound index" do
       check all terms <- list_of(term()),
                 count = length(terms) do
         out_of_bound = -(count + 1)
         result = IndexOperator.evaluate(terms, @relative_path, env_for_indexes([out_of_bound]))
-        assert result == Element.new(nil, [{:index_access, out_of_bound} | @relative_path])
+        assert result == Element.new(nil, [])
       end
     end
 
@@ -51,7 +51,7 @@ defmodule Warpath.Query.IndexOperatorTest do
 
       check all term <- term() do
         result = IndexOperator.evaluate(term, @relative_path, env)
-        assert is_list(term) or result == Element.new(nil, [{:index_access, 0} | @relative_path])
+        assert is_list(term) or result == Element.new(nil, [])
       end
     end
   end

@@ -202,6 +202,11 @@ defmodule Warpath do
       {:ok, [ [1, 2], [], [9, 8]]}
 
   ### Options
+      #default
+      iex>document = %{"integers" => [100, 200, 300]}
+      ...> Warpath.query(document, "$.integers")
+      {:ok, [100, 200, 300]}
+
       iex>document = %{"integers" => [100, 200, 300]}
       ...> Warpath.query(document, "$.integers[0, 1]", result_type: :path)
       {:ok, ["$['integers'][0]", "$['integers'][1]"]}
@@ -223,7 +228,6 @@ defmodule Warpath do
   alias Warpath.Execution
   alias Warpath.Execution.Env
   alias Warpath.Expression
-  alias Warpath.Query.RootOperator
 
   @doc """
   Query data for the given expression.
@@ -244,9 +248,9 @@ defmodule Warpath do
 
   ## Options:
     result_type:
-    * `:value` -  return the value of evaluated expression - `default`
-    * `:path` - return the path of evaluated expression instead of it's value
-    * `:value_path` - return both value and path.
+    * `:value` - return the value of evaluated expression - `default`
+    * `:path` - return the bracketfiy path string of evaluated expression instead of it's value
+    * `:value_path` - return both value and bracketify path string.
     * `:path_tokens` - return the path tokens instead of it string representation, see `Warpath.Element.Path`.
     * `:value_path_tokens` - return both value and path tokens.
   """
@@ -302,11 +306,6 @@ defmodule Warpath do
       {:ok, query_result} -> query_result
       {:error, error} -> raise error
     end
-  end
-
-  defp dispatch(%Env{operator: operator}, %Element{value: nil} = element)
-       when operator != RootOperator do
-    {:halt, element}
   end
 
   defp dispatch(%Env{operator: operator} = env, elements) when is_list(elements) do
