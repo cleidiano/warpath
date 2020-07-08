@@ -24,11 +24,16 @@ end
 defimpl IdentifierOperator, for: Map do
   def evaluate(document, relative_path, %Env{instruction: instruction}) do
     {:dot, {:property, identifier} = token} = instruction
-    path = Element.Path.accumulate(token, relative_path)
 
-    document
-    |> Access.get(identifier)
-    |> Element.new(path)
+    if Accessible.has_key?(document, identifier) do
+      path = Element.Path.accumulate(token, relative_path)
+
+      document
+      |> Access.get(identifier)
+      |> Element.new(path)
+    else
+      Element.new(nil, [])
+    end
   end
 end
 
@@ -43,11 +48,10 @@ defimpl IdentifierOperator, for: List do
     end)
   end
 
-  def evaluate(elements, relative_path, %Env{instruction: {:dot, property}} = env) do
+  def evaluate(elements, relative_path, env) do
     case {elements, Keyword.keyword?(elements)} do
       {_, false} ->
-        path = Element.Path.accumulate(property, relative_path)
-        Element.new(nil, path)
+        Element.new(nil, [])
 
       {keyword, true} ->
         IdentifierOperator.Map.evaluate(keyword, relative_path, env)
@@ -58,5 +62,5 @@ defimpl IdentifierOperator, for: List do
 end
 
 defimpl IdentifierOperator, for: Atom do
-  def evaluate(nil, relative_path, _), do: Element.new(nil, relative_path)
+  def evaluate(_, _relative_path, _), do: Element.new(nil, [])
 end

@@ -54,5 +54,5 @@ defimpl UnionOperator, for: List do
 end
 
 defimpl UnionOperator, for: Atom do
-  def evaluate(nil, _, _), do: []
+  def evaluate(_, _, _), do: []
 end

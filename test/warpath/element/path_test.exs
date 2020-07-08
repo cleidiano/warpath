@@ -41,6 +41,10 @@ defmodule Warpath.Element.PathTest do
       tokens = Enum.map(nested_tokens, &accumulate_tokens(&1))
       assert Path.bracketify(tokens) == ["$['persons'][0]['name']", "$['persons'][1]['name']"]
     end
+
+    test "empty list" do
+      assert Path.bracketify([]) == ""
+    end
   end
 
   describe "dotify/1 create path for" do
@@ -78,6 +82,10 @@ defmodule Warpath.Element.PathTest do
 
       tokens = Enum.map(nested_tokens, &accumulate_tokens(&1))
       assert Path.dotify(tokens) == ["$.persons[0].name", "$.persons[1].name"]
+    end
+
+    test "empty list" do
+      assert Path.dotify([]) == ""
     end
   end
 

@@ -59,7 +59,7 @@ defmodule Warpath.Element.Path do
     |> List.flatten()
   end
 
-  defp make_path([], _), do: []
+  defp make_path([], _), do: ""
 
   defp to_string(tokens, opts) do
     tokens
