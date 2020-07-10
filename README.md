@@ -57,6 +57,7 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
 
 ## Examples
 ### All children
+```elixir
     #wildcard using bracket-notation
     iex>document = %{"integers" => [100, 200, 300]}
     ...> Warpath.query(document, "$.integers[*]")
@@ -66,8 +67,10 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
     iex>document = %{"integers" => [100, 200, 300]}
     ...> Warpath.query(document, "$.integers.*")
     {:ok, [100, 200, 300]}
+```
 
 ### Children lookup by name
+```elixir
     #Simple string
     iex>Warpath.query(%{"category" => "fiction", "price" => 12.99}, "$.category")
     {:ok, "fiction"}
@@ -92,9 +95,10 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
     iex>document = %{"key" => "value", "another" => "entry"}
     ...> Warpath.query(document, "$['key', 'another']")
     {:ok, ["value", "entry"]}
-
+```
 
 ### Children lookup by index
+```elixir
     #Positive index
     iex>document = %{"integers" => [100, 200, 300]}
     ...> Warpath.query(document, "$.integers[0]")
@@ -109,8 +113,10 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
     iex>document = %{"integers" => [100, 200, 300]}
     ...> Warpath.query(document, "$.integers[0, 1]")
     {:ok, [100, 200]}
+```
 
 ### Slice
+```elixir
     iex> document = [0, 1, 2, 3, 4]
     ...> Warpath.query(document, "$[0:2:1]")
     {:ok, [0, 1]}
@@ -124,8 +130,10 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
     iex> document = [0, 1, 2, 3, 4]
     ...> Warpath.query(document, "$[-2:]")
     {:ok, [3, 4]}
+```
 
 ### Filter
+```elixir
     # Using logical and operator with is_integer function guard to gain strictness
     iex>document = %{
     ...>  "store" => %{
@@ -165,9 +173,10 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
     iex> document = [ [1,2,3], [0,5], [], [1], 9, [9,8,7] ]
     ...> Warpath.query(document, "$[?( @[2] )]") # That means give me all list that have index 2.
     {:ok, [ [1,2,3], [9,8,7]] }
+```
 
 ### Recursive descendant
-
+```elixir
     #Collect key
     iex>document = %{"store" => %{"car" => %{"price" => 100_000}, "bicycle" => %{"price" => 500}}}
     ...>Warpath.query(document, "$..price")
@@ -182,8 +191,10 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
     iex> document = [ [1,2], [], :item, 9, [9,8], 1.1, "string" ]
     ...>Warpath.query(document, "$..[?( is_list(@) )]")
     {:ok, [ [1, 2], [], [9, 8]]}
+```
 
 ### Options
+```elixir
     iex>document = %{"integers" => [100, 200, 300]}
     ...> Warpath.query(document, "$.integers")
     {:ok, [100, 200, 300]}
@@ -203,6 +214,7 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
     iex>document = %{"integers" => [100, 200, 300]}
     ...> Warpath.query(document, "$.integers[0]", result_type: :value_path_tokens)
     {:ok, {100, [{:root, "$"}, {:property, "integers"}, {:index_access, 0}]}}
+```
 <!-- MDOC !-->
 
 
