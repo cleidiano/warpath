@@ -1,5 +1,4 @@
 defmodule Warpath do
-
   @external_resource "README.md"
   @moduledoc "README.md"
              |> File.read!()
