@@ -213,7 +213,7 @@ The package can be installed by adding `warpath` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:warpath, "~> 0.3.0"}
+    {:warpath, "~> 0.4.0"}
   ]
 end
 ```
