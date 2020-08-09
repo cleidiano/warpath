@@ -82,7 +82,7 @@ defmodule Warpath do
   @doc """
     The same as query/3, but rise exception if it fail.
   """
-  @spec query!(document, String.t(), opts) :: any
+  @spec query!(document, selector(), opts) :: any
   def query!(data, selector, opts \\ []) do
     case query(data, selector, opts) do
       {:ok, query_result} -> query_result

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased][unreleased]
 
+### Fixed
+- Fix typespec of `Warpath.query!/3`
+
 ## [0.4.0] - 2020-07-10
 ### Added
 - Add support for deep match on filter expression predicate, exemple selector: `$.addresses[?(@.address.state=='Bahia')]`
