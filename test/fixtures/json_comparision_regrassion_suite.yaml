@@ -329,7 +329,7 @@ queries:
   - id: dot_notation_after_filter_expression_with_no_matching_entries
     selector: "$[?(@.id==0)].name"
     document: [{"id": 42, "name": "forty-two"}, {"id": 1, "name": "one"}]
-    consensus: null
+    consensus: []
   - id: dot_notation_after_filter_expression_with_mismatched_results
     selector: "$[?(@.id > 0)].name"
     document: [{"id": 42, "name": "forty-two"}, {"id": 1}, {"id": 0, "name": "zero"}]

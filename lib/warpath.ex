@@ -100,6 +100,7 @@ defmodule Warpath do
     {label_of(output), output}
   end
 
+  defp label_of([]), do: :halt
   defp label_of({:error, _}), do: :halt
   defp label_of(_), do: :cont
 
