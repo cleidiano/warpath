@@ -27,6 +27,7 @@ defmodule Warpath.Query.AccessibleTest do
 
     refute Accessible.has_key?([], :b)
     refute Accessible.has_key?(%{}, "b")
+    refute Accessible.has_key?([], "b")
 
     refute Accessible.has_key?(:atom, :a)
     refute Accessible.has_key?("", :a)
