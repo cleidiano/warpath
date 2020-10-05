@@ -59,6 +59,12 @@ defmodule WarpathTest do
       assert "Warpath" =
                Warpath.query!(~S/{"autobots": ["Optimus Prime", "Warpath"]}/, "$.autobots[1]")
     end
+
+    test "an empty list is returned for queries that filter out all possible matches", %{
+      data: document
+    } do
+      assert Warpath.query!(document, "$.store.book[?(@.id == 0)].title") == []
+    end
   end
 
   describe "query/3 handle options" do

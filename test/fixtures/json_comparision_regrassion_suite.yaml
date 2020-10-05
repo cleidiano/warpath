@@ -326,6 +326,14 @@ queries:
     selector: "$[?(@.id==42)].name"
     document: [{"id": 42, "name": "forty-two"}, {"id": 1, "name": "one"}]
     consensus: ["forty-two"]
+  - id: dot_notation_after_filter_expression_with_no_matching_entries
+    selector: "$[?(@.id==0)].name"
+    document: [{"id": 42, "name": "forty-two"}, {"id": 1, "name": "one"}]
+    consensus: []
+  - id: dot_notation_after_filter_expression_with_mismatched_results
+    selector: "$[?(@.id > 0)].name"
+    document: [{"id": 42, "name": "forty-two"}, {"id": 1}, {"id": 0, "name": "zero"}]
+    consensus: ["forty-two"]
   - id: dot_notation_after_recursive_descent
     selector: "$..key"
     document: {"object": {"key": "value", "array": [{"key": "something"}, {"key": {"key": "russian dolls"}}]}, "key": "top"}
