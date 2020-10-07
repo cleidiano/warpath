@@ -174,7 +174,10 @@ defmodule Warpath.Query.DescendantOperatorTest do
         ]
       }
 
-      env = env_for(filter_expression("@.id"))
+      env =
+        "@.id"
+        |> filter_expression()
+        |> env_for()
 
       expected = [
         Element.new(%{"id" => 2}, index_access: 0, property: "more"),
@@ -263,7 +266,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
       :is_tuple
     ]
 
-    check all terms <- list_of(term()),
+    check all terms <- list_of(term(), max_length: 20),
               function <- member_of(functions) do
       env =
         "#{function}(@)"

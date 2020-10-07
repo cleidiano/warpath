@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased][unreleased]
 
+## [0.4.1] - 2020-10-07
 ### Fixed
 - Fix typespec of `Warpath.query!/3`
+- Fix to allow property access after filter operation with no matches, empty list will be return.
 
 ## [0.4.0] - 2020-07-10
 ### Added
@@ -150,7 +152,8 @@ This realease put a effort to become compatible as possible with the concensus i
 - Unwrap output of query that the only possible result is as scalar value, ex. `Warpath.query!([1, 2, 3], "$[0]")` will return `1` instead of `[1]`.
 
 
-[unreleased]: https://github.com/Cleidiano/warpath/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/Cleidiano/warpath/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/Cleidiano/warpath/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Cleidiano/warpath/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Cleidiano/warpath/compare/v0.2.1...v0.3.0
 [0.3.0-rc.3]: https://github.com/Cleidiano/warpath/compare/v0.3.0-rc.2...v0.3.0-rc.3
