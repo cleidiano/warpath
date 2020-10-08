@@ -294,7 +294,6 @@ build_descendant_lookup(_, {indexes, _} = Expression) -> {scan, Expression}.
 value_of({_Token, _Line, Value}) -> Value.
 token_of({Token, _Line, _Value}) -> Token.
 
-literal_of({_Token, _Line, Value}) -> literal_of(Value);
 literal_of(Value) -> {literal, Value}.
 
 %%Errors
