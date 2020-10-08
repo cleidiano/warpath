@@ -38,7 +38,7 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
   | >=                       | left is greater than or equal to right                              |
   | in                       | left exists in right `[?(@.price in [10, 20, 30])]`                 |
   | and,&&                   | logical and operator `[?(@.price > 50 and @.price < 100)]`          |
-  | or,&#124;&#124;          | logical or operator `[?(@.category == 'fiction' or @.price < 100)]` |
+  | or,\|\|                  | logical or operator `[?(@.category == 'fiction' or @.price < 100)]` |
   | not                      | logical not operator `[?(not @.category == 'fiction')]`             |
 
 ### Functions allowed in filter expression
