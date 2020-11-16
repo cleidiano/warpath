@@ -120,4 +120,47 @@ defmodule WarpathTest do
       assert Warpath.query(document, "$.store.book[0]") == {:ok, book}
     end
   end
+
+  describe "delete/2" do
+    test "remove items from children list" do
+      numbers = %{"numbers" => [20, 3, 50, 6, 7]}
+      assert {:ok, %{"numbers" => [20, 50]}} == Warpath.delete(numbers, "$.numbers[?(@ < 10)]")
+    end
+
+    test "remove item from children map" do
+      assert {:ok, %{"one" => 1}} == Warpath.delete(%{"one" => 1, "two" => 2}, "$.two")
+    end
+
+    test "return the input data structure when then selector doesn't match any item" do
+      numbers = %{"numbers" => [20, 3, 50, 6, 7]}
+      assert {:ok, numbers} == Warpath.delete(numbers, "$.numbers[?(@ > 100)]")
+    end
+
+    test "using bad selector" do
+      assert {:error, _} = Warpath.delete(%{}, "$.")
+    end
+  end
+
+  describe "update/3" do
+    test "update a list" do
+      numbers = %{"numbers" => [20, 3, 50, 6, 7]}
+
+      assert {:ok, %{"numbers" => [20, 6, 50, 12, 14]}} ==
+               Warpath.update(numbers, "$.numbers[?(@ < 10)]", &(&1 * 2))
+    end
+
+    test "update a map" do
+      assert {:ok, %{"first" => 1, "second" => 12}} ==
+               Warpath.update(%{"first" => 1, "second" => 2}, "$.second", &(&1 + 10))
+    end
+
+    test "return the input data structure when then selector doesn't match any item" do
+      numbers = %{"numbers" => [20, 3, 50, 6, 7]}
+      assert {:ok, numbers} == Warpath.update(numbers, "$.numbers[?(@ > 100)]", &(&1 * 2))
+    end
+
+    test "using bad selector" do
+      assert {:error, _} = Warpath.delete(%{}, "$.")
+    end
+  end
 end
