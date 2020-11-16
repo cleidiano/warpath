@@ -105,14 +105,15 @@ defmodule Warpath do
   @spec delete(document(), selector()) :: {:ok, data} | {:error, any}
         when data: map | list()
   def delete(document, expression) do
-    with {:ok, paths} <- query(document, expression, result_type: :path_tokens) do
-      data =
-        paths
-        |> maybe_wrap()
-        |> do_delete(document)
+    case query(document, expression, result_type: :path_tokens) do
+      {:ok, paths} ->
+        data =
+          paths
+          |> maybe_wrap()
+          |> do_delete(document)
 
-      {:ok, data}
-    else
+        {:ok, data}
+
       error ->
         error
     end
@@ -135,14 +136,15 @@ defmodule Warpath do
   @spec update(document(), selector(), (term() -> term())) :: {:ok, data} | {:error, any}
         when data: map | list()
   def update(document, selector, fun) do
-    with {:ok, paths} <- query(document, selector, result_type: :path_tokens) do
-      data =
-        paths
-        |> maybe_wrap()
-        |> do_get_and_update_in(document, fn value -> {value, fun.(value)} end)
+    case query(document, selector, result_type: :path_tokens) do
+      {:ok, paths} ->
+        data =
+          paths
+          |> maybe_wrap()
+          |> do_get_and_update_in(document, fn value -> {value, fun.(value)} end)
 
-      {:ok, data}
-    else
+        {:ok, data}
+
       error ->
         error
     end
