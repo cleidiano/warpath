@@ -53,24 +53,57 @@ defmodule Warpath do
     end
   end
 
-  defp do_delete([], data), do: data
+  defp maybe_wrap(paths) do
+    case paths do
+      [{:root, _} | _] -> [paths]
+      _ -> paths
+    end
+  end
 
-  defp do_delete([h | _] = paths, data) do
-    patched_paths =
-      if match?([{:index_access, _} | _], :lists.reverse(h)) do
-        paths
-        |> Enum.uniq()
-        |> Enum.sort()
-        |> Enum.with_index()
-        |> Enum.map(fn {path, delete_count} ->
-          [{:index_access, index} | tail] = :lists.reverse(path)
-          :lists.reverse([{:index_access, index - delete_count} | tail])
-        end)
-      else
-        paths
+  defp do_delete([], document), do: document
+
+  defp do_delete([path | _] = paths, document) do
+    paths =
+      path
+      |> Enum.reverse()
+      |> case do
+        [{:index_access, _} | _] ->
+          adjust_index_deletion_of(paths)
+
+        _ ->
+          paths
       end
 
-    do_get_and_update_in(patched_paths, data, fn _ -> :pop end)
+    Enum.reduce(
+      paths,
+      document,
+      fn path, data ->
+        data
+        |> pop_in(to_accessor(path))
+        |> elem(1)
+      end
+    )
+  end
+
+  defp adjust_index_deletion_of(paths) do
+    paths
+    |> Enum.uniq()
+    |> Enum.sort()
+    |> Enum.with_index()
+    |> Enum.map(fn {path, delete_count} ->
+      [{:index_access, index} | tail] = Enum.reverse(path)
+      :lists.reverse([{:index_access, index - delete_count} | tail])
+    end)
+  end
+
+  defp to_accessor([{:root, _} | path_tokens]) do
+    Enum.map(path_tokens, fn
+      {:property, property} ->
+        property
+
+      {:index_access, index} ->
+        Access.at(index)
+    end)
   end
 
   @doc """
@@ -201,43 +234,12 @@ defmodule Warpath do
         data =
           paths
           |> maybe_wrap()
-          |> do_get_and_update_in(document, fn value -> {value, fun.(value)} end)
+          |> Enum.reduce(document, &update_in(&2, to_accessor(&1), fun))
 
         {:ok, data}
 
       error ->
         error
     end
-  end
-
-  defp maybe_wrap(paths) do
-    case paths do
-      [{:root, _} | _] -> [paths]
-      _ -> paths
-    end
-  end
-
-  defp do_get_and_update_in(paths, data, fun) do
-    Enum.reduce(
-      paths,
-      data,
-      fn exp, container ->
-        container
-        |> get_and_update_in(to_accessor(exp), fun)
-        |> elem(1)
-      end
-    )
-  end
-
-  defp to_accessor([{:root, _} | _] = path_tokens) do
-    path_tokens
-    |> Keyword.delete(:root)
-    |> Enum.map(fn
-      {:property, property} ->
-        property
-
-      {:index_access, index} ->
-        Access.at(index)
-    end)
   end
 end

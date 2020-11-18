@@ -133,11 +133,17 @@ defmodule WarpathTest do
 
     test "return the input data structure when then selector doesn't match any item" do
       numbers = %{"numbers" => [20, 3, 50, 6, 7]}
+
       assert {:ok, numbers} == Warpath.delete(numbers, "$.numbers[?(@ > 100)]")
+      assert {:ok, %{"numbers" => []}} == Warpath.delete(numbers, "$.numbers.*")
     end
 
     test "using bad selector" do
       assert {:error, _} = Warpath.delete(%{}, "$.")
+    end
+
+    test "request to remove an item that already have been removed should be ok", %{data: data} do
+      assert {:ok, %{}} == Warpath.delete(data, "$..*")
     end
   end
 
