@@ -60,39 +60,15 @@ defmodule Warpath do
     end
   end
 
-  defp do_delete([], document), do: document
-
-  defp do_delete([path | _] = paths, document) do
-    paths =
-      path
-      |> Enum.reverse()
-      |> case do
-        [{:index_access, _} | _] ->
-          adjust_index_deletion_of(paths)
-
-        _ ->
-          paths
-      end
-
-    Enum.reduce(
-      paths,
-      document,
-      fn path, data ->
-        data
-        |> pop_in(to_accessor(path))
-        |> elem(1)
-      end
-    )
-  end
-
-  defp adjust_index_deletion_of(paths) do
+  defp do_delete(paths, document) do
     paths
     |> Enum.uniq()
-    |> Enum.sort()
-    |> Enum.with_index()
-    |> Enum.map(fn {path, delete_count} ->
-      [{:index_access, index} | tail] = Enum.reverse(path)
-      :lists.reverse([{:index_access, index - delete_count} | tail])
+    # Remove highest index first
+    |> Enum.sort(:desc)
+    |> Enum.reduce(document, fn path, data ->
+      data
+      |> pop_in(to_accessor(path))
+      |> elem(1)
     end)
   end
 
