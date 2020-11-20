@@ -64,7 +64,7 @@ defmodule Warpath do
     paths
     |> Enum.uniq()
     # Remove highest index first
-    |> Enum.sort(:desc)
+    |> Enum.sort(&>=/2)
     |> Enum.reduce(document, fn path, data ->
       data
       |> pop_in(to_accessor(path))
