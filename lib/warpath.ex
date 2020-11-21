@@ -38,8 +38,8 @@ defmodule Warpath do
 
   """
   @spec delete(document(), selector()) :: {:ok, container()} | {:error, any}
-  def delete(document, expression) do
-    case query(document, expression, result_type: :path_tokens) do
+  def delete(document, selector) do
+    case query(document, selector, result_type: :path_tokens) do
       {:ok, paths} ->
         data =
           paths
