@@ -5,6 +5,9 @@
 <!-- MDOC !-->
 A implementation of Jsonpath expression proposal by [Stefan Goessner](https://goessner.net/articles/JsonPath/) for Elixir.
 
+
+The following apis are available: `Warpath.query/3`, `Warpath.delete/2`, `Warpath.update/3`.
+
 ## Operators
   | Operator                  | Description                                                        |
   | :------------------------ | :----------------------------------------------------------------- |
@@ -208,7 +211,7 @@ The package can be installed by adding `warpath` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:warpath, "~> 0.4.1"}
+    {:warpath, "~> 0.5.0"}
   ]
 end
 ```
