@@ -1,7 +1,7 @@
 defmodule Warpath.MixProject do
   use Mix.Project
   @description "A implementation of Jsonpath expression for Elixir."
-  @version "0.4.1"
+  @version "0.5.0"
 
   def project do
     [
@@ -32,13 +32,11 @@ defmodule Warpath.MixProject do
   defp deps do
     [
       {:jason, "~> 1.2"},
-      {:credo, "1.5.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:yaml_elixir, "~> 2.4", only: :test},
       {:stream_data, "~> 0.1", only: [:test, :dev]},
-      {:benchee, "~> 1.0", only: :dev},
-      {:benchee_html, "~> 1.0", only: :dev},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "1.5.1", only: [:dev, :test], runtime: false}
     ]
   end
 
