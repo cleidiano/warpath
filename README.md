@@ -59,12 +59,12 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
 ### All children
 ```elixir
     #wildcard using bracket-notation
-    iex>document = %{"integers" => [100, 200, 300]}
-    ...> Warpath.query(document, "$.integers[*]")
-    {:ok, [100, 200, 300]}
+    iex> document = %{"elements" => [:a, :b, :c]}
+    ...> Warpath.query(document, "$.elements[*]")
+    {:ok, [:a, :b, :c]}
 
     #wildcard using dot-notation
-    iex>document = %{"integers" => [100, 200, 300]}
+    iex> document = %{"integers" => [100, 200, 300]}
     ...> Warpath.query(document, "$.integers.*")
     {:ok, [100, 200, 300]}
 ```
@@ -72,27 +72,27 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
 ### Children lookup by name
 ```elixir
     #Simple string
-    iex>Warpath.query(%{"category" => "fiction", "price" => 12.99}, "$.category")
+    iex> Warpath.query(%{"category" => "fiction", "price" => 12.99}, "$.category")
     {:ok, "fiction"}
 
     #Quoted string
-    iex>Warpath.query(%{"key with whitespace" => "some value"}, "$.['key with whitespace']")
+    iex> Warpath.query(%{"key with whitespace" => "some value"}, "$.['key with whitespace']")
     {:ok, "some value"}
 
     #Simple atom
-    iex>Warpath.query(%{atom_key: "some value"}, "$.:atom_key")
+    iex> Warpath.query(%{atom_key: "some value"}, "$.:atom_key")
     {:ok, "some value"}
 
     #Quoted atom
-    iex>Warpath.query(%{"atom key": "some value"}, ~S{$.:'atom key'})
+    iex> Warpath.query(%{"atom key": "some value"}, ~S{$.:'atom key'})
     {:ok, "some value"}
 
     #Unicode support
-    iex>Warpath.query(%{"🌢" => "Elixir"}, "$.🌢")
+    iex> Warpath.query(%{"🌢" => "Elixir"}, "$.🌢")
     {:ok, "Elixir"}
 
     #Union
-    iex>document = %{"key" => "value", "another" => "entry"}
+    iex> document = %{"key" => "value", "another" => "entry"}
     ...> Warpath.query(document, "$['key', 'another']")
     {:ok, ["value", "entry"]}
 ```
@@ -100,19 +100,19 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
 ### Children lookup by index
 ```elixir
     #Positive index
-    iex>document = %{"integers" => [100, 200, 300]}
-    ...> Warpath.query(document, "$.integers[0]")
-    {:ok, 100}
+    iex> document = %{"elements" => [:a, :b, :c]}
+    ...> Warpath.query(document, "$.elements[0]")
+    {:ok, :a}
 
     #Negative index
-    iex>document = %{"integers" => [100, 200, 300]}
-    ...> Warpath.query(document, "$.integers[-1]")
-    {:ok, 300}
+    iex> document = %{"elements" => [:a, :b, :c]}
+    ...> Warpath.query(document, "$.elements[-1]")
+    {:ok, :c}
 
     #Union
-    iex>document = %{"integers" => [100, 200, 300]}
-    ...> Warpath.query(document, "$.integers[0, 1]")
-    {:ok, [100, 200]}
+    iex> document = %{"elements" => [:a, :b, :c]}
+    ...> Warpath.query(document, "$.elements[0, 1]")
+    {:ok, [:a, :b]}
 ```
 
 ### Slice
@@ -135,85 +135,68 @@ A implementation of Jsonpath expression proposal by [Stefan Goessner](https://go
 ### Filter
 ```elixir
     # Using logical and operator with is_integer function guard to gain strictness
-    iex>document = %{
-    ...>  "store" => %{
-    ...>  "car" => %{"price" => 100_000},
-    ...>  "bicycle" => %{"price" => 500}
-    ...> }
-    ...>}
+    iex> document = %{"store" => %{"car" => %{"price" => 100_000}, "bicycle" => %{"price" => 500}}}
     ...> Warpath.query(document, "$..*[?( @.price > 500 and is_integer(@.price) )]")
-    {:ok, [%{"price" => 100000}]}
+    {:ok, [%{"price" => 100_000}]}
 
     # Deep path matching
-    iex> addresses = [
-    ...>  %{"address" => %{"state" => "Bahia"}},
-    ...>  %{"address" => %{"state" => "São Paulo"}}
-    ...> ]
+    iex> addresses = [%{"address" => %{"state" => "Bahia"}}, %{"address" => %{"state" => "São Paulo"}}]
     ...> Warpath.query(addresses, "$[?(@.address.state=='Bahia')]")
-    {:ok,
-      [
-        %{
-          "address" => %{
-            "state" => "Bahia"
-          }
-        }
-    ]}
+    {:ok, [%{ "address" => %{ "state" => "Bahia"}}]}
 
     #has children using named key
-    iex> document = %{
-    ...> "store" => %{
-    ...>   "car" => %{"price" => 100_000},
-    ...>   "bicyle" => %{"price" => 500}
-    ...>   }
-    ...> }
+    iex> document = %{"store" => %{"car" => %{"price" => 100_000}, "bicycle" => %{"price" => 500}}}
     ...> Warpath.query(document, "$..*[?(@.price)]")
     {:ok, [%{"price" => 500}, %{"price" => 100_000}]}
 
     #has children using index
-    iex> document = [ [1,2,3], [0,5], [], [1], 9, [9,8,7] ]
+    iex> document = [ [1, 2, 3], [0, 5], [], [1], 9, [9, 8, 7] ]
     ...> Warpath.query(document, "$[?( @[2] )]") # That means give me all list that have index 2.
-    {:ok, [ [1,2,3], [9,8,7]] }
+    {:ok, [ [1, 2, 3], [9, 8, 7]] }
 ```
 
 ### Recursive descendant
 ```elixir
     #Collect key
-    iex>document = %{"store" => %{"car" => %{"price" => 100_000}, "bicycle" => %{"price" => 500}}}
-    ...>Warpath.query(document, "$..price")
+    iex> document = %{"store" => %{"car" => %{"price" => 100_000}, "bicycle" => %{"price" => 500}}}
+    ...> Warpath.query(document, "$..price")
     {:ok, [500, 100_000]}
 
     #Collect index
-    iex> document = [ [1,2,3], [], :item, [0,5], [1], 9, [9,8,7] ]
-    ...>Warpath.query(document, "$..[2]")
+    iex> document = [ [1, 2, 3], [], :item, [0, 5], [1], 9, [9, 8, 7] ]
+    ...> Warpath.query(document, "$..[2]")
     {:ok, [:item, 3, 7]}
 
     #Using filter criteria to scan
-    iex> document = [ [1,2], [], :item, 9, [9,8], 1.1, "string" ]
-    ...>Warpath.query(document, "$..[?( is_list(@) )]")
+    iex> document = [ [1, 2], [], :item, 9, [9, 8], 1.1, "string" ]
+    ...> Warpath.query(document, "$..[?( is_list(@) )]")
     {:ok, [ [1, 2], [], [9, 8]]}
 ```
 
 ### Options
+
 ```elixir
-    iex>document = %{"integers" => [100, 200, 300]}
-    ...> Warpath.query(document, "$.integers")
-    {:ok, [100, 200, 300]}
+    
+    iex> document = %{"elements" => [:a, :b, :c]}
+    ...> Warpath.query(document, "$.elements")
+    {:ok, [:a, :b, :c]}
 
-    iex>document = %{"integers" => [100, 200, 300]}
-    ...> Warpath.query(document, "$.integers[0, 1]", result_type: :path)
-    {:ok, ["$['integers'][0]", "$['integers'][1]"]}
+    iex> document = %{"elements" => [:a, :b, :c]}
+    ...> Warpath.query(document, "$.elements[0, 1]", result_type: :path)
+    {:ok, ["$['elements'][0]", "$['elements'][1]"]}
 
-    iex>document = %{"integers" => [100, 200, 300]}
-    ...> Warpath.query(document, "$.integers[0]", result_type: :path_tokens)
-    {:ok, [{:root, "$"}, {:property, "integers"}, {:index_access, 0}]}
+    iex> document = %{"elements" => [:a, :b, :c]}
+    ...> Warpath.query(document, "$.elements[0]", result_type: :path_tokens)
+    {:ok, [{:root, "$"}, {:property, "elements"}, {:index_access, 0}]}
 
-    iex>document = %{"integers" => [100, 200, 300]}
-    ...> Warpath.query(document, "$.integers[0, 1]", result_type: :value_path)
-    {:ok, [{100, "$['integers'][0]"}, {200, "$['integers'][1]"}]}
+    iex> document = %{"elements" => [:a, :b, :c]}
+    ...> Warpath.query(document, "$.elements[0, 1]", result_type: :value_path)
+    {:ok, [{:a, "$['elements'][0]"}, {:b, "$['elements'][1]"}]}
 
-    iex>document = %{"integers" => [100, 200, 300]}
-    ...> Warpath.query(document, "$.integers[0]", result_type: :value_path_tokens)
-    {:ok, {100, [{:root, "$"}, {:property, "integers"}, {:index_access, 0}]}}
+    iex> document = %{"elements" => [:a, :b, :c]}
+    ...> Warpath.query(document, "$.elements[0]", result_type: :value_path_tokens)
+    {:ok, {:a, [{:root, "$"}, {:property, "elements"}, {:index_access, 0}]}}
+
 ```
 <!-- MDOC !-->
 

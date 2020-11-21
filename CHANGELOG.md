@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased][unreleased]
+### Added
+ - Add `Warpath.delete/2` api to delete item on nested data strucure using query selector.
+ - Add `Warpath.update/3` api to update item on nested data strucure using query selector.
 
 ## [0.4.1] - 2020-10-07
 ### Fixed
