@@ -132,5 +132,11 @@ defimpl DescendantOperator, for: [Map, List] do
 end
 
 defimpl DescendantOperator, for: Any do
+  def evaluate(%_{} = struct, relative_path, env) do
+    struct
+    |> Map.from_struct()
+    |> DescendantOperator.Map.evaluate(relative_path, env)
+  end
+
   def evaluate(_data, _relative_path, _), do: []
 end

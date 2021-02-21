@@ -25,7 +25,8 @@ defmodule Warpath.Query.DescendantOperatorTest do
           %{"key" => %{"key" => "russian dolls"}}
         ]
       },
-      "key" => "top"
+      "key" => "top",
+      "struct" => %Transformer{name: "Warpath"}
     }
 
     [document: document]
@@ -77,6 +78,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
                },
                property: "object"
              ),
+             Element.new(%Transformer{name: "Warpath"}, property: "struct"),
              Element.new([%{"key" => "something"}, %{"key" => %{"key" => "russian dolls"}}],
                property: "array",
                property: "object"
@@ -110,7 +112,8 @@ defmodule Warpath.Query.DescendantOperatorTest do
                index_access: 1,
                property: "array",
                property: "object"
-             )
+             ),
+             Element.new("Warpath", property: :name, property: "struct")
            ]
   end
 
@@ -301,7 +304,7 @@ defmodule Warpath.Query.DescendantOperatorTest do
     end
   end
 
-  property "descendant operator on data type other then list or map always produce empty list" do
+  property "descendant operator on data type other then list, struct or map always produce empty list" do
     check all term <- term() do
       container? = is_list(term) or is_map(term)
       assert container? or DescendantOperator.evaluate(term, [], env_for({:wildcard, :*})) == []
