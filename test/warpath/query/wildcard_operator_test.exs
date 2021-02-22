@@ -10,6 +10,10 @@ defmodule Warpath.Query.WildcardOperatorTest do
     Env.new({:wildcard, :*})
   end
 
+  defmodule MyStruct do
+    defstruct [:a, :b, :c]
+  end
+
   describe "wildcard operator" do
     test "nil safe traverse" do
       assert WildcardOperator.evaluate(nil, [], env()) == []
@@ -69,6 +73,18 @@ defmodule Warpath.Query.WildcardOperatorTest do
         assert Enum.sort(Enum.flat_map(result, &Element.path/1)) == keys_as_properties
         assert Enum.sort(Enum.map(result, &Element.value/1)) == Enum.sort(Map.values(map))
       end
+    end
+
+    test "support struct data type" do
+      document = %MyStruct{a: 1, b: 2, c: 3}
+
+      expected = [
+        Element.new(1, property: :a),
+        Element.new(2, property: :b),
+        Element.new(3, property: :c)
+      ]
+
+      assert WildcardOperator.evaluate(document, [], env()) == expected
     end
   end
 end

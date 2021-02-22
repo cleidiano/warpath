@@ -41,5 +41,11 @@ defimpl WildcardOperator, for: List do
 end
 
 defimpl WildcardOperator, for: Any do
+  def evaluate(%_{} = struct, relative_path, env) do
+    struct
+    |> Map.from_struct()
+    |> WildcardOperator.Map.evaluate(relative_path, env)
+  end
+
   def evaluate(_element, _path, _), do: []
 end
