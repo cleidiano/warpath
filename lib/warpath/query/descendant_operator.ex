@@ -33,7 +33,12 @@ defimpl DescendantOperator, for: [Map, List] do
           metadata: %{descendant_started: true}
         } = env
       ) do
-    collect_by(document, relative_path, env, _acceptor = &at_least_one?(&1, indexes))
+    collect_by(
+      document,
+      relative_path,
+      env,
+      _acceptor = &has_list_with_at_least_one?(&1, indexes)
+    )
   end
 
   def evaluate(
@@ -45,8 +50,8 @@ defimpl DescendantOperator, for: [Map, List] do
     env_started = %{env | metadata: Map.put(env.metadata, :descendant_started, true)}
 
     document
-    |> wrap_if_needed()
-    |> collect_by(path, env_started, _acceptor = &at_least_one?(&1, indexes))
+    |> maybe_prevent_elementify_items()
+    |> collect_by(path, env_started, _acceptor = &has_list_with_at_least_one?(&1, indexes))
     |> Enum.flat_map(fn %Element{value: list, path: list_path} ->
       case IndexOperator.evaluate(list, list_path, indexes_env) do
         %Element{} = element -> [element]
@@ -76,9 +81,8 @@ defimpl DescendantOperator, for: [Map, List] do
     )
   end
 
-  defp collect_by(data, relative_path, env, acceptor)
-       when is_list(data) or is_map(data) do
-    members = Element.elementify(data, relative_path)
+  defp collect_by(data, relative_path, env, acceptor) do
+    members = elementify(data, relative_path)
 
     children =
       Enum.flat_map(
@@ -93,14 +97,20 @@ defimpl DescendantOperator, for: [Map, List] do
     |> Enum.filter(acceptor)
   end
 
-  # Index search
-  defp wrap_if_needed(document) when is_list(document), do: [document]
-  defp wrap_if_needed(document), do: document
+  # When the entry point of evaluate/3 is a search for index and the document is a list,
+  # it must skip elementify to include it self in search algorithm implemented by the entry point function
+  # here we are introducing a special case that will be handled by elementify/2 local function.
+  defp maybe_prevent_elementify_items(document) when is_list(document),
+    do: {:no_elementify_items, document}
 
-  defp at_least_one?(%Element{value: []}, _indexes), do: false
-  defp at_least_one?(%Element{value: value}, _indexes) when not is_list(value), do: false
+  defp maybe_prevent_elementify_items(document), do: document
 
-  defp at_least_one?(%Element{value: list}, indexes) do
+  defp has_list_with_at_least_one?(%Element{value: []}, _indexes), do: false
+
+  defp has_list_with_at_least_one?(%Element{value: value}, _indexes) when not is_list(value),
+    do: false
+
+  defp has_list_with_at_least_one?(%Element{value: list}, indexes) do
     count = length(list)
     Enum.any?(indexes, &in_bound?(&1, count))
   end
@@ -111,6 +121,14 @@ defimpl DescendantOperator, for: [Map, List] do
   # Property search
   defp accept_key?(%Element{value: _, path: path}, token_key), do: match?([^token_key | _], path)
   defp accept_key?(_, _), do: false
+
+  defp elementify({:no_elementify_items, data}, path) do
+    [Element.new(data, path)]
+  end
+
+  defp elementify(data, path) do
+    Element.elementify(data, path)
+  end
 end
 
 defimpl DescendantOperator, for: Any do

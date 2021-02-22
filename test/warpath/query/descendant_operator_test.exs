@@ -115,6 +115,24 @@ defmodule Warpath.Query.DescendantOperatorTest do
   end
 
   describe "descendant index" do
+    test "scan for positive index when a document is a list" do
+      env = env_for({:indexes, [index_access: 0, index_access: 2]})
+
+      assert DescendantOperator.evaluate([:a, :b, :c], [], env) == [
+               Element.new(:a, index_access: 0),
+               Element.new(:c, index_access: 2)
+             ]
+    end
+
+    test "scan for negative index when a document is a list" do
+      env = env_for({:indexes, [index_access: -2, index_access: -1]})
+
+      assert DescendantOperator.evaluate([:a, :b, :c], [], env) == [
+               Element.new(:b, index_access: 1),
+               Element.new(:c, index_access: 2)
+             ]
+    end
+
     test "scan a existent one", %{document: document} do
       env = env_for({:indexes, index_access: 0})
 
@@ -159,6 +177,11 @@ defmodule Warpath.Query.DescendantOperatorTest do
     test "scan a inexistent index result in an empty list", %{document: document} do
       env = env_for({:indexes, index_access: 99})
       assert DescendantOperator.evaluate(document, [], env) == []
+    end
+
+    test "scan on data type that isn't indexable result in an empty list" do
+      env = env_for({:indexes, index_access: 0})
+      assert DescendantOperator.evaluate(%{name: "warpath"}, [], env) == []
     end
   end
 
