@@ -54,9 +54,7 @@ defmodule Warpath.Element.Path do
   end
 
   defp make_path([h | _] = tokens, option) when is_list(h) do
-    tokens
-    |> Enum.map(&make_path(&1, option))
-    |> List.flatten()
+    Enum.map(tokens, &make_path(&1, option))
   end
 
   defp make_path([], _), do: ""

@@ -1,6 +1,8 @@
 defmodule Warpath.Filter.Predicate do
   @moduledoc false
 
+  alias Warpath.Query.Accessible
+
   @operators [
     :<,
     :>,
@@ -73,11 +75,8 @@ defmodule Warpath.Filter.Predicate do
     result = resolve({:subpath_expression, rest}, context)
 
     case {result, last_token} do
-      {map, {:dot, {:property, key}}} when is_map(map) ->
-        Map.has_key?(map, key)
-
-      {list, {:dot, {:property, key}}} when is_list(list) and is_atom(key) ->
-        Keyword.has_key?(list, key)
+      {data, {:dot, {:property, key}}} ->
+        Accessible.has_key?(data, key)
 
       {list, {:indexes, [index_access: index]}} when is_list(list) and index >= 0 ->
         length(list) > index
@@ -116,8 +115,6 @@ defmodule Warpath.Filter.Predicate do
         throw(:not_indexable_type)
     end
   end
-
-  false
 
   defp resolve(term, context) when is_list(term) do
     Enum.map(term, &resolve(&1, context))
