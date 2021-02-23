@@ -56,7 +56,9 @@ defimpl IdentifierOperator, for: List do
         Element.new(nil, [])
 
       {keyword, true} ->
-        IdentifierOperator.Map.evaluate(keyword, relative_path, env)
+        keyword
+        |> Map.new()
+        |> IdentifierOperator.Map.evaluate(relative_path, env)
     end
   end
 
