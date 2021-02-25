@@ -8,6 +8,8 @@ alias Warpath.Query.IdentifierOperator
 defprotocol UnionOperator do
   @moduledoc false
 
+  @fallback_to_any true
+
   @type document :: map() | keyword() | list(Element.t()) | nil
 
   @type result :: [Element.t()]
@@ -28,7 +30,7 @@ defimpl UnionOperator, for: Map do
     |> Stream.filter(&has_property?(document, &1))
     |> Enum.map(fn property_query ->
       new_env = Env.new(property_query)
-      IdentifierOperator.Map.evaluate(document, relative_path, new_env)
+      IdentifierOperator.evaluate(document, relative_path, new_env)
     end)
   end
 
@@ -53,6 +55,12 @@ defimpl UnionOperator, for: List do
   end
 end
 
-defimpl UnionOperator, for: Atom do
+defimpl UnionOperator, for: Any do
+  def evaluate(%_{} = struct, relative_path, env) do
+    struct
+    |> Map.from_struct()
+    |> UnionOperator.Map.evaluate(relative_path, env)
+  end
+
   def evaluate(_, _, _), do: []
 end

@@ -51,6 +51,11 @@ defmodule Warpath.Query.IdentifierOperatorTest do
       end
     end
 
+    test "evaluate a non keyword list result in nil and empty path" do
+      assert IdentifierOperator.evaluate([1, 2], @relative_path, env_evaluation_for(:any)) ==
+               Element.new(nil, [])
+    end
+
     test "traverse it's elements and query it value when it's a map" do
       elements_with_map = [
         Element.new(%{"b" => 1}, @relative_path),
@@ -96,6 +101,15 @@ defmodule Warpath.Query.IdentifierOperatorTest do
     test "evaluate a empty list always result in element with nil value and empty path" do
       assert IdentifierOperator.evaluate([], @relative_path, env_evaluation_for(:any)) ==
                Element.new(nil, [])
+    end
+  end
+
+  describe "IdentifierOperator.Any" do
+    test "fallback struct data type to map implementation" do
+      document = %Transformer{name: "warpath"}
+      expected = Element.new("warpath", property: :name)
+
+      assert IdentifierOperator.evaluate(document, [], env_evaluation_for(:name)) == expected
     end
   end
 

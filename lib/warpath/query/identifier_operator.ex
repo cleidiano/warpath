@@ -7,6 +7,8 @@ alias Warpath.Query.IdentifierOperator
 defprotocol IdentifierOperator do
   @moduledoc false
 
+  @fallback_to_any true
+
   @type document :: map | keyword() | list(Element.t()) | nil
 
   @type relative_path :: Element.Path.acc() | []
@@ -29,7 +31,7 @@ defimpl IdentifierOperator, for: Map do
       path = Element.Path.accumulate(token, relative_path)
 
       document
-      |> Access.get(identifier)
+      |> Map.get(identifier)
       |> Element.new(path)
     else
       Element.new(nil, [])
@@ -44,7 +46,7 @@ defimpl IdentifierOperator, for: List do
     elements
     |> Stream.filter(&accessible_with_key?(&1, key))
     |> Enum.map(fn %Element{value: document, path: path} ->
-      IdentifierOperator.Map.evaluate(document, path, env)
+      IdentifierOperator.evaluate(document, path, env)
     end)
   end
 
@@ -54,13 +56,23 @@ defimpl IdentifierOperator, for: List do
         Element.new(nil, [])
 
       {keyword, true} ->
-        IdentifierOperator.Map.evaluate(keyword, relative_path, env)
+        keyword
+        |> Map.new()
+        |> IdentifierOperator.Map.evaluate(relative_path, env)
     end
   end
 
   defp accessible_with_key?(%Element{value: value}, key), do: Accessible.has_key?(value, key)
 end
 
-defimpl IdentifierOperator, for: Atom do
-  def evaluate(_, _relative_path, _), do: Element.new(nil, [])
+defimpl IdentifierOperator, for: Any do
+  def evaluate(%_{} = struct, relative_path, env) do
+    struct
+    |> Map.from_struct()
+    |> IdentifierOperator.Map.evaluate(relative_path, env)
+  end
+
+  def evaluate(_struct, _path, _env) do
+    Element.new(nil, [])
+  end
 end

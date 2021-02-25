@@ -51,6 +51,12 @@ defmodule Warpath.Element do
     end)
   end
 
+  def elementify(%_{} = struct, relative_path, path_fun) do
+    struct
+    |> Map.from_struct()
+    |> elementify(relative_path, path_fun)
+  end
+
   def elementify(map, relative_path, path_fun) when is_map(map) do
     Enum.map(
       map,

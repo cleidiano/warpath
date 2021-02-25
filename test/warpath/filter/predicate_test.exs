@@ -107,6 +107,10 @@ defmodule Warpath.Filter.PredicateTest do
       assert Predicate.eval(expression("@.:my_key"), my_key: :any)
     end
 
+    test "when context is a struct" do
+      assert Predicate.eval(expression("@.:name"), %Transformer{name: "Warpath"})
+    end
+
     test "when context is a keyword list and property key is string" do
       refute Predicate.eval(expression("@.my_key"), my_key: 1)
     end
@@ -232,6 +236,11 @@ defmodule Warpath.Filter.PredicateTest do
 
     test "when context is a keyword list and property key is string" do
       refute Predicate.eval(expression("@.my_key == 1"), my_key: 1)
+    end
+
+    test "when context is a struct" do
+      assert Predicate.eval(expression("@.:name == 'Warpath'"), %Transformer{name: "Warpath"})
+      refute Predicate.eval(expression("@.:name == 'Optimus'"), %Transformer{name: "Warpath"})
     end
 
     test "when expression is subpath expression using dot notation" do

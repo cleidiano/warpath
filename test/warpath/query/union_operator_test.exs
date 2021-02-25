@@ -117,6 +117,23 @@ defmodule Warpath.Query.UnionOperatorOperatorTest do
     end
   end
 
+  describe "UnionOperator.Any" do
+    defmodule MyStruct do
+      defstruct [:a, :b, :c]
+    end
+
+    test "fallback struct data type to map implementation" do
+      document = %MyStruct{a: 1, b: 2, c: 3}
+
+      expected = [
+        Element.new(1, property: :a),
+        Element.new(3, property: :c)
+      ]
+
+      assert UnionOperator.evaluate(document, [], env_evaluation_for([:a, :c])) == expected
+    end
+  end
+
   test "evaluate/3 is nil safe traverse" do
     assert UnionOperator.evaluate(nil, [], env_evaluation_for([:first, :second])) == []
   end

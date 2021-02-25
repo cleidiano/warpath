@@ -14,16 +14,19 @@ defmodule Warpath.Query.AccessibleTest do
     assert Accessible.accessible?([])
     assert Accessible.accessible?(a: 1)
     assert Accessible.accessible?(%{})
+    assert Accessible.accessible?(%Transformer{})
   end
 
   test "has_key?/2" do
     assert Accessible.has_key?([a: 1], :a)
     assert Accessible.has_key?(%{a: 1}, :a)
     assert Accessible.has_key?(%{"a" => 1}, "a")
+    assert Accessible.has_key?(%Transformer{name: "warpath"}, :name)
 
     refute Accessible.has_key?([a: 1], :b)
     refute Accessible.has_key?(%{a: 1}, :b)
     refute Accessible.has_key?(%{"a" => 1}, "b")
+    refute Accessible.has_key?(%Transformer{name: "warpath"}, :family)
 
     refute Accessible.has_key?([], :b)
     refute Accessible.has_key?(%{}, "b")
