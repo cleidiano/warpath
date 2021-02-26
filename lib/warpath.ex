@@ -21,6 +21,7 @@ defmodule Warpath do
   Remove an item(s) from a nested data structure via the given `selector`.
 
   If the selector does not evaluate anything, it returns the data structure unchanged.
+  > This function rely on `Access` behaviour, that means structs must implement that behaviour to got support.
 
   ## Examples
 
@@ -35,7 +36,6 @@ defmodule Warpath do
       iex> users = %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}
       ...> Warpath.delete(users, "$..city")
       {:ok, %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}} # Unchanged
-
   """
   @spec delete(document(), selector()) :: {:ok, container()} | {:error, any}
   def delete(document, selector) do
@@ -189,6 +189,7 @@ defmodule Warpath do
     The `fun` will be called for each item discovered under the given `selector`, the `fun` result will be used to update the data structure.
 
     If the selector does not evaluate anything, it returns the data structure unchanged.
+    > This function rely on `Access` behaviour, that means structs must implement that behaviour to got support.
 
   ## Examples
       iex> users = %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}
