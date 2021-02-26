@@ -10,7 +10,7 @@ defprotocol DescendantOperator do
 
   @fallback_to_any true
 
-  @type document :: list() | map()
+  @type document :: list() | map() | struct()
 
   @type relative_path :: Element.Path.acc()
 

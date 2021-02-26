@@ -8,7 +8,7 @@ defprotocol WildcardOperator do
 
   @fallback_to_any true
 
-  @type document :: map() | list()
+  @type document :: map() | struct() | list()
 
   @type relative_path :: [] | Element.Path.acc()
 

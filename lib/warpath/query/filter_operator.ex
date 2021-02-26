@@ -10,7 +10,7 @@ defprotocol FilterOperator do
 
   @fallback_to_any true
 
-  @type document :: map() | list()
+  @type document :: map() | list() | struct()
 
   @type relative_path :: Path.acc()
 

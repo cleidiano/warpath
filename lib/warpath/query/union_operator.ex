@@ -10,7 +10,7 @@ defprotocol UnionOperator do
 
   @fallback_to_any true
 
-  @type document :: map() | keyword() | list(Element.t()) | nil
+  @type document :: map() | struct() | keyword() | list(Element.t()) | nil
 
   @type result :: [Element.t()]
 

@@ -12,7 +12,7 @@ defmodule Warpath do
   alias Warpath.Expression
 
   @type json :: String.t()
-  @type container :: map | list
+  @type container :: map | struct | list
   @type document :: container | json
   @type selector :: Expression.t() | String.t()
   @type opts :: [result_type: :value | :path | :value_path | :path_tokens | :value_path_tokens]
