@@ -6,6 +6,8 @@ defmodule Warpath.Query.WildcardOperatorTest do
   alias Warpath.Execution.Env
   alias Warpath.Query.WildcardOperator
 
+  @max_length 10
+
   defp env do
     Env.new({:wildcard, :*})
   end
@@ -28,7 +30,7 @@ defmodule Warpath.Query.WildcardOperatorTest do
     end
 
     property "should have each path of element composed by a relative path input" do
-      check all list <- StreamData.list_of(term()) do
+      check all list <- StreamData.list_of(term(), max_length: @max_length) do
         relative_path = {:property, "initial_path"}
         elements = WildcardOperator.evaluate(list, [relative_path], env())
 
@@ -40,7 +42,7 @@ defmodule Warpath.Query.WildcardOperatorTest do
     end
 
     property "produce a list of element with value from input list" do
-      check all list <- StreamData.list_of(term()) do
+      check all list <- StreamData.list_of(term(), max_length: @max_length) do
         elements = WildcardOperator.evaluate(list, [], env())
         values = Enum.map(elements, fn %Element{value: value} -> value end)
 
@@ -61,7 +63,7 @@ defmodule Warpath.Query.WildcardOperatorTest do
     end
 
     property "produce a list of element where it path and value is extracted from input map" do
-      check all map <- map_of(term(), term()) do
+      check all map <- map_of(term(), term(), max_length: @max_length) do
         result = WildcardOperator.evaluate(map, [], env())
 
         keys_as_properties =
