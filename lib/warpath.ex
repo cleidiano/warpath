@@ -133,16 +133,12 @@ defmodule Warpath do
   end
 
   def query(document, %Expression{} = expression, opts) do
-    expression
-    |> Execution.execution_plan()
-    |> Enum.reduce_while(Element.new(document, []), &dispatch/2)
-    |> case do
-      {:error, _} = error ->
-        error
+    result =
+      expression
+      |> Execution.execution_plan()
+      |> Enum.reduce_while(Element.new(document, []), &dispatch/2)
 
-      result ->
-        {:ok, collect(result, opts[:result_type] || :value)}
-    end
+    {:ok, collect(result, opts[:result_type] || :value)}
   end
 
   @doc """
@@ -167,7 +163,6 @@ defmodule Warpath do
   end
 
   defp label_of([]), do: :halt
-  defp label_of({:error, _}), do: :halt
   defp label_of(_), do: :cont
 
   defp collect(elements, opt) when is_list(elements), do: Enum.map(elements, &collect(&1, opt))
