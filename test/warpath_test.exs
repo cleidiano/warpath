@@ -166,7 +166,7 @@ defmodule WarpathTest do
     end
 
     test "using bad selector" do
-      assert {:error, _} = Warpath.delete(%{}, "$.")
+      assert {:error, _} = Warpath.update(%{}, "$.", &[&1])
     end
   end
 end
