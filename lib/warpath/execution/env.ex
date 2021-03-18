@@ -1,6 +1,7 @@
 defmodule Warpath.Execution.Env do
   @moduledoc false
 
+  alias __MODULE__
   alias Warpath.Query.DescendantOperator
   alias Warpath.Query.FilterOperator
   alias Warpath.Query.IdentifierOperator
@@ -14,7 +15,7 @@ defmodule Warpath.Execution.Env do
   @type instruction :: Warpath.Expression.token()
   @type metadata :: map()
 
-  @type t :: %__MODULE__{
+  @type t :: %Env{
           instruction: instruction(),
           operator: operator(),
           previous_operator: operator(),
@@ -23,9 +24,9 @@ defmodule Warpath.Execution.Env do
 
   defstruct operator: nil, instruction: nil, previous_operator: nil, metadata: nil
 
-  @spec new(instruction(), operator() | nil, map()) :: Warpath.Execution.Env.t()
+  @spec new(instruction(), operator() | nil, map()) :: Env.t()
   def new(instruction, previous_operator \\ nil, metadata \\ %{}) do
-    %__MODULE__{
+    %Env{
       operator: operator_for(instruction),
       instruction: instruction,
       previous_operator: previous_operator,

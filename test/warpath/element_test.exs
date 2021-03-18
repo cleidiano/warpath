@@ -23,5 +23,10 @@ defmodule Warpath.Element.ElementTest do
                Element.new("Bumblebee", [{:property, "name"}])
              ]
     end
+
+    test "should convert struct to map and then elementify it" do
+      assert [Element.new("Warpath", property: :name)] ==
+               Element.elementify(%Transformer{name: "Warpath"}, [])
+    end
   end
 end

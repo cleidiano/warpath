@@ -40,7 +40,7 @@ defmodule Warpath.Element do
         %Warpath.Element{value: "Warpath", path: [{:property, :name }]}
       ]
   """
-  @spec elementify(map() | list(), Path.acc(), path_accumulator) :: [Element.t()]
+  @spec elementify(map() | struct() | list(), Path.acc(), path_accumulator) :: [Element.t()]
   def elementify(enum, relative_path, path_fun \\ &Path.accumulate/2)
 
   def elementify(list, relative_path, path_fun) when is_list(list) do
