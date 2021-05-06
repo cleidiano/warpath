@@ -38,15 +38,23 @@ defmodule Warpath do
       {:ok, %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}} # Unchanged
   """
   @spec delete(document(), selector()) :: {:ok, container()} | {:error, any}
+  def delete(document, selector) when is_binary(document) do
+    case decode(document) do
+      {:ok, decode_document} -> delete(decode_document, selector)
+      error -> error
+    end
+  end
+
   def delete(document, selector) do
     case query(document, selector, result_type: :path_tokens) do
-      {:ok, paths} ->
-        data =
-          paths
-          |> maybe_wrap()
-          |> do_delete(document)
+      {:ok, [root: "$"]} ->
+        {:ok, nil}
 
-        {:ok, data}
+      {:ok, paths} ->
+        {:ok,
+         paths
+         |> maybe_wrap()
+         |> do_delete(document)}
 
       error ->
         error
@@ -111,14 +119,9 @@ defmodule Warpath do
   def query(document, selector, opts \\ [])
 
   def query(document, selector, opts) when is_binary(document) do
-    document
-    |> Jason.decode()
-    |> case do
-      {:ok, decoded_document} ->
-        query(decoded_document, selector, opts)
-
-      {:error, exception} ->
-        {:error, Warpath.JsonDecodeError.from(exception)}
+    case decode(document) do
+      {:ok, decoded_document} -> query(decoded_document, selector, opts)
+      error -> error
     end
   end
 
@@ -149,6 +152,18 @@ defmodule Warpath do
     case query(data, selector, opts) do
       {:ok, query_result} -> query_result
       {:error, error} -> raise error
+    end
+  end
+
+  defp decode(document) do
+    document
+    |> Jason.decode()
+    |> case do
+      {:ok, _} = decoded ->
+        decoded
+
+      {:error, exception} ->
+        {:error, Warpath.JsonDecodeError.from(exception)}
     end
   end
 
@@ -200,8 +215,18 @@ defmodule Warpath do
       {:ok, %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}} # Unchanaged
   """
   @spec update(document(), selector(), (term() -> term())) :: {:ok, container()} | {:error, any}
+  def update(document, selector, fun) when is_binary(document) do
+    case decode(document) do
+      {:ok, decoded_document} -> update(decoded_document, selector, fun)
+      error -> error
+    end
+  end
+
   def update(document, selector, fun) do
     case query(document, selector, result_type: :path_tokens) do
+      {:ok, [root: "$"]} ->
+        {:ok, fun.(document)}
+
       {:ok, paths} ->
         data =
           paths

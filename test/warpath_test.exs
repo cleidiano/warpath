@@ -127,7 +127,7 @@ defmodule WarpathTest do
       assert {:ok, %{"numbers" => [20, 50]}} == Warpath.delete(numbers, "$.numbers[?(@ < 10)]")
     end
 
-    test "remove item from children map" do
+    test "remove item from map" do
       assert {:ok, %{"one" => 1}} == Warpath.delete(%{"one" => 1, "two" => 2}, "$.two")
     end
 
@@ -144,6 +144,18 @@ defmodule WarpathTest do
 
     test "request to remove an item that already have been removed should be ok", %{data: data} do
       assert {:ok, %{}} == Warpath.delete(data, "$..*")
+    end
+
+    test "delete root document result nil" do
+      document = %{"value" => [20, 3, 50, 6, 7]}
+
+      assert {:ok, nil} == Warpath.delete(document, "$")
+    end
+
+    test "when document is a json string" do
+      document = ~S|{"numbers": [20, 3, 50, 6, 7]}|
+
+      assert {:ok, %{"numbers" => [20, 50]}} == Warpath.delete(document, "$.numbers[?(@ < 10)]")
     end
   end
 
@@ -163,6 +175,19 @@ defmodule WarpathTest do
     test "return the input data structure when then selector doesn't match any item" do
       numbers = %{"numbers" => [20, 3, 50, 6, 7]}
       assert {:ok, numbers} == Warpath.update(numbers, "$.numbers[?(@ > 100)]", &(&1 * 2))
+    end
+
+    test "when document is a json string" do
+      numbers = ~S|{"numbers" : [20, 3, 50, 6, 7]}|
+
+      assert {:ok, %{"numbers" => [20, 6, 50, 12, 14]}} ==
+               Warpath.update(numbers, "$.numbers[?(@ < 10)]", &(&1 * 2))
+    end
+
+    test "update root document" do
+      document = %{"value" => [20, 3, 50, 6, 7]}
+
+      assert {:ok, ["Hello World"]} == Warpath.update(document, "$", fn _ -> ["Hello World"] end)
     end
 
     test "using bad selector" do
