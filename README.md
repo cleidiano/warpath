@@ -211,7 +211,7 @@ The package can be installed by adding `warpath` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:warpath, "~> 0.6.0"}
+    {:warpath, "~> 0.6.1"}
   ]
 end
 ```
