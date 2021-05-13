@@ -13,9 +13,17 @@ defmodule Warpath do
   alias Warpath.Expression
 
   @type json :: String.t()
+
   @type container :: map | struct | list
+
   @type document :: container | json
+
   @type selector :: Expression.t() | String.t()
+
+  @type updated_value :: any()
+
+  @type update_fun :: (term() -> updated_value)
+
   @type opts :: [result_type: :value | :path | :value_path | :path_tokens | :value_path_tokens]
 
   @doc """
@@ -34,11 +42,15 @@ defmodule Warpath do
       ...> Warpath.delete(numbers, "$.numbers[?(@ < 10)]")
       {:ok, %{"numbers" => [20, 50]}}
 
+      iex> numbers = %{"numbers" => [20, 3, 50, 6, 7]}
+      ...> Warpath.delete(numbers, "$")
+      {:ok, nil}
+
       iex> users = %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}
       ...> Warpath.delete(users, "$..city")
       {:ok, %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}} # Unchanged
   """
-  @spec delete(document(), selector()) :: {:ok, container()} | {:error, any}
+  @spec delete(document(), selector()) :: {:ok, container() | nil} | {:error, any}
   def delete(document, selector) when is_binary(document) do
     case decode(document) do
       {:ok, decode_document} -> delete(decode_document, selector)
@@ -178,7 +190,9 @@ defmodule Warpath do
       ...> Warpath.update(users, "$.theo.age", &(&1 + 1))
       {:ok, %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}} # Unchanaged
   """
-  @spec update(document(), selector(), (term() -> term())) :: {:ok, container()} | {:error, any}
+
+  @spec update(document(), selector(), (term() -> term())) ::
+          {:ok, container() | updated_value()} | {:error, any}
   def update(document, selector, fun) when is_binary(document) do
     case decode(document) do
       {:ok, decoded_document} -> update(decoded_document, selector, fun)

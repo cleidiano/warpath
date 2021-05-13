@@ -157,6 +157,11 @@ defmodule WarpathTest do
 
       assert {:ok, %{"numbers" => [20, 50]}} == Warpath.delete(document, "$.numbers[?(@ < 10)]")
     end
+
+    test "when document is a bad json string results decode error" do
+      document = ~S|{"numbers": }|
+      assert {:error, %JsonDecodeError{}} = Warpath.delete(document, "$.numbers[?(@ < 10)]")
+    end
   end
 
   describe "update/3" do
@@ -181,6 +186,13 @@ defmodule WarpathTest do
       numbers = ~S|{"numbers" : [20, 3, 50, 6, 7]}|
 
       assert {:ok, %{"numbers" => [20, 6, 50, 12, 14]}} ==
+               Warpath.update(numbers, "$.numbers[?(@ < 10)]", &(&1 * 2))
+    end
+
+    test "when document is a bad json string results decode error" do
+      numbers = ~S|{"numbers": }|
+
+      assert {:error, %JsonDecodeError{}} =
                Warpath.update(numbers, "$.numbers[?(@ < 10)]", &(&1 * 2))
     end
 
