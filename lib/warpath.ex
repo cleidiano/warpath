@@ -5,6 +5,7 @@ defmodule Warpath do
              |> String.split("<!-- MDOC !-->")
              |> Enum.fetch!(1)
 
+  alias Warpath.AccessBuilder
   alias Warpath.Element
   alias Warpath.Element.Path
   alias Warpath.Execution
@@ -46,48 +47,11 @@ defmodule Warpath do
   end
 
   def delete(document, selector) do
-    case query(document, selector, result_type: :path_tokens) do
-      {:ok, [root: "$"]} ->
-        {:ok, nil}
-
-      {:ok, paths} ->
-        {:ok,
-         paths
-         |> maybe_wrap()
-         |> do_delete(document)}
-
-      error ->
-        error
-    end
-  end
-
-  defp maybe_wrap(paths) do
-    case paths do
-      [{:root, _} | _] -> [paths]
-      _ -> paths
-    end
-  end
-
-  defp do_delete(paths, document) do
-    paths
-    |> Enum.uniq()
-    # Remove highest index first
-    |> Enum.sort(&>=/2)
-    |> Enum.reduce(document, fn path, data ->
-      data
-      |> pop_in(to_accessor(path))
-      |> elem(1)
-    end)
-  end
-
-  defp to_accessor([{:root, _} | path_tokens]) do
-    Enum.map(path_tokens, fn
-      {:property, property} ->
-        property
-
-      {:index_access, index} ->
-        Access.at(index)
-    end)
+    execute_change(
+      document,
+      selector,
+      fn path, acc -> elem(pop_in(acc, path), 1) end
+    )
   end
 
   @doc """
@@ -223,17 +187,25 @@ defmodule Warpath do
   end
 
   def update(document, selector, fun) do
+    execute_change(
+      document,
+      selector,
+      fn path, acc -> update_in(acc, path, fun) end
+    )
+  end
+
+  defp execute_change(document, selector, reducer) do
     case query(document, selector, result_type: :path_tokens) do
-      {:ok, [root: "$"]} ->
-        {:ok, fun.(document)}
+      {:ok, [_ | _] = paths} ->
+        {:ok,
+         paths
+         |> Enum.uniq()
+         |> Enum.sort(&>=/2)
+         |> AccessBuilder.build()
+         |> Enum.reduce(document, reducer)}
 
-      {:ok, paths} ->
-        data =
-          paths
-          |> maybe_wrap()
-          |> Enum.reduce(document, &update_in(&2, to_accessor(&1), fun))
-
-        {:ok, data}
+      {:ok, []} ->
+        {:ok, document}
 
       error ->
         error
