@@ -5,6 +5,7 @@ defmodule Warpath do
              |> String.split("<!-- MDOC !-->")
              |> Enum.fetch!(1)
 
+  alias Warpath.AccessBuilder
   alias Warpath.Element
   alias Warpath.Element.Path
   alias Warpath.Execution
@@ -12,9 +13,17 @@ defmodule Warpath do
   alias Warpath.Expression
 
   @type json :: String.t()
+
   @type container :: map | struct | list
+
   @type document :: container | json
+
   @type selector :: Expression.t() | String.t()
+
+  @type updated_value :: any()
+
+  @type update_fun :: (term() -> updated_value)
+
   @type opts :: [result_type: :value | :path | :value_path | :path_tokens | :value_path_tokens]
 
   @doc """
@@ -33,11 +42,15 @@ defmodule Warpath do
       ...> Warpath.delete(numbers, "$.numbers[?(@ < 10)]")
       {:ok, %{"numbers" => [20, 50]}}
 
+      iex> numbers = %{"numbers" => [20, 3, 50, 6, 7]}
+      ...> Warpath.delete(numbers, "$")
+      {:ok, nil}
+
       iex> users = %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}
       ...> Warpath.delete(users, "$..city")
       {:ok, %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}} # Unchanged
   """
-  @spec delete(document(), selector()) :: {:ok, container()} | {:error, any}
+  @spec delete(document(), selector()) :: {:ok, container() | nil} | {:error, any}
   def delete(document, selector) when is_binary(document) do
     case decode(document) do
       {:ok, decode_document} -> delete(decode_document, selector)
@@ -46,48 +59,11 @@ defmodule Warpath do
   end
 
   def delete(document, selector) do
-    case query(document, selector, result_type: :path_tokens) do
-      {:ok, [root: "$"]} ->
-        {:ok, nil}
-
-      {:ok, paths} ->
-        {:ok,
-         paths
-         |> maybe_wrap()
-         |> do_delete(document)}
-
-      error ->
-        error
-    end
-  end
-
-  defp maybe_wrap(paths) do
-    case paths do
-      [{:root, _} | _] -> [paths]
-      _ -> paths
-    end
-  end
-
-  defp do_delete(paths, document) do
-    paths
-    |> Enum.uniq()
-    # Remove highest index first
-    |> Enum.sort(&>=/2)
-    |> Enum.reduce(document, fn path, data ->
-      data
-      |> pop_in(to_accessor(path))
-      |> elem(1)
-    end)
-  end
-
-  defp to_accessor([{:root, _} | path_tokens]) do
-    Enum.map(path_tokens, fn
-      {:property, property} ->
-        property
-
-      {:index_access, index} ->
-        Access.at(index)
-    end)
+    execute_change(
+      document,
+      selector,
+      fn path, acc -> elem(pop_in(acc, path), 1) end
+    )
   end
 
   @doc """
@@ -214,7 +190,9 @@ defmodule Warpath do
       ...> Warpath.update(users, "$.theo.age", &(&1 + 1))
       {:ok, %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}} # Unchanaged
   """
-  @spec update(document(), selector(), (term() -> term())) :: {:ok, container()} | {:error, any}
+
+  @spec update(document(), selector(), (term() -> term())) ::
+          {:ok, container() | updated_value()} | {:error, any}
   def update(document, selector, fun) when is_binary(document) do
     case decode(document) do
       {:ok, decoded_document} -> update(decoded_document, selector, fun)
@@ -223,17 +201,25 @@ defmodule Warpath do
   end
 
   def update(document, selector, fun) do
+    execute_change(
+      document,
+      selector,
+      fn path, acc -> update_in(acc, path, fun) end
+    )
+  end
+
+  defp execute_change(document, selector, reducer) do
     case query(document, selector, result_type: :path_tokens) do
-      {:ok, [root: "$"]} ->
-        {:ok, fun.(document)}
+      {:ok, [_ | _] = paths} ->
+        {:ok,
+         paths
+         |> Enum.uniq()
+         |> Enum.sort(&>=/2)
+         |> AccessBuilder.build()
+         |> Enum.reduce(document, reducer)}
 
-      {:ok, paths} ->
-        data =
-          paths
-          |> maybe_wrap()
-          |> Enum.reduce(document, &update_in(&2, to_accessor(&1), fun))
-
-        {:ok, data}
+      {:ok, []} ->
+        {:ok, document}
 
       error ->
         error
