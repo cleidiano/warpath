@@ -16,7 +16,10 @@ defmodule Warpath.AccessBuilderTest do
     [accessor] = AccessBuilder.build(path)
 
     assert pop_in(%{key: "ABC"}, accessor) == {"ABC", %{}}
-    assert update_in(%{key: "ABC"}, accessor, fn value -> String.reverse(value) end) == %{key: "CBA"}
+
+    assert update_in(%{key: "ABC"}, accessor, fn value -> String.reverse(value) end) == %{
+             key: "CBA"
+           }
   end
 
   test "create access path to modify a nested data structure" do
@@ -26,14 +29,16 @@ defmodule Warpath.AccessBuilderTest do
     data = %{list: [%{map: %{key: "ABC"}}]}
 
     assert pop_in(data, accessor) == {"ABC", %{list: [%{map: %{}}]}}
-    assert update_in(data, accessor, fn value -> String.reverse(value) end) == %{list: [%{map: %{key: "CBA"}}]}
+
+    assert update_in(data, accessor, fn value -> String.reverse(value) end) == %{
+             list: [%{map: %{key: "CBA"}}]
+           }
   end
 
   test "create a path to pop root data structure" do
-    [accessor] = AccessBuilder.build([root: "$"])
+    [accessor] = AccessBuilder.build(root: "$")
 
     assert pop_in([1], accessor) == {[1], nil}
     assert pop_in(%{key: :a}, accessor) == {%{key: :a}, nil}
   end
-
 end
