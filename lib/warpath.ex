@@ -51,18 +51,14 @@ defmodule Warpath do
       {:ok, %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}} # Unchanged
   """
   @spec delete(document(), selector()) :: {:ok, container() | nil} | {:error, any}
-  def delete(document, selector) when is_binary(document) do
-    case decode(document) do
-      {:ok, decode_document} -> delete(decode_document, selector)
-      error -> error
-    end
-  end
-
   def delete(document, selector) do
-    execute_change(
+    decode_run(
       document,
-      selector,
-      fn path, acc -> elem(pop_in(acc, path), 1) end
+      &execute_change(
+        &1,
+        selector,
+        fn path, acc -> elem(pop_in(acc, path), 1) end
+      )
     )
   end
 
@@ -95,10 +91,7 @@ defmodule Warpath do
   def query(document, selector, opts \\ [])
 
   def query(document, selector, opts) when is_binary(document) do
-    case decode(document) do
-      {:ok, decoded_document} -> query(decoded_document, selector, opts)
-      error -> error
-    end
+    decode_run(document, &query(&1, selector, opts))
   end
 
   def query(document, selector, opts) when is_binary(selector) do
@@ -131,17 +124,19 @@ defmodule Warpath do
     end
   end
 
-  defp decode(document) do
-    document
+  defp decode_run(json, fun) when is_binary(json) do
+    json
     |> Jason.decode()
     |> case do
-      {:ok, _} = decoded ->
-        decoded
+      {:ok, decoded} ->
+        fun.(decoded)
 
       {:error, exception} ->
         {:error, Warpath.JsonDecodeError.from(exception)}
     end
   end
+
+  defp decode_run(document, fun), do: fun.(document)
 
   defp dispatch(%Env{operator: operator} = env, elements) when is_list(elements) do
     output = operator.evaluate(elements, [], env)
@@ -193,18 +188,10 @@ defmodule Warpath do
 
   @spec update(document(), selector(), (term() -> term())) ::
           {:ok, container() | updated_value()} | {:error, any}
-  def update(document, selector, fun) when is_binary(document) do
-    case decode(document) do
-      {:ok, decoded_document} -> update(decoded_document, selector, fun)
-      error -> error
-    end
-  end
-
   def update(document, selector, fun) do
-    execute_change(
+    decode_run(
       document,
-      selector,
-      fn path, acc -> update_in(acc, path, fun) end
+      &execute_change(&1, selector, fn path, acc -> update_in(acc, path, fun) end)
     )
   end
 
