@@ -127,6 +127,13 @@ defmodule WarpathTest do
       assert {:ok, %{"numbers" => [20, 50]}} == Warpath.delete(numbers, "$.numbers[?(@ < 10)]")
     end
 
+    test "remove item on map that is an element of list" do
+      numbers = %{"people" => [%{"name" => "John", "age" => 27}]}
+
+      assert {:ok, %{"people" => [%{"name" => "John"}]}} ==
+               Warpath.delete(numbers, "$.people[0].age")
+    end
+
     test "remove item from map" do
       assert {:ok, %{"one" => 1}} == Warpath.delete(%{"one" => 1, "two" => 2}, "$.two")
     end

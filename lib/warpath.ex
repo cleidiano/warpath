@@ -197,11 +197,18 @@ defmodule Warpath do
 
   defp execute_change(document, selector, reducer) do
     case query(document, selector, result_type: :path_tokens) do
-      {:ok, [_ | _] = paths} ->
+      {:ok, [head | _] = paths} ->
+        longest_paths_first =
+          if is_list(head) do
+            paths
+            |> Enum.uniq()
+            |> Enum.sort(&>=/2)
+          else
+            paths
+          end
+
         {:ok,
-         paths
-         |> Enum.uniq()
-         |> Enum.sort(&>=/2)
+         longest_paths_first
          |> AccessBuilder.build()
          |> Enum.reduce(document, reducer)}
 
