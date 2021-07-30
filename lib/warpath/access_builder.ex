@@ -4,7 +4,7 @@ defmodule Warpath.AccessBuilder do
   def build(paths) when is_list(paths) do
     paths
     |> maybe_wrap()
-    |> Enum.map(&to_accessor/1)
+    |> Enum.map(fn tokens -> {tokens, to_accessor(tokens)} end)
   end
 
   defp maybe_wrap(paths) do

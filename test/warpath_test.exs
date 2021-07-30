@@ -184,6 +184,16 @@ defmodule WarpathTest do
                Warpath.update(%{"first" => 1, "second" => 2}, "$.second", &(&1 + 10))
     end
 
+    test "update a map with update_fun/2" do
+      fun = fn
+        [{:root, _}, {:property, "first"}], item -> item + 10
+        _, node -> node
+      end
+
+      assert {:ok, %{"first" => 11, "second" => 2}} ==
+               Warpath.update(%{"first" => 1, "second" => 2}, "$.*", fun)
+    end
+
     test "return the input data structure when then selector doesn't match any item" do
       numbers = %{"numbers" => [20, 3, 50, 6, 7]}
       assert {:ok, numbers} == Warpath.update(numbers, "$.numbers[?(@ > 100)]", &(&1 * 2))
