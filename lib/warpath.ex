@@ -22,7 +22,7 @@ defmodule Warpath do
 
   @type updated_value :: any()
 
-  @type update_fun :: (term() -> updated_value)
+  @type update_fun :: (term() -> updated_value) | (Path.acc(), term() -> updated_value)
 
   @type opts :: [result_type: :value | :path | :value_path | :path_tokens | :value_path_tokens]
 
@@ -57,7 +57,7 @@ defmodule Warpath do
       &execute_change(
         &1,
         selector,
-        fn path, acc -> elem(pop_in(acc, path), 1) end
+        fn {_tokens, path}, acc -> elem(pop_in(acc, path), 1) end
       )
     )
   end
@@ -186,13 +186,23 @@ defmodule Warpath do
       {:ok, %{"john" => %{"age" => 27}, "meg" => %{"age" => 23}}} # Unchanaged
   """
 
-  @spec update(document(), selector(), (term() -> term())) ::
+  @spec update(document(), selector(), update_fun()) ::
           {:ok, container() | updated_value()} | {:error, any}
-  def update(document, selector, fun) do
+  def update(document, selector, fun) when is_function(fun, 2) do
     decode_run(
       document,
-      &execute_change(&1, selector, fn path, acc -> update_in(acc, path, fun) end)
+      &execute_change(
+        &1,
+        selector,
+        fn {tokens, path}, acc ->
+          update_in(acc, path, fn node -> fun.(tokens, node) end)
+        end
+      )
     )
+  end
+
+  def update(document, selector, fun) when is_function(fun, 1) do
+    update(document, selector, fn _tokens, node -> fun.(node) end)
   end
 
   defp execute_change(document, selector, reducer) do
