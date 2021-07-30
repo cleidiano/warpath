@@ -1,7 +1,7 @@
 defmodule Warpath.MixProject do
   use Mix.Project
   @description "A implementation of Jsonpath expression for Elixir."
-  @version "0.6.1"
+  @version "0.6.2"
 
   def project do
     [
@@ -42,7 +42,7 @@ defmodule Warpath.MixProject do
 
   defp package do
     %{
-      maintainers: ["Cleidiano Oliviera"],
+      maintainers: ["Cleidiano Oliveira"],
       licenses: ["MIT"],
       links: %{
         "GitHub" => "https://github.com/cleidiano/warpath"
