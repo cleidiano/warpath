@@ -62,8 +62,7 @@ defmodule Warpath.Element.Path do
   defp to_string(tokens, opts) do
     tokens
     |> Enum.reverse()
-    |> Enum.map(&path(&1, opts))
-    |> Enum.join()
+    |> Enum.map_join(&path(&1, opts))
   end
 
   defp path({:root, root}, :bracketify), do: root
