@@ -199,18 +199,10 @@ defmodule Warpath.Query.SliceOperatorTest do
       end
     end
 
-    property "supplied is used" do
-      check all(list <- list_of(term(), min_length: 1)) do
-        step = Enum.random(1..length(list))
+    test "supplied is used" do
+      document = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-        elements =
-          list
-          |> Stream.with_index()
-          |> Stream.filter(fn {_, index} -> rem(index, step) == 0 end)
-          |> Enum.map(&element/1)
-
-        assert SliceOperator.evaluate(list, [], env_for_slice(step: step)) == elements
-      end
+      assert [1, 3, 5] == Warpath.query!(document, "$[1:7:2]")
     end
   end
 

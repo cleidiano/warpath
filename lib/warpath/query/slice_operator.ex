@@ -31,8 +31,8 @@ defimpl SliceOperator, for: List do
         elements
         |> Element.elementify(relative_path)
         |> Stream.with_index()
-        |> Stream.reject(fn {_, index} -> rem(index, step) != 0 end)
-        |> Stream.filter(fn {_, index} -> index in range end)
+        |> Enum.slice(range)
+        |> Enum.take_every(step)
         |> Enum.map(fn {element, _index} -> element end)
 
       _ ->
