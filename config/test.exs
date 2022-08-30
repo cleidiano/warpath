@@ -1,4 +1,4 @@
-import Config
+use Mix.Config
 
 config :stream_data,
   max_runs:
