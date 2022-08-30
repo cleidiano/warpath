@@ -24,60 +24,64 @@ end
 
 defimpl SliceOperator, for: List do
   def evaluate(elements, relative_path, %Env{instruction: {:slice, slice_args}}) do
-    {first, last, step} = slice_config(elements, slice_args)
+    length = length(elements)
+    start_index = Keyword.get(slice_args, :start_index, 0)
+    end_index = Keyword.get(slice_args, :end_index, length)
+    step = Keyword.get(slice_args, :step, 1)
 
-    case build_range(first, last) do
-      {:range, range} ->
-        elements
-        |> Element.elementify(relative_path)
-        |> Stream.with_index()
-        |> Enum.slice(range)
-        |> Enum.take_every(step)
-        |> Enum.map(fn {element, _index} -> element end)
-
-      _ ->
-        []
-    end
-  end
-
-  defp build_range(first, last) do
-    if first > last do
-      {:empty_range?, true}
-    else
-      {:range, Range.new(first, last)}
-    end
-  end
-
-  defp slice_config(elements, slice_ops) when is_list(elements) do
-    start = start_index(elements, slice_ops)
-    end_index = end_index(elements, slice_ops)
-    step = step(slice_ops)
-
-    {start, end_index, step}
-  end
-
-  defp step(slice), do: Keyword.get(slice, :step, 1)
-
-  defp start_index(elements, slice) do
-    case Keyword.get(slice, :start_index, 0) do
-      start when start >= 0 ->
-        start
-
-      start ->
-        max(length(elements) + start, 0)
-    end
-  end
-
-  defp end_index(elements, slice) do
-    end_index =
-      case Keyword.get_lazy(slice, :end_index, fn -> length(elements) end) do
-        index when index >= 0 -> index
-        index -> index + length(elements)
+    {lower, upper} =
+      case bounds(start_index, end_index, step, length) do
+        bounds when step < 0 -> flip(bounds)
+        bounds -> bounds
       end
 
-    # end_index exclusive.
-    end_index - 1
+    slice(elements, relative_path, {lower, upper, step})
   end
+
+  defp slice(_, _, {_, _, 0}), do: []
+
+  defp slice(elements, relative_path, {lower, upper, step}) do
+    itens =
+      elements
+      |> Element.elementify(relative_path)
+      |> Stream.with_index()
+      |> Stream.transform([], fn {element, index}, acc ->
+        case select?(index, lower, upper) do
+          {:cont, true} -> {[element], nil}
+          {:cont, false} -> {[], nil}
+          {:halt, _} -> {:halt, acc}
+        end
+      end)
+      |> Enum.take_every(abs(step))
+
+    if step > 0, do: itens, else: Enum.reverse(itens)
+  end
+
+  defp bounds(start_index, end_index, step, length) do
+    normalized_start = normalize_index(start_index, length)
+    normalized_end = normalize_index(end_index, length)
+
+    if step >= 0 do
+      lower = min(max(normalized_start, 0), length)
+      upper = min(max(normalized_end, 0), length)
+      {lower, upper}
+    else
+      lower = min(max(normalized_start, -1), length - 1)
+      upper = min(max(normalized_end, -1), length - 1)
+
+      {lower, upper}
+    end
+  end
+
+  defp normalize_index(i, len) do
+    if i >= 0, do: i, else: len + i
+  end
+
+  defp flip({lower, upper}), do: {upper, lower}
+
+  defp select?(index, lower, upper) when index >= lower and index < upper, do: {:cont, true}
+  defp select?(index, lower, _upper) when index < lower, do: {:cont, false}
+  defp select?(_, _, _), do: {:halt, false}
 end
 
 defimpl SliceOperator, for: Any do
