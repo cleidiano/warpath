@@ -25,17 +25,27 @@ end
 defimpl SliceOperator, for: List do
   def evaluate(elements, relative_path, %Env{instruction: {:slice, slice_args}}) do
     length = length(elements)
-    start_index = Keyword.get(slice_args, :start_index, 0)
-    end_index = Keyword.get(slice_args, :end_index, length)
-    step = Keyword.get(slice_args, :step, 1)
+    {start_index, end_index, step} = arguments_or_defaults(slice_args, length)
 
-    {lower, upper} =
-      case bounds(start_index, end_index, step, length) do
-        bounds when step < 0 -> flip(bounds)
-        bounds -> bounds
-      end
+    {lower, upper} = bounds(start_index, end_index, step, length)
 
     slice(elements, relative_path, {lower, upper, step})
+  end
+
+  defp arguments_or_defaults(args, length) do
+    step = Keyword.get(args, :step, 1)
+
+    {default_start, default_end} =
+      if step >= 0 do
+        {0, length}
+      else
+        {length, 0}
+      end
+
+    start_index = Keyword.get(args, :start_index, default_start)
+    end_index = Keyword.get(args, :end_index, default_end)
+
+    {start_index, end_index, step}
   end
 
   defp slice(_, _, {_, _, 0}), do: []
@@ -66,8 +76,8 @@ defimpl SliceOperator, for: List do
       upper = min(max(normalized_end, 0), length)
       {lower, upper}
     else
-      lower = min(max(normalized_start, -1), length - 1)
-      upper = min(max(normalized_end, -1), length - 1)
+      upper = min(max(normalized_start, -1), length)
+      lower = min(max(normalized_end, -1), length - 1)
 
       {lower, upper}
     end
@@ -76,8 +86,6 @@ defimpl SliceOperator, for: List do
   defp normalize_index(i, len) do
     if i >= 0, do: i, else: len + i
   end
-
-  defp flip({lower, upper}), do: {upper, lower}
 
   defp select?(index, lower, upper) when index >= lower and index < upper, do: {:cont, true}
   defp select?(index, lower, _upper) when index < lower, do: {:cont, false}

@@ -216,6 +216,12 @@ defmodule Warpath.Query.SliceOperatorTest do
 
       assert [] == Warpath.query!(document, "$[1:2:-2]")
     end
+
+    test "with negative step only" do
+      document = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+      assert Enum.reverse(document) == Warpath.query!(document, "$[::-1]")
+    end
   end
 
   test "evaluate/3 is nil safe traverse" do
