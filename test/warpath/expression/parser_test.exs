@@ -91,17 +91,23 @@ defmodule Warpath.Expression.ParserTest do
     end
 
     test "with negative step" do
-      error_message = "#{@error_message_prefix} slice step should be greater than zero."
+      expression = [
+        @root_expression,
+        {:slice, [start_index: 1, end_index: 3, step: -2]}
+      ]
 
-      assert_parse_error tokenize!("$[::-2]"), error_message
-      assert_parse_error tokenize!("$.[::-2]"), error_message
+      assert_parse tokenize!("$[1:3:-2]"), expression
+      assert_parse tokenize!("$.[1:3:-2]"), expression
     end
 
     test "with step zero" do
-      error_message = "#{@error_message_prefix} slice step should be greater than zero."
+      expression = [
+        @root_expression,
+        {:slice, [step: 0]}
+      ]
 
-      assert_parse_error tokenize!("$[::0]"), error_message
-      assert_parse_error tokenize!("$.[::0]"), error_message
+      assert_parse tokenize!("$[::0]"), expression
+      assert_parse tokenize!("$.[::0]"), expression
     end
 
     test "with to many arguments" do

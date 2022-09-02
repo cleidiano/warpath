@@ -199,10 +199,28 @@ defmodule Warpath.Query.SliceOperatorTest do
       end
     end
 
-    test "supplied is used" do
+    test "should be used when supplied a positive step" do
       document = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
       assert [1, 3, 5] == Warpath.query!(document, "$[1:7:2]")
+    end
+
+    test "should be used when supplied a negative step" do
+      document = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+      assert [5, 3, 1] == Warpath.query!(document, "$[7:1:-2]")
+    end
+
+    test "when negative, start less then end index result in empty list" do
+      document = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+      assert [] == Warpath.query!(document, "$[1:2:-2]")
+    end
+
+    test "with negative step only" do
+      document = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+      assert Enum.reverse(document) == Warpath.query!(document, "$[::-1]")
     end
   end
 

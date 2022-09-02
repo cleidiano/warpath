@@ -228,9 +228,8 @@ compute_slice(Line, ColonCount, Acc, []) ->
         _ -> Acc
     end.
 
-token_for(ColonCount, {int, Line, Int}) ->
+token_for(ColonCount, {int, _Line, Int}) ->
     case ColonCount of
-      2 when Int < 1 -> error_slice_step_less_then_one(Line);
       0 -> {start_index, Int};
       1 -> {end_index, Int};
       2 -> {step, Int};
@@ -297,10 +296,6 @@ token_of({Token, _Line, _Value}) -> Token.
 literal_of(Value) -> {literal, Value}.
 
 %%Errors
--spec error_slice_step_less_then_one(line()) -> no_return().
-error_slice_step_less_then_one(Line) ->
-    return_error(Line, "slice step should be greater than zero.").
-
 -spec error_slice_with_many_params(line) -> no_return().
 error_slice_with_many_params(Line) ->
     return_error(Line,
