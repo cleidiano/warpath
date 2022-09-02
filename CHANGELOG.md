@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased][unreleased]
 
+## [0.6.3] - 2022-09-02
+### Added
+- Support negative slice step
+
+### Fixed
+- Wrong slice step behaviour when it's > 1
+
 ## [0.6.2] - 2021-07-30
 ### Added
 - Support for update fun with arity 2
@@ -186,7 +193,8 @@ This realease put a effort to become compatible as possible with the concensus i
 - Unwrap output of query that the only possible result is as scalar value, ex. `Warpath.query!([1, 2, 3], "$[0]")` will return `1` instead of `[1]`.
 
 
-[unreleased]: https://github.com/Cleidiano/warpath/compare/v0.6.2...HEAD
+[unreleased]: https://github.com/Cleidiano/warpath/compare/v0.6.3...HEAD
+[0.6.3]: https://github.com/Cleidiano/warpath/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/Cleidiano/warpath/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/Cleidiano/warpath/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/Cleidiano/warpath/compare/v0.5.0...v0.6.0
