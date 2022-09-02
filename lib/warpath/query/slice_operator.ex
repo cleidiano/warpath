@@ -55,6 +55,7 @@ defimpl SliceOperator, for: List do
       elements
       |> Element.elementify(relative_path)
       |> Stream.with_index()
+      |> Stream.drop(lower)
       |> Stream.transform([], fn {element, index}, acc ->
         case select?(index, lower, upper) do
           {:cont, true} -> {[element], nil}
