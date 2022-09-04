@@ -3,6 +3,7 @@ defmodule Warpath.Element do
 
   alias __MODULE__
   alias Warpath.Element.Path
+  alias Warpath.Element.IndexedElementList
 
   @type t :: %Element{value: any, path: Path.acc()}
 
@@ -45,8 +46,14 @@ defmodule Warpath.Element do
 
   def elementify(list, relative_path, path_fun) when is_list(list) do
     list
-    |> Stream.with_index()
+    |> Enum.with_index()
     |> Enum.map(fn {item, index} ->
+      Element.new(item, path_fun.({:index_access, index}, relative_path))
+    end)
+  end
+
+  def elementify(%IndexedElementList{indexed_elements: elements}, relative_path, path_fun) do
+    Enum.map(elements, fn {item, index} ->
       Element.new(item, path_fun.({:index_access, index}, relative_path))
     end)
   end

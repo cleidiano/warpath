@@ -1,0 +1,1678 @@
+{
+  "tests": [
+    {
+      "name": "root",
+      "selector": "$",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": [
+        [
+          "first",
+          "second"
+        ]
+      ]
+    },
+    {
+      "name": "no leading whitespace",
+      "selector": " $",
+      "invalid_selector": true
+    },
+    {
+      "name": "no trailing whitespace",
+      "selector": "$ ",
+      "invalid_selector": true
+    },
+    {
+      "name": "dot child",
+      "selector": "$.a",
+      "document": {
+        "a": "A",
+        "b": "B"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "dot child, ☺ name",
+      "selector": "$.☺",
+      "document": {
+        "☺": "A",
+        "b": "B"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "dot child, invalid character",
+      "selector": "$.&",
+      "invalid_selector": true
+    },
+    {
+      "name": "dot child absent",
+      "selector": "$.c",
+      "document": {
+        "a": "A",
+        "b": "B"
+      },
+      "result": []
+    },
+    {
+      "name": "dot child of array",
+      "selector": "$.a",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": []
+    },
+    {
+      "name": "wildcarded child",
+      "selector": "$.*",
+      "document": {
+        "a": "A",
+        "b": "B"
+      },
+      "result": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "name": "wildcarded child of array",
+      "selector": "$.*",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": [
+        "first",
+        "second"
+      ]
+    },
+    {
+      "name": "wildcarded index of array",
+      "selector": "$[*]",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": [
+        "first",
+        "second"
+      ]
+    },
+    {
+      "name": "wildcarded child dot child",
+      "selector": "$.*.a",
+      "document": {
+        "x": {
+          "a": "Ax",
+          "b": "Bx"
+        },
+        "y": {
+          "a": "Ay",
+          "b": "By"
+        }
+      },
+      "result": [
+        "Ax",
+        "Ay"
+      ]
+    },
+    {
+      "name": "union child, double quotes",
+      "selector": "$[\"a\"]",
+      "document": {
+        "a": "A",
+        "b": "B"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child absent, double quotes",
+      "selector": "$[\"c\"]",
+      "document": {
+        "a": "A",
+        "b": "B"
+      },
+      "result": []
+    },
+    {
+      "name": "union child of array, double quotes",
+      "selector": "$[\"a\"]",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": []
+    },
+    {
+      "name": "union child, double quotes, embedded U+0000",
+      "selector": "$[\"\u0000\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0001",
+      "selector": "$[\"\u0001\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0002",
+      "selector": "$[\"\u0002\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0003",
+      "selector": "$[\"\u0003\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0004",
+      "selector": "$[\"\u0004\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0005",
+      "selector": "$[\"\u0005\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0006",
+      "selector": "$[\"\u0006\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0007",
+      "selector": "$[\"\u0007\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0008",
+      "selector": "$[\"\u0008\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0009",
+      "selector": "$[\"\u0009\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+000A",
+      "selector": "$[\"\u000A\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+000B",
+      "selector": "$[\"\u000B\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+000C",
+      "selector": "$[\"\u000C\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+000D",
+      "selector": "$[\"\u000D\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+000E",
+      "selector": "$[\"\u000E\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+000F",
+      "selector": "$[\"\u000F\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0010",
+      "selector": "$[\"\u0010\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0011",
+      "selector": "$[\"\u0011\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0012",
+      "selector": "$[\"\u0012\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0013",
+      "selector": "$[\"\u0013\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0014",
+      "selector": "$[\"\u0014\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0015",
+      "selector": "$[\"\u0015\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0016",
+      "selector": "$[\"\u0016\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0017",
+      "selector": "$[\"\u0017\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0018",
+      "selector": "$[\"\u0018\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0019",
+      "selector": "$[\"\u0019\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+001A",
+      "selector": "$[\"\u001A\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+001B",
+      "selector": "$[\"\u001B\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+001C",
+      "selector": "$[\"\u001C\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+001D",
+      "selector": "$[\"\u001D\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+001E",
+      "selector": "$[\"\u001E\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+001F",
+      "selector": "$[\"\u001F\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded U+0020",
+      "selector": "$[\"\u0020\"]",
+      "document": {
+        "\u0020": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, escaped double quote",
+      "selector": "$[\"\\\"\"]",
+      "document": {
+        "\"": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, escaped reverse solidus",
+      "selector": "$[\"\\\\\"]",
+      "document": {
+        "\\": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, escaped solidus",
+      "selector": "$[\"\\/\"]",
+      "document": {
+        "/": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, escaped backspace",
+      "selector": "$[\"\\b\"]",
+      "document": {
+        "\u0008": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, escaped form feed",
+      "selector": "$[\"\\f\"]",
+      "document": {
+        "\u000C": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, escaped line feed",
+      "selector": "$[\"\\n\"]",
+      "document": {
+        "\u000A": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, escaped carriage return",
+      "selector": "$[\"\\r\"]",
+      "document": {
+        "\u000D": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, escaped tab",
+      "selector": "$[\"\\t\"]",
+      "document": {
+        "\u0009": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, escaped ☺, upper case hex",
+      "selector": "$[\"\\u263A\"]",
+      "document": {
+        "☺": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, escaped ☺, lower case hex",
+      "selector": "$[\"\\u263a\"]",
+      "document": {
+        "☺": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, surrogate pair 𝄞",
+      "selector": "$[\"\\uD834\\uDD1E\"]",
+      "document": {
+        "𝄞": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, surrogate pair 😀",
+      "selector": "$[\"\\uD83D\\uDE00\"]",
+      "document": {
+        "😀": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, double quotes, invalid escaped single quote",
+      "selector": "$[\"\\'\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, embedded double quote",
+      "selector": "$[\"\"\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, double quotes, incomplete escape",
+      "selector": "$[\"\\\"]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes",
+      "selector": "$['a']",
+      "document": {
+        "a": "A",
+        "b": "B"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child absent, single quotes",
+      "selector": "$['c']",
+      "document": {
+        "a": "A",
+        "b": "B"
+      },
+      "result": []
+    },
+    {
+      "name": "union child of array, single quotes",
+      "selector": "$['a']",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": []
+    },
+    {
+      "name": "union child, single quotes, embedded U+0000",
+      "selector": "$['\u0000']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0001",
+      "selector": "$['\u0001']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0002",
+      "selector": "$['\u0002']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0003",
+      "selector": "$['\u0003']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0004",
+      "selector": "$['\u0004']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0005",
+      "selector": "$['\u0005']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0006",
+      "selector": "$['\u0006']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0007",
+      "selector": "$['\u0007']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0008",
+      "selector": "$['\u0008']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0009",
+      "selector": "$['\u0009']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+000A",
+      "selector": "$['\u000A']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+000B",
+      "selector": "$['\u000B']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+000C",
+      "selector": "$['\u000C']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+000D",
+      "selector": "$['\u000D']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+000E",
+      "selector": "$['\u000E']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+000F",
+      "selector": "$['\u000F']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0010",
+      "selector": "$['\u0010']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0011",
+      "selector": "$['\u0011']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0012",
+      "selector": "$['\u0012']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0013",
+      "selector": "$['\u0013']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0014",
+      "selector": "$['\u0014']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0015",
+      "selector": "$['\u0015']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0016",
+      "selector": "$['\u0016']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0017",
+      "selector": "$['\u0017']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0018",
+      "selector": "$['\u0018']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0019",
+      "selector": "$['\u0019']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+001A",
+      "selector": "$['\u001A']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+001B",
+      "selector": "$['\u001B']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+001C",
+      "selector": "$['\u001C']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+001D",
+      "selector": "$['\u001D']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+001E",
+      "selector": "$['\u001E']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+001F",
+      "selector": "$['\u001F']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded U+0020",
+      "selector": "$['\u0020']",
+      "document": {
+        "\u0020": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, escaped single quote",
+      "selector": "$['\\'']",
+      "document": {
+        "'": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, escaped reverse solidus",
+      "selector": "$['\\\\']",
+      "document": {
+        "\\": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, escaped solidus",
+      "selector": "$['\\/']",
+      "document": {
+        "/": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, escaped backspace",
+      "selector": "$['\\b']",
+      "document": {
+        "\u0008": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, escaped form feed",
+      "selector": "$['\\f']",
+      "document": {
+        "\u000C": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, escaped line feed",
+      "selector": "$['\\n']",
+      "document": {
+        "\u000A": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, escaped carriage return",
+      "selector": "$['\\r']",
+      "document": {
+        "\u000D": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, escaped tab",
+      "selector": "$['\\t']",
+      "document": {
+        "\u0009": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, escaped ☺, upper case hex",
+      "selector": "$['\\u263A']",
+      "document": {
+        "☺": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, escaped ☺, lower case hex",
+      "selector": "$['\\u263a']",
+      "document": {
+        "☺": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, surrogate pair 𝄞",
+      "selector": "$['\\uD834\\uDD1E']",
+      "document": {
+        "𝄞": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, surrogate pair 😀",
+      "selector": "$['\\uD83D\\uDE00']",
+      "document": {
+        "😀": "A"
+      },
+      "result": [
+        "A"
+      ]
+    },
+    {
+      "name": "union child, single quotes, invalid escaped double quote",
+      "selector": "$['\\\"']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, embedded single quote",
+      "selector": "$[''']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union child, single quotes, incomplete escape",
+      "selector": "$['\\']",
+      "invalid_selector": true
+    },
+    {
+      "name": "union",
+      "selector": "$[0,2]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "union with whitespace",
+      "selector": "$[ 0 , 1 ]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "empty union",
+      "selector": "$[]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array access",
+      "selector": "$[0]",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": [
+        "first"
+      ]
+    },
+    {
+      "name": "union array access, 1",
+      "selector": "$[1]",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": [
+        "second"
+      ]
+    },
+    {
+      "name": "union array access, out of bound",
+      "selector": "$[2]",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": []
+    },
+    {
+      "name": "union array access, overflowing index",
+      "selector": "$[231584178474632390847141970017375815706539969331281128078915168015826259279872]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array access, negative",
+      "selector": "$[-1]",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": [
+        "second"
+      ]
+    },
+    {
+      "name": "union array access, more negative",
+      "selector": "$[-2]",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": [
+        "first"
+      ]
+    },
+    {
+      "name": "union array access, negative out of bound",
+      "selector": "$[-3]",
+      "document": [
+        "first",
+        "second"
+      ],
+      "result": []
+    },
+    {
+      "name": "union array access, on object",
+      "selector": "$[0]",
+      "document": {
+        "foo": 1
+      },
+      "result": []
+    },
+    {
+      "name": "union array access, leading 0",
+      "selector": "$[01]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array access, leading -0",
+      "selector": "$[-01]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array slice",
+      "selector": "$[1:3]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "union array slice with step",
+      "selector": "$[1:6:2]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        1,
+        3,
+        5
+      ]
+    },
+    {
+      "name": "union array slice with everything omitted, short form",
+      "selector": "$[:]",
+      "document": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "result": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "union array slice with everything omitted, long form",
+      "selector": "$[::]",
+      "document": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "result": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "union array slice with start omitted",
+      "selector": "$[:2]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "union array slice with start and end omitted",
+      "selector": "$[::2]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        0,
+        2,
+        4,
+        6,
+        8
+      ]
+    },
+    {
+      "name": "union array slice, last index",
+      "selector": "$[-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "result": [
+        3
+      ]
+    },
+    {
+      "name": "union array slice, overflowed index",
+      "selector": "$[4]",
+      "document": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "result": []
+    },
+    {
+      "name": "union array slice, underflowed index",
+      "selector": "$[-5]",
+      "document": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "result": []
+    },
+    {
+      "name": "union array slice, negative step with default start and end",
+      "selector": "$[::-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "result": [
+        3,
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "union array slice, negative step with default start",
+      "selector": "$[:0:-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "result": [
+        3,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "union array slice, negative step with default end",
+      "selector": "$[2::-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "result": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "union array slice, larger negative step",
+      "selector": "$[::-2]",
+      "document": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "result": [
+        3,
+        1
+      ]
+    },
+    {
+      "name": "union array slice, negative range with default step",
+      "selector": "$[-1:-3]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": []
+    },
+    {
+      "name": "union array slice, negative range with negative step",
+      "selector": "$[-1:-3:-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        9,
+        8
+      ]
+    },
+    {
+      "name": "union array slice, negative range with larger negative step",
+      "selector": "$[-1:-6:-2]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        9,
+        7,
+        5
+      ]
+    },
+    {
+      "name": "union array slice, larger negative range with larger negative step",
+      "selector": "$[-1:-7:-2]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        9,
+        7,
+        5
+      ]
+    },
+    {
+      "name": "union array slice, negative from, positive to",
+      "selector": "$[-5:7]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        5,
+        6
+      ]
+    },
+    {
+      "name": "union array slice, negative from",
+      "selector": "$[-2:]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        8,
+        9
+      ]
+    },
+    {
+      "name": "union array slice, positive from, negative to",
+      "selector": "$[1:-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "name": "union array slice, negative from, positive to, negative step",
+      "selector": "$[-1:1:-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "name": "union array slice, positive from, negative to, negative step",
+      "selector": "$[7:-5:-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        7,
+        6
+      ]
+    },
+    {
+      "name": "union array slice, too many colons",
+      "selector": "$[1:2:3:4]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array slice, non-integer array index",
+      "selector": "$[1:2:a]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array slice, zero step",
+      "selector": "$[1:2:0]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": []
+    },
+    {
+      "name": "union array slice, empty range",
+      "selector": "$[2:2]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": []
+    },
+    {
+      "name": "union array slice, default indices with empty array",
+      "selector": "$[:]",
+      "document": [],
+      "result": []
+    },
+    {
+      "name": "union array slice, negative step with empty array",
+      "selector": "$[::-1]",
+      "document": [],
+      "result": []
+    },
+    {
+      "name": "union array slice, maximal range with positive step",
+      "selector": "$[0:10]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "name": "union array slice, maximal range with negative step",
+      "selector": "$[9:0:-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "union array slice, excessively large to value",
+      "selector": "$[2:113667776004]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "name": "union array slice, excessively small from value",
+      "selector": "$[-113667776004:1]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        0
+      ]
+    },
+    {
+      "name": "union array slice, excessively large from value with negative step",
+      "selector": "$[113667776004:0:-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "union array slice, excessively small to value with negative step",
+      "selector": "$[3:-113667776004:-1]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        3,
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "union array slice, excessively large step",
+      "selector": "$[1:10:113667776004]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        1
+      ]
+    },
+    {
+      "name": "union array slice, excessively small step",
+      "selector": "$[-1:-10:-113667776004]",
+      "document": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": [
+        9
+      ]
+    },
+    {
+      "name": "union array slice, overflowing to value",
+      "selector": "$[2:231584178474632390847141970017375815706539969331281128078915168015826259279872]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array slice, underflowing from value",
+      "selector": "$[-231584178474632390847141970017375815706539969331281128078915168015826259279872:1]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array slice, overflowing from value with negative step",
+      "selector": "$[231584178474632390847141970017375815706539969331281128078915168015826259279872:0:-1]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array slice, underflowing to value with negative step",
+      "selector": "$[3:-231584178474632390847141970017375815706539969331281128078915168015826259279872:-1]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array slice, overflowing step",
+      "selector": "$[1:10:231584178474632390847141970017375815706539969331281128078915168015826259279872]",
+      "invalid_selector": true
+    },
+    {
+      "name": "union array slice, underflowing step",
+      "selector": "$[-1:-10:-231584178474632390847141970017375815706539969331281128078915168015826259279872]",
+      "invalid_selector": true
+    },
+    {
+      "name": "descendant selector, index",
+      "selector" : "$..[1]",
+      "document" : {"o": [0, 1, [2, 3]]},
+      "result": [
+        1,
+        3
+     ]
+    },
+    {
+      "name": "descendant selector, dot child",
+      "selector" : "$..a",
+      "document" : {"o": [{"a": "b"}, {"a":"c"}]},
+      "result": [
+        "b",
+        "c"
+     ]
+    },
+    {
+      "name": "descendant selector, wildcard, array",
+      "selector" : "$..*",
+      "document" : [0, 1],
+      "result": [
+        0,
+        1
+     ]
+    },
+    {
+      "name": "descendant selector, index wildcard, array",
+      "selector" : "$..[*]",
+      "document" : [0, 1],
+      "result": [
+        0,
+        1
+     ]
+    },
+    {
+      "name": "descendant selector, wildcard, object",
+      "selector" : "$..*",
+      "document" : {"a": "b"},
+      "result": [
+        "b"
+     ]
+    },
+    {
+      "name": "descendant selector, wildcard, nesting",
+      "selector" : "$..*",
+      "document" : {
+        "o": [{"a": "b"}]
+      },
+      "result": [
+        [
+           {
+              "a" : "b"
+           }
+        ],
+        {
+           "a" : "b"
+        },
+        "b"
+     ]
+    },
+    {
+      "name": "descendant selector, list",
+      "selector" : "$..['a', 'd']",
+      "document" : [{"a": "b", "d": "e"}, {"a":"c", "d": "f"}],
+      "result": [
+        "b",
+        "e",
+        "c",
+        "f"
+     ]
+    },
+    {
+      "name": "bald descendant selector",
+      "selector": "$..",
+      "invalid_selector": true
+    }
+  ]
+}

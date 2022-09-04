@@ -53,10 +53,9 @@ defimpl SliceOperator, for: List do
   defp slice(elements, relative_path, {lower, upper, step}) do
     itens =
       elements
-      |> Element.elementify(relative_path)
       |> Stream.with_index()
       |> Stream.drop(lower)
-      |> Stream.transform([], fn {element, index}, acc ->
+      |> Stream.transform([], fn {_, index} = element, acc ->
         case select?(index, lower, upper) do
           {:cont, true} -> {[element], nil}
           {:cont, false} -> {[], nil}
@@ -64,6 +63,8 @@ defimpl SliceOperator, for: List do
         end
       end)
       |> Enum.take_every(abs(step))
+      |> Element.IndexedElementList.new()
+      |> Element.elementify(relative_path)
 
     if step > 0, do: itens, else: Enum.reverse(itens)
   end
