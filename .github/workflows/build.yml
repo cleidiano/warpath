@@ -52,7 +52,7 @@ jobs:
             ubuntu: "jammy-20240530"
 
     steps:
-      - uses: actions/checkout@v1.0.0
+      - uses: actions/checkout@v4
       
       - name: Install Node.js
         run: |-
