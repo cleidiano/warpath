@@ -21,6 +21,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1.0.0
       
+      - name: Install Node.js
+        run: |-
+          apt-get update
+          apt-get install -y nodejs
+      
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
