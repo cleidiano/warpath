@@ -15,26 +15,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Older versions with compatible Erlang/Ubuntu
-          - elixir: "1.7.4"
-            erlang: "22.3.4.26"
-            ubuntu: "focal-20240530"
-          - elixir: "1.8.2"
-            erlang: "22.3.4.26"
-            ubuntu: "focal-20240530"
-          - elixir: "1.9.4"
-            erlang: "22.3.4.26"
-            ubuntu: "focal-20240530"
-          - elixir: "1.10.4"
-            erlang: "22.3.4.26"
-            ubuntu: "focal-20240530"
-          - elixir: "1.11.4"
-            erlang: "24.3.4.17"
-            ubuntu: "focal-20240530"
-          - elixir: "1.12.3"
-            erlang: "24.3.4.17"
-            ubuntu: "focal-20240530"
-          # Newer versions with recent Erlang/Ubuntu
           - elixir: "1.13.4"
             erlang: "25.3.2.14"
             ubuntu: "jammy-20240530"
@@ -50,15 +30,13 @@ jobs:
           - elixir: "1.17.3"
             erlang: "27.1.2"
             ubuntu: "jammy-20240530"
+          - elixir: "1.19.4"
+            erlang: "27.1.2"
+            ubuntu: "jammy-20240530"
 
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Install Node.js
-        run: |-
-          apt-get update
-          apt-get install -y nodejs
-      
+            
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
