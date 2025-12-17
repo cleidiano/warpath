@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         elixir: ["1.19.0", "1.18.0", "1.17.0", "1.16.0", "1.15.0"]
-        erlang: ["24.2.1"]
-        ubuntu: ["jammy-20260217"]
+        erlang: ["26.2.5.3"]
+        ubuntu: ["noble-20260217"]
 
     steps:
       - uses: actions/checkout@v4
