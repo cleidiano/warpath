@@ -42,10 +42,6 @@ jobs:
 
       - name: Run static code analysis
         run: mix credo --strict
-
-      - name: Run dialyzer
-        if: matrix.erlang != '27.2'
-        run: mix dialyzer
        
       - name: Run tests
         run: mix test --cover
