@@ -11,6 +11,7 @@ defmodule Warpath.MixProject do
       version: @version,
       elixir: "~> 1.7",
       compilers: [:leex, :yecc] ++ Mix.compilers(),
+      test_coverage: [ignore_modules: [:warpath_tokenizer, :warpath_parser], threshold: 0],
       package: package(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
