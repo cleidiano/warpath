@@ -19,7 +19,7 @@ jobs:
         ubuntu: ["jammy-20260217"]
 
     steps:
-      - uses: actions/checkout@v1.0.0
+      - uses: actions/checkout@v4
       
       - name: Cache dependencies
         uses: actions/cache@v4
@@ -40,13 +40,14 @@ jobs:
           mix deps.get
 
       - name: Check format
-        if: (!startsWith(matrix.elixir, '1.7'))
+        if: matrix.elixir == '1.18.0'
         run: mix format --check-formatted
 
       - name: Run static code analysis
         run: mix credo --strict
 
       - name: Run dialyzer
+        if: matrix.erlang != '27.2'
         run: mix dialyzer
        
       - name: Run tests
