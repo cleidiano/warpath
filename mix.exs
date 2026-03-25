@@ -34,7 +34,7 @@ defmodule Warpath.MixProject do
     [
       {:jason, "~> 1.2"},
       {:yaml_elixir, "~> 2.4", only: :test},
-      {:stream_data, "~> 0.1", only: [:test, :dev]},
+      {:stream_data, "~> 1.3", only: [:test, :dev]},
       {:erlex, "~> 0.2.7"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
