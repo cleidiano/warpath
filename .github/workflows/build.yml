@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         elixir: ["1.12.0", "1.11.0", "1.10.4", "1.9.4", "1.8.2", "1.7.4"]
-        erlang: ["22.3.4"]
+        erlang: ["24.2.1"]
         ubuntu: ["jammy-20260217"]
 
     steps:
