@@ -12,7 +12,10 @@ defmodule Warpath.Expression.Tokenizer do
         {:ok, tokens}
 
       {:error, {line, _module, message}, _} ->
-        {:error, TokenizerError.exception("Invalid syntax on line #{line}, #{inspect(message, charlists: :as_charlists)}")}
+        {:error,
+         TokenizerError.exception(
+           "Invalid syntax on line #{line}, #{inspect(message, charlists: :as_charlists)}"
+         )}
     end
   end
 

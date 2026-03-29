@@ -37,10 +37,11 @@ jobs:
           mix deps.get
 
       - name: Check format
-        if: matrix.elixir == '1.18.0'
+        if: matrix.elixir >= '1.18.0'
         run: mix format --check-formatted
 
       - name: Run static code analysis
+        if: matrix.elixir >= '1.17.0'
         run: mix credo --strict
        
       - name: Run tests

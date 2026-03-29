@@ -34,7 +34,9 @@ defmodule Warpath.Element do
       ]
 
       #List
-      iex> Warpath.Element.elementify(%{name: "Warpath", category: "Autobots"}, [])
+      iex> %{name: "Warpath", category: "Autobots"}
+      ...> |> Warpath.Element.elementify([])
+      ...> |> Enum.sort_by(& &1.path)
       [
         %Warpath.Element{value: "Autobots", path: [{:property, :category }]},
         %Warpath.Element{value: "Warpath", path: [{:property, :name }]}
