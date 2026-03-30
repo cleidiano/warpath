@@ -1,7 +1,7 @@
 alias Warpath.Element
-alias Warpath.Expression
 alias Warpath.Element.Path
 alias Warpath.Execution.Env
+alias Warpath.Expression
 alias Warpath.Filter.Predicate
 alias Warpath.Query.FilterOperator
 

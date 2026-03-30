@@ -172,10 +172,12 @@ defmodule Warpath.TokenizerTest do
 
   describe "tokenize/1" do
     test "should return {:error, reason} for nested single quote" do
-      message = "Invalid syntax on line 1, {:illegal, '\\''}"
+      expected_msg =
+        "Invalid syntax on line 1, " <>
+          inspect({:illegal, ~c"'"}, charlists: :as_charlists)
 
       assert Tokenizer.tokenize("'nested single ' quote'") ==
-               {:error, %TokenizerError{message: message}}
+               {:error, %TokenizerError{message: expected_msg}}
     end
 
     test "sucsessfull tokenize" do

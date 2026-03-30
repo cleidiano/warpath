@@ -10,8 +10,11 @@ defmodule Warpath.ExpressionTest do
 
   describe "compile/1" do
     test "when tokenizer fail" do
-      error = %ExpressionError{message: ~S(Invalid syntax on line 1, {:illegal, '"'})}
-      assert {:error, error} == Expression.compile(~S("))
+      expected_msg =
+        "Invalid syntax on line 1, " <>
+          inspect({:illegal, ~c"\""}, charlists: :as_charlists)
+
+      assert {:error, %ExpressionError{message: ^expected_msg}} = Expression.compile(~S("))
     end
 
     test "when parser fail" do

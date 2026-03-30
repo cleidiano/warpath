@@ -1,6 +1,6 @@
 alias Warpath.Element
-alias Warpath.Expression
 alias Warpath.Execution.Env
+alias Warpath.Expression
 alias Warpath.Query.IndexOperator
 
 defprotocol IndexOperator do

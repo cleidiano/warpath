@@ -2,8 +2,8 @@ alias Warpath.Element
 alias Warpath.Execution.Env
 alias Warpath.Expression
 alias Warpath.Query.Accessible
-alias Warpath.Query.UnionOperator
 alias Warpath.Query.IdentifierOperator
+alias Warpath.Query.UnionOperator
 
 defprotocol UnionOperator do
   @moduledoc false

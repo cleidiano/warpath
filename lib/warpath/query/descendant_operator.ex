@@ -1,9 +1,9 @@
 alias Warpath.Element
-alias Warpath.Expression
 alias Warpath.Execution.Env
+alias Warpath.Expression
 alias Warpath.Filter
-alias Warpath.Query.IndexOperator
 alias Warpath.Query.DescendantOperator
+alias Warpath.Query.IndexOperator
 
 defprotocol DescendantOperator do
   @moduledoc false

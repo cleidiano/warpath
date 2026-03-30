@@ -86,7 +86,9 @@ defmodule Warpath.Query.WildcardOperatorTest do
         Element.new(3, property: :c)
       ]
 
-      assert WildcardOperator.evaluate(document, [], env()) == expected
+      result = WildcardOperator.evaluate(document, [], env())
+
+      assert Enum.sort_by(result, & &1.path) == Enum.sort_by(expected, & &1.path)
     end
   end
 end

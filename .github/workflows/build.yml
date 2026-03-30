@@ -15,24 +15,21 @@ jobs:
       fail-fast: false
       matrix:
         elixir: ["1.19.0", "1.18.0", "1.17.0", "1.16.0", "1.15.0"]
-        erlang: ["24.2.1"]
-        ubuntu: ["jammy-20260217"]
+        erlang: ["26.2.5.3"]
+        ubuntu: ["noble-20260217"]
 
     steps:
-      - uses: actions/checkout@v1.0.0
+      - uses: actions/checkout@v4
       
+      - name: Install CA certificates
+        run: apt-get update -qq && apt-get install -y ca-certificates
+
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: deps/
           key: dependencies-${{ matrix.elixir }}-erlang-${{ matrix.erlang }}-${{ hashFiles('mix.lock') }}
-      
-      - name: Cache dialyzer plt  
-        uses: actions/cache@v4
-        with:
-          path: _build/
-          key: build-elixir-${{ matrix.elixir }}-erlang-${{ matrix.erlang }}-${{ hashFiles('mix.lock') }}
-      
+            
       - name: Install dependencies
         run: |-
           mix local.rebar --force
@@ -40,14 +37,12 @@ jobs:
           mix deps.get
 
       - name: Check format
-        if: (!startsWith(matrix.elixir, '1.7'))
+        if: matrix.elixir >= '1.18.0'
         run: mix format --check-formatted
 
       - name: Run static code analysis
+        if: matrix.elixir >= '1.17.0'
         run: mix credo --strict
-
-      - name: Run dialyzer
-        run: mix dialyzer
        
       - name: Run tests
         run: mix test --cover

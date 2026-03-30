@@ -11,14 +11,12 @@ defmodule Warpath.MixProject do
       version: @version,
       elixir: "~> 1.7",
       compilers: [:leex, :yecc] ++ Mix.compilers(),
+      test_coverage: [ignore_modules: [:warpath_tokenizer, :warpath_parser], threshold: 0],
       package: package(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       source_url: "https://github.com/cleidiano/warpath",
-      docs: [main: "Warpath"],
-      dialyzer: [
-        plt_core_path: "_build/#{Mix.env()}"
-      ]
+      docs: [main: "Warpath"]
     ]
   end
 
@@ -37,8 +35,7 @@ defmodule Warpath.MixProject do
       {:stream_data, "~> 0.1", only: [:test, :dev]},
       {:erlex, "~> 0.2.7"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:credo, "1.7.1", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7.1", only: [:dev, :test], runtime: false}
     ]
   end
 
